@@ -155,7 +155,21 @@
       padding: 12px 12px;
     }
 
-  </style>
+  
+    /* ✅ Ajustes de legibilidade no modal em telas muito pequenas */
+    @media (max-width: 380px){
+      .pm-meta-row{ padding: 10px 10px; gap: 8px; }
+      #pmCodeSeg{ font-size: 12px; }
+    
+      #pmPrecoMain{ font-size: 18px; }
+    }
+
+    /* ✅ Garantia: título do produto no header do modal NÃO aparece no mobile (evita sobrepor ícones) */
+    @media (max-width: 767px){
+      #pmTitle{ display:none !important; }
+      #actionBar{ -webkit-overflow-scrolling: touch; }
+    }
+</style>
 </head>
 
 <body class="min-h-full">
@@ -176,9 +190,9 @@
             <div id="headerStatusMobile" class="text-xs text-oly-muted sm:hidden">Carregando…</div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div id="actionBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap scroll-smooth -mx-1 px-1 overscroll-x-contain">
             <!-- Search: icon-only -> expands -->
-            <div id="searchWrap" class="search-collapsed bg-white border border-oly-border shadow-sm flex items-center gap-2 px-2 py-2">
+            <div id="searchWrap" class="search-collapsed shrink-0 bg-white border border-oly-border shadow-sm flex items-center gap-2 px-2 py-2">
               <button id="btnSearchToggle" class="focus-ring h-9 w-9 rounded-full hover:bg-oly-bg" title="Buscar">
                 <i class="fa-solid fa-magnifying-glass text-oly-blue"></i>
               </button>
@@ -210,6 +224,19 @@
               <span id="btnFavsText" class="hidden sm:inline">Favoritos</span>
               <span id="favCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
+                <!-- ✅ Ações de Favoritos (aparecem somente no modo favoritos) -->
+                <div id="favsActions" class="hidden items-center gap-2">
+                  <button id="btnFavsSelect" class="h-10 px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-sm font-extrabold" title="Selecionar para remover">
+                    <i class="fa-regular fa-square-check mr-2 text-oly-blue"></i>Selecionar
+                  </button>
+                  <button id="btnFavsRemoveSelected" class="hidden h-10 px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-sm font-extrabold" title="Remover selecionados">
+                    <i class="fa-solid fa-trash-can mr-2 text-oly-blue"></i>Remover
+                  </button>
+                  <button id="btnFavsClear" class="h-10 px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-sm font-extrabold" title="Limpar todos os favoritos">
+                    <i class="fa-solid fa-broom mr-2 text-oly-blue"></i>Limpar
+                  </button>
+                </div>
+
 
             <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-4 py-2 text-sm font-semibold hover:bg-oly-bg" title="Sacola">
               <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
@@ -321,14 +348,14 @@
             </h2>
             <p class="mt-2 text-oly-muted leading-relaxed">
               Estrutura esperada:
-              <span class="font-mono">/index.html</span> · <span class="font-mono">/Produtos.xlsx</span> · <span class="font-mono">/Catalogo/*.png</span>
+              <span class="font-mono">/index.html</span> · <span class="font-mono">/Produtos.xlsx</span> · <span class="font-mono">/imagens_olympikus/*.png</span>
             </p>
 
             <div id="loadHint" class="mt-4 rounded-2xl border border-oly-border bg-oly-bg p-4 text-sm">
               <div class="font-bold">Se não carregar:</div>
               <ul class="mt-1 list-disc pl-5 text-oly-muted">
                 <li>Confirme o nome <b>Produtos.xlsx</b> (exato).</li>
-                <li>Confirme a pasta <b>Catalogo</b>.</li>
+                <li>Confirme a pasta <b>imagens_olympikus</b>.</li>
                 <li>Clique em <b>Atualizar</b> no topo.</li>
               </ul>
             </div>
@@ -392,7 +419,7 @@
           <div class="p-4 sm:p-6 border-b border-oly-border flex items-center justify-between">
             <div class="min-w-0">
               <div class="text-xs text-oly-muted">Detalhes do produto</div>
-              <div id="pmTitle" class="truncate text-lg sm:text-xl font-extrabold">—</div>
+              <div id="pmTitle" class="truncate text-base md:text-xl font-extrabold hidden md:block">—</div>
             </div>
             <div class="flex items-center gap-2">
               <!-- ✅ Favoritar no modal (por cor/variante) -->
@@ -438,28 +465,23 @@
 
                   <div class="mt-3 pm-meta-row">
                     <!-- Gender icon -->
-                    <div class="h-12 w-12 rounded-full bg-white border border-oly-border flex items-center justify-center" title="Gênero">
+                    <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-oly-border flex items-center justify-center" title="Gênero">
                       <i id="pmGenderIcon" class="fa-solid fa-user text-oly-blue"></i>
                     </div>
 
                     <div class="flex-1 min-w-0">
                       <div class="text-xs text-oly-muted font-bold">Preço</div>
-                      <div id="pmPrecoMain" class="truncate text-2xl font-extrabold tracking-tight">—</div>
+                      <div id="pmPrecoMain" class="whitespace-nowrap text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight leading-tight tabular-nums">—</div>
                     </div>
 
                     <div class="min-w-0">
                       <div class="text-xs text-oly-muted font-bold">Cor</div>
-                      <div class="mt-1 inline-flex items-center gap-2 rounded-full bg-white border border-oly-border px-3 py-2 text-sm font-extrabold">
+                      <div class="mt-1 inline-flex items-center gap-2 rounded-full bg-white border border-oly-border px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold max-w-full flex-wrap">
                         <i class="fa-solid fa-palette text-oly-blue"></i>
                         <span id="pmCorMain">—</span>
                       </div>
                       <span class="hidden"><span id="pmCorCodigoBadge">—</span></span>
                     </div>
-                  </div>
-
-                  <!-- Miniaturas (cores) abaixo da imagem principal -->
-                  <div id="pmThumbsWrap" class="hidden mt-4">
-                    <div id="pmThumbs" class="flex gap-2 overflow-x-auto no-scrollbar"></div>
                   </div>
                 </div>
                 </div>
@@ -520,7 +542,7 @@
             </button>
           </div>
 
-          <div class="p-4 sm:p-6 overflow-y-auto no-scrollbar" id="pmScroll">
+          <div class="p-4 sm:p-6 overflow-y-auto no-scrollbar" id="cartScroll">
             <div id="cartEmpty" class="hidden rounded-3xl border border-oly-border bg-oly-bg p-8 text-center">
               <div class="mx-auto h-12 w-12 rounded-2xl bg-oly-blue/10 flex items-center justify-center">
                 <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
@@ -543,6 +565,23 @@
 
               <div class="lg:col-span-1">
                 <div class="rounded-3xl border border-oly-border bg-oly-bg p-4">
+                   <div class="font-extrabold">Resumo</div>
+                   <div class="mt-3 rounded-2xl border border-oly-border bg-white p-4">
+                     <div>
+                       <div class="text-xs font-bold text-oly-muted">Total de pares</div>
+                       <div id="cartTotalQty" class="mt-1 text-2xl font-extrabold">0</div>
+                     </div>
+                     <div class="mt-4 space-y-2 text-sm">
+                       <div id="cartRowMasc" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Masculino</span><span id="cartQtyMasc" class="font-extrabold">0</span></div>
+                       <div id="cartRowFem" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Feminino</span><span id="cartQtyFem" class="font-extrabold">0</span></div>
+                       <div id="cartRowInf" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Infantil</span><span id="cartQtyInf" class="font-extrabold">0</span></div>
+                       <div id="cartRowAcess" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Acessórios</span><span id="cartQtyAcess" class="font-extrabold">0</span></div>
+                       <div id="cartRowVest" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Vestuário</span><span id="cartQtyVest" class="font-extrabold">0</span></div>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div class="mt-4 rounded-3xl border border-oly-border bg-oly-bg p-4">
                   <div class="font-extrabold">Dados (opcional)</div>
                   <div class="mt-3 space-y-3">
                     <div>
@@ -632,11 +671,27 @@
   </div>
 
 <script>
-const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./Catalogo/", cacheBustOnRefresh: true };
+const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_olympikus/", cacheBustOnRefresh: true };
+
+// ===== Namespacing de LocalStorage por projeto =====
+const STORAGE_NS = (location.pathname || "/").replace(/\/$/, ""); // ex: /Catalogo-Olympikus_2.0
+const CACHE_VERSION = "v2"; // incrementa para invalidar caches antigos
+function lsKey(k){ return `${STORAGE_NS}:${CACHE_VERSION}:${k}`; }
+
+function clearAllLocalState(){
+  try{
+    localStorage.removeItem(lsKey("cart"));
+    localStorage.removeItem(lsKey("favorites"));
+    localStorage.removeItem(lsKey("productsCache"));
+  }catch(e){}
+}
+
+
 const STORAGE_KEYS = {
   cart: "olympikus_cart_v5",
   customer: "olympikus_customer_v1",
-  favorites: "olympikus_favs_v1"
+  favorites: "olympikus_favs_v1",
+  productsCache: "olympikus_products_cache_v1"
 };
 const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "V&A":"VESTUÁRIO" };
 
@@ -653,7 +708,9 @@ const state = {
   cardQty: new Map(), // key -> qty manual for card
   cardAddStatus: new Map(), // key -> 'idle' | 'pending' | 'added'
   cardAdded: new Set(), // key -> already added (green) for cart only
-  favorites: new Set(), // variant keys
+  favorites: new Set(),
+  favsSelectMode: false,
+  favsSelected: new Set(), // variant keys
 };
 
 const $ = (id)=>document.getElementById(id);
@@ -745,6 +802,33 @@ function loadCustomerFromStorage(){
   }catch(e){}
 }
 
+/** ✅ Cache do catálogo (JSON) - acelera carregamento e dá fallback se o XLSX falhar */
+const PRODUCTS_CACHE_CONFIG = { enabled: true, maxAgeHours: 24 };
+
+function saveProductsCache(rows){
+  if(!PRODUCTS_CACHE_CONFIG.enabled) return;
+  try{
+    const payload = { ts: Date.now(), rows };
+    localStorage.setItem(STORAGE_KEYS.productsCache, JSON.stringify(payload));
+  }catch(e){}
+}
+function loadProductsCache(){
+  if(!PRODUCTS_CACHE_CONFIG.enabled) return null;
+  try{
+    const raw = localStorage.getItem(STORAGE_KEYS.productsCache);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || !Array.isArray(obj.rows) || !obj.ts) return null;
+    const ageMs = Date.now() - Number(obj.ts);
+    const maxMs = PRODUCTS_CACHE_CONFIG.maxAgeHours * 3600 * 1000;
+    if(ageMs > maxMs) return null;
+    return obj.rows;
+  }catch(e){
+    return null;
+  }
+}
+
+
 /** ✅ Favoritos */
 function saveFavsToStorage(){
   localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(Array.from(state.favorites)));
@@ -760,6 +844,20 @@ function loadFavsFromStorage(){
 }
 function isFavoriteKey(key){ return state.favorites.has(key); }
 function updateFavHeaderUI(){
+  // ✅ mostra ações extras somente no modo favoritos
+  if($("favsActions")){
+    $("favsActions").classList.toggle("hidden", state.viewMode !== "favs");
+    $("favsActions").classList.toggle("flex", state.viewMode === "favs");
+  }
+  if($("btnFavsRemoveSelected")){
+    $("btnFavsRemoveSelected").classList.toggle("hidden", !(state.viewMode==="favs" && state.favsSelectMode));
+  }
+  if($("btnFavsSelect")){
+    $("btnFavsSelect").innerHTML = state.favsSelectMode
+      ? `<i class="fa-solid fa-xmark mr-2 text-oly-blue"></i>Cancelar`
+      : `<i class="fa-regular fa-square-check mr-2 text-oly-blue"></i>Selecionar`;
+  }
+
   const n = state.favorites.size;
   const badge = $("favCountBadge");
   badge.textContent = String(n);
@@ -834,6 +932,20 @@ async function loadCatalog({ cacheBust=false } = {}){
     $("grid").classList.add("hidden");
     setHeaderStatus("Carregando…");
 
+     // ✅ Tenta usar cache JSON (se não for refresh forçado)
+     if(!cacheBust){
+       const cachedRows = loadProductsCache();
+       if(Array.isArray(cachedRows) && cachedRows.length){
+         state.productsRaw = cachedRows;
+         setHeaderStatus("Catálogo pronto (cache)");
+         buildFilterOptions();
+         refreshView(true);
+         $("loadingState").classList.add("hidden");
+         $("grid").classList.remove("hidden");
+         return;
+       }
+     }
+
     const url = cacheBust ? `${DATA_CONFIG.xlsxPath}?v=${Date.now()}` : DATA_CONFIG.xlsxPath;
     const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -857,6 +969,7 @@ async function loadCatalog({ cacheBust=false } = {}){
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
+     saveProductsCache(state.productsRaw);
     setHeaderStatus("Catálogo pronto");
 
     buildFilterOptions();
@@ -867,6 +980,17 @@ async function loadCatalog({ cacheBust=false } = {}){
   }catch(err){
     console.error(err);
     setHeaderStatus("Erro ao carregar");
+     // ✅ Fallback: tenta cache mesmo com erro de XLSX
+     const cachedRows = loadProductsCache();
+     if(Array.isArray(cachedRows) && cachedRows.length){
+       state.productsRaw = cachedRows;
+       setHeaderStatus("Catálogo pronto (cache)");
+       buildFilterOptions();
+       refreshView(true);
+       $("loadingState").classList.add("hidden");
+       $("grid").classList.remove("hidden");
+       return;
+     }
     $("loadHint").innerHTML = `
       <div class="font-bold text-red-700">Falha ao carregar Produtos.xlsx</div>
       <div class="mt-2 text-sm text-oly-muted">Verifique nome do arquivo e a pasta <b>Catalogo</b>.</div>
@@ -978,6 +1102,41 @@ $("btnFavs").addEventListener("click", ()=>{
 
 });
 
+// ✅ Favoritos: limpar tudo / selecionar / remover selecionados
+$("btnFavsClear")?.addEventListener("click", ()=>{
+  if(state.favorites.size === 0){ toast("Nenhum favorito"); return; }
+  if(!confirm("Limpar TODOS os favoritos?")) return;
+  state.favorites.clear();
+  state.favsSelected.clear();
+  state.favsSelectMode = false;
+  saveFavsToStorage();
+  updateFavHeaderUI();
+  refreshView(true);
+  toast("Favoritos limpos");
+});
+
+$("btnFavsSelect")?.addEventListener("click", ()=>{
+  if(state.viewMode !== "favs"){ toast("Abra os favoritos primeiro"); return; }
+  state.favsSelectMode = !state.favsSelectMode;
+  if(!state.favsSelectMode) state.favsSelected.clear();
+  updateFavHeaderUI();
+  refreshView(false);
+});
+
+$("btnFavsRemoveSelected")?.addEventListener("click", ()=>{
+  if(state.viewMode !== "favs" || !state.favsSelectMode) return;
+  if(state.favsSelected.size === 0){ toast("Selecione pelo menos 1 item"); return; }
+  if(!confirm(`Remover ${state.favsSelected.size} favorito(s) selecionado(s)?`)) return;
+  for(const k of state.favsSelected) state.favorites.delete(k);
+  state.favsSelected.clear();
+  state.favsSelectMode = false;
+  saveFavsToStorage();
+  updateFavHeaderUI();
+  refreshView(true);
+  toast("Removidos");
+});
+
+
 /** View + paging */
 $("btnLoadMore").addEventListener("click", ()=>{
   state.pagination.shown = Math.min(state.pagination.shown + state.pagination.pageSize, state.productsView.length);
@@ -1046,13 +1205,233 @@ function refreshView(resetPaging){
   $("btnLoadMore").classList.toggle("hidden", !(state.pagination.shown < state.productsView.length) || state.productsView.length===0);
 }
 
-function resolveImageSrc(imagemValue){
-  const raw = String(imagemValue || "").trim();
-  if(!raw) return "";
-  const hasExt = /\.[a-z0-9]+$/i.test(raw);
-  const filename = hasExt ? raw : `${raw}.png`;
-  return `${DATA_CONFIG.imagesBasePath}${encodeURIComponent(filename)}`;
+
+/** ✅ Multi-ângulo no CARD (swipe) */
+
+
+// ===== Helpers de imagem (robustos) =====
+const IMG_EXTS = [".jpg",".jpeg",".png",".webp",".JPG",".JPEG",".PNG",".WEBP"];
+
+function normalizeImageBase(name){
+  // Converte para padrão de arquivo: 43341472_ARTMRF (sem extensão)
+  return String(name||"")
+    .trim()
+    .replace(/\.(png|jpg|jpeg|webp)$/i, "")     // remove extensão se vier
+    .replace(/\s+/g, "_")                      // espaços -> _
+    .replace(/[\/\\]+/g, "_")                  // / ou \ -> _
+    .replace(/[^A-Za-z0-9_\-]+/g, "_")         // demais chars -> _
+    .replace(/_+/g, "_")                       // colapsa __
+    .replace(/^_+|_+$/g, "");                  // tira _ nas pontas
 }
+
+function buildAngleSrcs(imgBaseName){
+  // imgBaseName vem do XLSX (coluna "Imagem") e geralmente NÃO tem extensão.
+  // Exemplos reais:
+  //  - 43210417_ARELLS
+  //  - 43210417_ARELLS__02 (miniaturas)
+  //  - 43369229_MARITM__02 (miniaturas)
+  // Precisamos suportar: base, base__02..__04 e (fallback) base_02.._04
+  const basePath = "./imagens_olympikus/";
+
+  const clean = String(imgBaseName || "").trim();
+  if(!clean) return [];
+
+  // tenta também uma variante trocando espaços <-> underscore (caso o XLSX venha inconsistente)
+  const stemVariants = Array.from(new Set([
+    clean,
+    clean.replace(/\s+/g, "_"),
+    clean.replace(/_+/g, "_"), // normaliza múltiplos underscores
+  ])).filter(Boolean);
+
+  // ângulos: principal + 3 variações
+  const angleSuffixes = ["", "__02", "__03", "__04", "_02", "_03", "_04"];
+
+  // monta grupos por ângulo "lógico" (0..3), cada grupo tem várias tentativas (nome+ext)
+  const groups = [[],[],[],[]];
+
+  function pushCandidates(groupIndex, fileStem){
+    // encodeURI mantém "/" e escapa espaços (se existirem)
+    // encodeURIComponent escaparia "_" também, então não usamos aqui.
+    IMG_EXTS.forEach(ext => {
+      groups[groupIndex].push(encodeURI(`${basePath}${fileStem}${ext}`));
+    });
+  }
+
+  stemVariants.forEach(stem=>{
+    // se o stem já termina em __02 etc, tratamos como principal e ainda assim montamos tudo
+    const base = stem.replace(/(__0[2-4]|_0[2-4])$/i, "");
+
+    // principal
+    pushCandidates(0, base);
+
+    // miniaturas com __02..__04 (padrão principal do seu folder)
+    pushCandidates(1, `${base}__02`);
+    pushCandidates(2, `${base}__03`);
+    pushCandidates(3, `${base}__04`);
+
+    // fallback (alguns lotes podem estar com _02.._04)
+    pushCandidates(1, `${base}_02`);
+    pushCandidates(2, `${base}_03`);
+    pushCandidates(3, `${base}_04`);
+  });
+
+  // remove duplicados dentro de cada grupo
+  return groups.map(g => Array.from(new Set(g)));
+}
+
+function resolveImageSrc(imgBaseName){
+  // retorna o primeiro candidato do primeiro grupo (o onerror faz o fallback)
+  const groups = buildAngleSrcs(imgBaseName);
+  return (groups[0] && groups[0][0]) ? groups[0][0] : "";
+}
+function setupCardCarousel(cardEl){
+  const img = cardEl.querySelector("[data-cardimg]");
+  const wrap = cardEl.querySelector("[data-cardimgwrap]");
+  const dots = cardEl.querySelector("[data-carddots]");
+  const thumbs = cardEl.querySelector("[data-cardthumbs]");
+  if(!img || !wrap) return;
+
+  // data-angle-srcs pode vir como:
+  // 1) [["a1.jpg","a1.png"],["a2.jpg"...],...]
+  // 2) ["a1.jpg","a1.png", ...] (legado)
+  let groups = [];
+  try{
+    const parsed = JSON.parse(cardEl.dataset.angleSrcs || "[]");
+    if(Array.isArray(parsed) && parsed.length){
+      if(Array.isArray(parsed[0])) groups = parsed;
+      else groups = [parsed]; // legado: tudo vira um único grupo
+    }
+  }catch(e){ groups = []; }
+
+  // normaliza para 4 grupos
+  if(groups.length === 1){
+    // se veio legado, tentamos reconstruir em 4 grupos dividindo por "blocos" (melhor que nada)
+    // mas no nosso buildAngleSrcs já vem em 4 grupos.
+    groups = [groups[0],[],[],[]];
+  }
+  while(groups.length < 4) groups.push([]);
+  groups = groups.slice(0,4).map(g => Array.from(new Set((g||[]).filter(Boolean))));
+
+  // se não tem nada, esconde dots/thumbs e sai
+  const hasAny = groups.some(g => g.length);
+  if(!hasAny){
+    if(dots) dots.classList.add("hidden");
+    if(thumbs) thumbs.classList.add("hidden");
+    return;
+  }
+
+  let index = 0; // 0..3
+
+  function setImgWithFallback(targetImg, urls){
+    // tenta sequencialmente; ao falhar, vai para o próximo
+    const list = (urls||[]).filter(Boolean);
+    if(!list.length){
+      targetImg.removeAttribute("src");
+      return;
+    }
+    let i = 0;
+    const trySet = ()=>{
+      targetImg.dataset.tryIndex = String(i);
+      targetImg.src = list[i];
+    };
+    targetImg.onerror = ()=>{
+      i += 1;
+      if(i < list.length) trySet();
+      else{
+        // esgota, cai para fallback visual
+        try{ targetImg.style.display = "none"; }catch(e){}
+        const fb = targetImg.parentElement && targetImg.parentElement.querySelector(".imgFallback");
+        if(fb) fb.style.display = "flex";
+      }
+    };
+    // reset fallback visual
+    try{ targetImg.style.display = ""; }catch(e){}
+    const fb = targetImg.parentElement && targetImg.parentElement.querySelector(".imgFallback");
+    if(fb) fb.style.display = "none";
+    trySet();
+  }
+
+  const availableIndexes = [0,1,2,3].filter(i => (groups[i] && groups[i].length));
+
+  function renderDots(){
+    if(!dots) return;
+    if(availableIndexes.length <= 1){
+      dots.classList.add("hidden");
+      return;
+    }
+    dots.classList.remove("hidden");
+    dots.innerHTML = availableIndexes.map((i)=>(
+      `<span class="${i===index?'bg-black':'bg-black/20'} inline-block h-2 w-2 rounded-full"></span>`
+    )).join("");
+  }
+
+  function renderThumbs(){
+    if(!thumbs) return;
+    if(availableIndexes.length <= 1){
+      thumbs.classList.add("hidden");
+      return;
+    }
+    thumbs.classList.remove("hidden");
+    thumbs.innerHTML = availableIndexes.map((i)=>{
+      // miniaturas: usa o primeiro candidato do grupo e faz fallback interno também via onerror
+      const thumbId = `t_${cardEl.dataset.cardKey}_${i}`;
+      return `
+        <button type="button" data-thumb-index="${i}" class="thumbBtn border ${i===index?'border-oly-accent':'border-oly-border'} rounded-lg overflow-hidden h-12 w-12 bg-white flex items-center justify-center" aria-label="Miniatura ${i+1}">
+          <img id="${thumbId}" alt="miniatura" class="h-full w-full object-contain" />
+        </button>
+      `;
+    }).join("");
+
+    // aplica src + fallback nos thumbs
+    availableIndexes.forEach((i)=>{
+      const btn = thumbs.querySelector(`[data-thumb-index="${i}"]`);
+      const im = btn && btn.querySelector("img");
+      if(im) setImgWithFallback(im, groups[i]);
+    });
+
+    thumbs.querySelectorAll("[data-thumb-index]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const i = parseInt(btn.getAttribute("data-thumb-index"),10);
+        if(!Number.isFinite(i)) return;
+        index = i;
+        update();
+      });
+    });
+  }
+
+  function update(){
+    // troca imagem principal com fallback (tenta jpg/png/etc e também __02 vs _02)
+    setImgWithFallback(img, groups[index] || groups[0] || []);
+    renderDots();
+    renderThumbs();
+    if(thumbs){
+      thumbs.querySelectorAll(".thumbBtn").forEach(b=>{
+        const i = parseInt(b.getAttribute("data-thumb-index"),10);
+        b.classList.toggle("border-oly-accent", i===index);
+        b.classList.toggle("border-oly-border", i!==index);
+      });
+    }
+  }
+
+  // swipe no wrapper
+  let startX = 0;
+  wrap.addEventListener("pointerdown", (e)=>{ startX = e.clientX; });
+  wrap.addEventListener("pointerup", (e)=>{
+    const dx = e.clientX - startX;
+    if(Math.abs(dx) < 30) return;
+    if(availableIndexes.length <= 1) return;
+    const currPos = availableIndexes.indexOf(index);
+    if(currPos === -1) return;
+    const nextPos = dx < 0 ? currPos + 1 : currPos - 1;
+    const clamped = Math.max(0, Math.min(availableIndexes.length-1, nextPos));
+    index = availableIndexes[clamped];
+    update();
+  });
+
+  update();
+}
+
+
 
 /** Key for cart item (variant) */
 function cartKeyFor(item){
@@ -1277,7 +1656,108 @@ function renderCards(){
 
   for(const v of slice){
     const card = document.createElement("article");
-    card.className = "rounded-3xl border border-oly-border bg-white shadow-card hover:shadow-lift transition-shadow overflow-hidden";
+
+    // ✅ Favoritos: lista compacta (como print) + seleção para remover
+    if(state.viewMode === "favs"){
+      card.className = "rounded-3xl border border-oly-border bg-white shadow-card overflow-hidden";
+      card.tabIndex = 0;
+
+      // Decide conteúdo baseado em group/item
+      const isGroup = (v._type === "group");
+      const base = isGroup ? (v.items?.[0] || {}) : v;
+      const imgSrc = resolveImageSrc(base?.imagem);
+
+      const keyForSelect = (isGroup ? null : cartKeyFor(base));
+      const colorLabel = isGroup
+        ? (v.colorCount > 1 ? `${v.colorCount} cores` : (v.colors?.[0] || base.cor || "—"))
+        : (base.cor || "—");
+
+      const colorCode = isGroup ? (base.corCodigo || "") : (base.corCodigo || "");
+      const code = String(base.codigo || v.codigo || "—");
+
+      const checked = keyForSelect && state.favsSelected.has(keyForSelect);
+
+      card.innerHTML = `
+        <div class="flex items-center gap-3 p-3 sm:p-4">
+          <div class="h-16 w-20 rounded-2xl border border-oly-border bg-oly-bg flex items-center justify-center overflow-hidden shrink-0">
+            ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||v.produto||"Produto")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">` : `<div class="text-xs text-oly-muted font-bold">SEM IMG</div>`}
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="font-extrabold leading-tight truncate">${escapeHtml(v.produto || base.produto || "—")}</div>
+                <div class="mt-1 flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center gap-2 rounded-full bg-oly-bg border border-oly-border px-3 py-1 text-xs font-extrabold">
+                    <i class="fa-solid fa-palette text-oly-blue"></i>${escapeHtml(colorLabel)}${colorCode ? ` <span class="opacity-70">(${escapeHtml(colorCode)})</span>` : ""}
+                  </span>
+                  <span class="inline-flex items-center gap-2 rounded-full bg-oly-bg border border-oly-border px-3 py-1 text-xs font-extrabold">
+                    <i class="fa-solid fa-hashtag text-oly-blue"></i>${escapeHtml(code)}
+                  </span>
+                </div>
+              </div>
+
+              ${state.favsSelectMode && !isGroup ? `
+                <label class="inline-flex items-center justify-center h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg cursor-pointer" title="Selecionar">
+                  <input type="checkbox" class="hidden" ${checked ? "checked" : ""} data-favkey="${escapeHtml(keyForSelect)}">
+                  <i class="${checked ? "fa-solid text-green-600" : "fa-regular text-oly-blue"} fa-square-check"></i>
+                </label>
+              ` : ``}
+            </div>
+
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <button class="btnDetails h-10 px-4 rounded-full bg-oly-blue text-white font-extrabold hover:opacity-95 focus-ring">
+                Detalhes
+              </button>
+              <button class="btnUnfav h-10 px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg font-extrabold text-sm whitespace-nowrap focus-ring">
+                <i class="fa-solid fa-heart-crack mr-2 text-oly-blue"></i>Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+    // ✅ Multi-ângulo no card (base na coluna "Imagem")
+    card.dataset.angleSrcs = JSON.stringify(buildAngleSrcs(v.imagem));
+
+      // eventos
+      card.querySelector(".btnDetails")?.addEventListener("click", ()=> openProductModal({ item: base, group: isGroup ? v : null }));
+      card.querySelector(".btnUnfav")?.addEventListener("click", ()=>{
+        if(isGroup){
+          // remove todos os favoritos das variantes desse grupo
+          for(const it of (v.items || [])){
+            state.favorites.delete(cartKeyFor(it));
+          }
+        }else{
+          state.favorites.delete(cartKeyFor(base));
+        }
+        saveFavsToStorage();
+        updateFavHeaderUI();
+        refreshView(true);
+        toast("Removido");
+      });
+
+      // seleção
+      card.querySelector("input[type='checkbox']")?.addEventListener("change", (e)=>{
+        const k = e.target?.dataset?.favkey;
+        if(!k) return;
+        const icon = e.target.closest("label")?.querySelector("i");
+        if(e.target.checked){
+          state.favsSelected.add(k);
+          if(icon){ icon.classList.remove("fa-regular","text-oly-blue"); icon.classList.add("fa-solid","text-green-600"); }
+        }else{
+          state.favsSelected.delete(k);
+          if(icon){ icon.classList.remove("fa-solid","text-green-600"); icon.classList.add("fa-regular","text-oly-blue"); }
+        }
+        updateFavHeaderUI();
+      });
+
+      wrap.appendChild(card);
+    setupCardCarousel(card);
+      continue;
+    }
+
+    card.className = "$1";
     card.tabIndex = 0;
 
     if(v._type === "group"){
@@ -1285,18 +1765,22 @@ function renderCards(){
       const imgSrc = resolveImageSrc(first?.imagem);
 
       card.innerHTML = `
-        <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
+        <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
             <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
     <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
   </button>
 
-  <img alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
+  <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
             <div class="text-xs font-bold">sem imagem</div>
           </div>
+          <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2"></div>
         </div>
+
+        <div data-cardthumbs="1" class="px-4 pt-3 flex items-center justify-center gap-2"></div>
+
 
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">
@@ -1343,8 +1827,8 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
       const fav = isFavoriteKey(key);
 
       card.innerHTML = `
-        <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-          <img alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
+        <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
+          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
@@ -1402,6 +1886,9 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
           </div>
         </div>
       `;
+
+    // ✅ Multi-ângulo no card (base na coluna "Imagem")
+    card.dataset.angleSrcs = JSON.stringify(buildAngleSrcs(v.imagem));
 
       const btnFav = card.querySelector(".btnFav");
       const imgHit = card.querySelector(".imgHit");
@@ -1517,7 +2004,8 @@ btnAdd.addEventListener("click", ()=>{
       updateAddButtonUI(btnAdd, key);
     }
 
-    wrap.appendChild(card);
+    setupCardCarousel(card);
+wrap.appendChild(card);
   }
 }
 
@@ -1821,16 +2309,49 @@ $("btnClearCart").addEventListener("click", ()=>{
 
 function cartTotals(){
   let items = 0;
-  for(const it of state.cart.values()) items += it.qty;
-  return { items };
+  const by = { masc:0, fem:0, inf:0, acess:0, vest:0 };
+  const norm = (s)=> String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  for(const it of state.cart.values()){
+    const q = (Number(it.qty)||0);
+    items += q;
+
+    const g = norm(it.genero);
+    const seg = norm(it.segmento);
+    const cat = norm(it.categoria);
+
+    // prioridade: genero explícito
+    if(g.includes("masc") || g.includes("homem")) by.masc += q;
+    else if(g.includes("fem") || g.includes("mulher")) by.fem += q;
+    else if(g.includes("inf") || g.includes("kids") || g.includes("crianca")) by.inf += q;
+    else {
+      // fallback: segmento/categoria (acessórios/vestuário)
+      if(seg.includes("acessor") || cat.includes("acessor")) by.acess += q;
+      else if(seg.includes("vest") || cat.includes("vest") || seg.includes("roup") || cat.includes("roup")) by.vest += q;
+    }
+  }
+  return { items, by };
 }
 function renderCartUI(){
   syncCardAddStatusFromCart();
   syncCardAddStatusFromCart();
   syncCardAddStatusFromCart();
-  const { items } = cartTotals();
+  const { items, by } = cartTotals();
 
-  const badge = $("cartCountBadge");
+  // ✅ Atualiza resumo (se existir)
+  if($("cartTotalQty")) $("cartTotalQty").textContent = String(items);
+
+  const setRow = (rowId, valId, val)=>{
+    const row = $(rowId); const el = $(valId);
+    if(!row || !el) return;
+    row.classList.toggle("hidden", !(val>0));
+    el.textContent = String(val||0);
+  };
+  setRow("cartRowMasc","cartQtyMasc",by.masc);
+  setRow("cartRowFem","cartQtyFem",by.fem);
+  setRow("cartRowInf","cartQtyInf",by.inf);
+  setRow("cartRowAcess","cartQtyAcess",by.acess);
+  setRow("cartRowVest","cartQtyVest",by.vest);
+const badge = $("cartCountBadge");
   badge.textContent = String(items);
   badge.classList.toggle("hidden", items === 0);
 
@@ -1855,7 +2376,7 @@ function renderCartUI(){
     row.innerHTML = `
       <div class="flex gap-3">
         <div class="h-20 w-20 cursor-pointer rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center">
-          ${it.imgSrc ? `<img src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">`
+          ${it.imgSrc ? `<img loading="lazy" decoding="async" src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">`
             : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
         </div>
         <div class="min-w-0 flex-1">
@@ -2303,3 +2824,4 @@ document.addEventListener("input", (e)=>{
 </script>
 </body>
 </html>
+
