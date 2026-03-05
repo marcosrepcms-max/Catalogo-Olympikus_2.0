@@ -355,7 +355,7 @@
               <div class="font-bold">Se não carregar:</div>
               <ul class="mt-1 list-disc pl-5 text-oly-muted">
                 <li>Confirme o nome <b>Produtos.xlsx</b> (exato).</li>
-                <li>Confirme a pasta <b>imagens_olympikus</b>.</li>
+                <li>Confirme a pasta <b>Catalogo</b>.</li>
                 <li>Clique em <b>Atualizar</b> no topo.</li>
               </ul>
             </div>
@@ -978,7 +978,7 @@ async function loadCatalog({ cacheBust=false } = {}){
      }
     $("loadHint").innerHTML = `
       <div class="font-bold text-red-700">Falha ao carregar Produtos.xlsx</div>
-      <div class="mt-2 text-sm text-oly-muted">Verifique nome do arquivo e a pasta <b>imagens_olympikus</b>.</div>
+      <div class="mt-2 text-sm text-oly-muted">Verifique nome do arquivo e a pasta <b>Catalogo</b>.</div>
     `;
   }
 }
@@ -1197,6 +1197,92 @@ function resolveImageSrc(imagemValue){
   const filename = hasExt ? raw : `${raw}.png`;
   return `${DATA_CONFIG.imagesBasePath}${encodeURIComponent(filename)}`;
 }
+
+/** ✅ Multi-ângulo no CARD (swipe) */
+function buildAngleSrcs(imgBaseName){
+  const base = String(imgBaseName||"").trim();
+  if(!base) return [];
+  const names = [base, `${base}_02`, `${base}_03`, `${base}_04`];
+  // monta as URLs respeitando imagesBasePath
+  const basePath = (DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./";
+  return names.map(n => `${basePath}${n}.png`);
+}
+
+function setupCardCarousel(cardEl){
+  const img = cardEl.querySelector("[data-cardimg]");
+  const wrap = cardEl.querySelector("[data-cardimgwrap]");
+  const dots = cardEl.querySelector("[data-carddots]");
+  if(!img || !wrap) return;
+
+  let srcs = [];
+  try{ srcs = JSON.parse(cardEl.dataset.angleSrcs || "[]"); }catch(e){ srcs = []; }
+  if(!Array.isArray(srcs) || srcs.length === 0) return;
+  srcs = [...new Set(srcs)].filter(Boolean);
+
+  if(srcs.length <= 1){
+    if(dots) dots.classList.add("hidden");
+    return;
+  }
+
+  let index = 0;
+
+  const renderDots = ()=>{
+    if(!dots) return;
+    dots.innerHTML = srcs.map((_,i)=>`<span class="${i===index?'bg-black':'bg-black/20'} inline-block h-2 w-2 rounded-full"></span>`).join("");
+  };
+  const setIndex = (i)=>{
+    index = (i + srcs.length) % srcs.length;
+    img.src = srcs[index];
+    renderDots();
+  };
+
+  img.addEventListener("error", ()=>{
+    // remove src quebrada e tenta próxima
+    const bad = srcs[index];
+    srcs = srcs.filter(s=>s!==bad);
+    if(srcs.length <= 1){
+      if(dots) dots.classList.add("hidden");
+      return;
+    }
+    index = 0;
+    img.src = srcs[index];
+    renderDots();
+  });
+
+  renderDots();
+
+  const THRESH = 35;
+  let startX = null;
+  let dragging = false;
+
+  const onStart = (clientX)=>{ startX = clientX; dragging = true; };
+  const onEnd = (clientX)=>{
+    if(!dragging || startX === null) return;
+    const dx = clientX - startX;
+    dragging = false; startX = null;
+    if(Math.abs(dx) < THRESH) return;
+    if(dx < 0) setIndex(index + 1);
+    else setIndex(index - 1);
+  };
+
+  wrap.addEventListener("touchstart", (e)=>{
+    if(!e.touches || e.touches.length!==1) return;
+    onStart(e.touches[0].clientX);
+  }, { passive: true });
+
+  wrap.addEventListener("touchend", (e)=>{
+    const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+    if(!t) return;
+    onEnd(t.clientX);
+  }, { passive: true });
+
+  wrap.addEventListener("mousedown", (e)=>{ onStart(e.clientX); });
+  window.addEventListener("mouseup", (e)=>{ if(dragging) onEnd(e.clientX); });
+
+  img.draggable = false;
+}
+
+
 
 /** Key for cart item (variant) */
 function cartKeyFor(item){
@@ -1589,8 +1675,8 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
       const fav = isFavoriteKey(key);
 
       card.innerHTML = `
-        <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-          <img loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
+        <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
+          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
