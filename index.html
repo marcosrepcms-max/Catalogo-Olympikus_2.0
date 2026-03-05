@@ -181,7 +181,7 @@
           <!-- Left: logo always, title only on sm+ -->
           <div class="flex items-center gap-3 min-w-0">
             <div class="h-10 w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden">
-              <img id="brandLogo" src="./logo-olympikus.png" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
+              <img id="brandLogo" src="./logo-olympikus.png" onerror=\"this.onerror=null;this.src='logo-olympikus.png.png'\" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
             </div>
             <div class="leading-tight min-w-0 hidden sm:block">
               <div class="text-lg sm:text-xl font-extrabold tracking-tight truncate">Catálogo Olympikus</div>
@@ -1210,7 +1210,24 @@ function refreshView(resetPaging){
 
 
 // ===== Helpers de imagem (robustos) =====
-const IMG_EXTS = [".jpg", ".png", ".jpeg", ".webp"];
+const IMG_EXTS = [".jpg",".jpeg",".png",".webp"];
+
+
+function normalizeImgBaseName(v){
+  if(!v) return "";
+  let s = String(v).trim();
+  // remove leading path if user put folder/filename
+  s = s.split("/").pop();
+  // drop extension if present
+  s = s.replace(/\.(png|jpg|jpeg|webp)$/i, "");
+  // normalize separators -> underscores
+  s = s.replace(/[\s\-]+/g, "_");
+  // collapse underscores
+  s = s.replace(/_+/g, "_");
+  return s;
+}
+
+
 
 function normalizeImageBase(name){
   // Converte para padrão de arquivo: 43341472_ARTMRF (sem extensão)
@@ -1225,16 +1242,14 @@ function normalizeImageBase(name){
 }
 
 function buildAngleSrcs(imgBaseName){
-  const base = normalizeImageBase(imgBaseName);
+  const base = normalizeImgBaseName(imgBaseName);
   if(!base) return [];
+  const basePath = DATA_CONFIG.imagesBasePath || "./imagens_olympikus/";
   const angleNames = [base, `${base}_02`, `${base}_03`, `${base}_04`];
-  const basePath = (DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./";
-
-  // gera candidatos: base.jpg, base.png, ... depois base_02.jpg, base_02.png, ...
   const out = [];
   angleNames.forEach(n=>{
     IMG_EXTS.forEach(ext=>{
-      out.push(encodeURI(`${basePath}${n}${ext}`));
+      out.push(`${basePath}${n}${ext}`);
     });
   });
   // remove duplicados
@@ -1277,7 +1292,7 @@ function setupCardCarousel(cardEl){
     if(dots) dots.classList.add("hidden");
     thumbs.innerHTML = srcs.map((s,i)=>`
       <button type="button" data-ti="${i}" class="${i===index?'ring-2 ring-oly-blue':'ring-1 ring-oly-border'} rounded-xl overflow-hidden bg-white h-10 w-10 flex items-center justify-center">
-        <img src="${s}" class="h-full w-full object-contain" alt="ângulo ${i+1}" draggable="false"/>
+        <img data-thumbimg="1" src="${s}" class="h-full w-full object-contain" alt="" draggable="false"/>
       </button>
     `).join("");
     // clique troca a imagem principal
@@ -1289,6 +1304,18 @@ function setupCardCarousel(cardEl){
         setIndex(i);
       });
     });
+ 
+    // Remove miniaturas quebradas (evita ícone + texto "ângulo")
+    thumbs.querySelectorAll('img[data-thumbimg="1"]').forEach(imgEl=>{
+      imgEl.addEventListener("error", ()=>{
+        const btn = imgEl.closest("button");
+        if(btn) btn.remove();
+        // se sobrar 0/1, esconde a faixa
+        const left = thumbs.querySelectorAll('button[data-ti]').length;
+        if(left <= 1) thumbs.classList.add("hidden");
+      }, {once:true});
+    });
+
   };
   const setIndex = (i)=>{
     index = (i + srcs.length) % srcs.length;
@@ -1500,7 +1527,7 @@ function addToCart(item, qty, { obs="" } = {}){
       precoFmt,
       qty: qty,
       obs: obs || "",
-      imgSrc: resolveImageSrc(item.imagem),
+      imgSrc: resolveImageSrc(normalizeImgBaseName(item.imagem)),
     });
   }
   saveCartToStorage();
@@ -2010,7 +2037,7 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
   // imagem principal
   const img = $("pmImage");
   const fallback = $("pmImageFallback");
-  const imgSrc = resolveImageSrc(item.imagem);
+  const imgSrc = resolveImageSrc(normalizeImgBaseName(item.imagem));
   if(imgSrc){
     img.src = imgSrc;
     img.classList.remove("hidden");
@@ -2156,7 +2183,7 @@ $("btnAddToCart").addEventListener("click", ()=>{
     merged.genero = item.genero || "";
     merged.segmento = item.segmento || "";
     merged.categoria = item.categoria || "";
-    merged.imgSrc = resolveImageSrc(item.imagem);
+    merged.imgSrc = resolveImageSrc(normalizeImgBaseName(item.imagem));
 
     merged.qty = Math.max(1, Math.min(9999, Number(qty)||1));
     merged.obs = obs || "";
