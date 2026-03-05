@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -169,6 +170,13 @@
       #pmTitle{ display:none !important; }
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
+
+/* miniaturas no card */
+[data-cardthumbs="1"]{display:flex;gap:.5rem;justify-content:center;align-items:center;padding:.6rem .75rem;}
+.thumbBtn{width:42px;height:42px;border-radius:12px;border:2px solid rgba(37,99,235,.25);background:white;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:transform .12s ease,border-color .12s ease;}
+.thumbBtn img{width:100%;height:100%;object-fit:cover;}
+.thumbBtn.active{border-color:rgba(37,99,235,.95);transform:scale(1.03);}
+
 </style>
 </head>
 
@@ -181,7 +189,7 @@
           <!-- Left: logo always, title only on sm+ -->
           <div class="flex items-center gap-3 min-w-0">
             <div class="h-10 w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden">
-              <img id="brandLogo" src="./logo-olympikus.png" onerror=\"this.onerror=null;this.src='logo-olympikus.png.png'\" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
+              <img id="brandLogo" src="./logo-olympikus.png.png" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
             </div>
             <div class="leading-tight min-w-0 hidden sm:block">
               <div class="text-lg sm:text-xl font-extrabold tracking-tight truncate">Catálogo Olympikus</div>
@@ -1210,24 +1218,7 @@ function refreshView(resetPaging){
 
 
 // ===== Helpers de imagem (robustos) =====
-const IMG_EXTS = [".jpg",".jpeg",".png",".webp"];
-
-
-function normalizeImgBaseName(v){
-  if(!v) return "";
-  let s = String(v).trim();
-  // remove leading path if user put folder/filename
-  s = s.split("/").pop();
-  // drop extension if present
-  s = s.replace(/\.(png|jpg|jpeg|webp)$/i, "");
-  // normalize separators -> underscores
-  s = s.replace(/[\s\-]+/g, "_");
-  // collapse underscores
-  s = s.replace(/_+/g, "_");
-  return s;
-}
-
-
+const IMG_EXTS = ['.jpg'];
 
 function normalizeImageBase(name){
   // Converte para padrão de arquivo: 43341472_ARTMRF (sem extensão)
@@ -1242,27 +1233,41 @@ function normalizeImageBase(name){
 }
 
 function buildAngleSrcs(imgBaseName){
-  const base = normalizeImgBaseName(imgBaseName);
+  const base = normalizeImageBase(imgBaseName);
   if(!base) return [];
-  const basePath = DATA_CONFIG.imagesBasePath || "./imagens_olympikus/";
-  const angleNames = [base, `${base}_02`, `${base}_03`, `${base}_04`];
+  const basePath = (DATA_CONFIG.imgFolder || "./imagens_olympikus/").replace(/\/?$/, "/");
+  const angleBases = [base, `${base}_02`, `${base}_03`, `${base}_04`];
+
+  // monta URLs candidatos (ordem importa) - nesta versão usamos .jpg como padrão
   const out = [];
-  angleNames.forEach(n=>{
-    IMG_EXTS.forEach(ext=>{
-      out.push(`${basePath}${n}${ext}`);
-    });
-  });
-  // remove duplicados
+  for(const b of angleBases){
+    for(const ext of IMG_EXTS){
+      const fname = `${b}${ext}`;
+      out.push(basePath + encodeURIComponent(fname));
+    }
+  }
+  // remove duplicados preservando ordem
   return [...new Set(out)];
 }
 
 function resolveImageSrc(imgBaseName){
-  // retorna o primeiro candidato (o onerror vai tentar os próximos)
   const srcs = buildAngleSrcs(imgBaseName);
-  return srcs[0] || "";
+  return srcs[0] || \"\";
 }
 
-function setupCardCarousel(cardEl){
+
+
+
+function canLoadImage(src){
+  return new Promise((resolve)=>{
+    const im = new Image();
+    im.onload = ()=>resolve(true);
+    im.onerror = ()=>resolve(false);
+    im.src = src;
+  });
+}
+
+async function setupCardCarousel(cardEl){
   const img = cardEl.querySelector("[data-cardimg]");
   const wrap = cardEl.querySelector("[data-cardimgwrap]");
   const dots = cardEl.querySelector("[data-carddots]");
@@ -1270,13 +1275,26 @@ function setupCardCarousel(cardEl){
   if(!img || !wrap) return;
 
   let srcs = [];
-  try{ srcs = JSON.parse(cardEl.dataset.angleSrcs || "[]"); }catch(e){ srcs = []; }
-  if(!Array.isArray(srcs) || srcs.length === 0) return;
+  try{
+    srcs = JSON.parse(cardEl.dataset.angleSrcs || "[]");
+  }catch(e){ srcs = []; }
+  if(!Array.isArray(srcs) || srcs.length===0){
+    srcs = buildAngleSrcs(cardEl.dataset.imgBase || "");
+  }
+  // filtra duplicados e vazios
   srcs = [...new Set(srcs)].filter(Boolean);
 
-  if(srcs.length <= 1){
+  // valida quais imagens realmente existem (evita miniaturas e logs 404)
+  try{
+    const okArr = await Promise.all(srcs.map(s=>canLoadImage(s)));
+    srcs = srcs.filter((s,i)=>okArr[i]);
+  }catch(e){}
+if(srcs.length <= 1){
     if(dots) dots.classList.add("hidden");
+    if(wrap) wrap.classList.add("hidden");
     return;
+  }else{
+    if(wrap) wrap.classList.remove("hidden");
   }
 
   let index = 0;
@@ -1292,7 +1310,7 @@ function setupCardCarousel(cardEl){
     if(dots) dots.classList.add("hidden");
     thumbs.innerHTML = srcs.map((s,i)=>`
       <button type="button" data-ti="${i}" class="${i===index?'ring-2 ring-oly-blue':'ring-1 ring-oly-border'} rounded-xl overflow-hidden bg-white h-10 w-10 flex items-center justify-center">
-        <img data-thumbimg="1" src="${s}" class="h-full w-full object-contain" alt="" draggable="false"/>
+        <img src="${s}" class="h-full w-full object-contain" alt="ângulo ${i+1}" draggable="false"/>
       </button>
     `).join("");
     // clique troca a imagem principal
@@ -1304,18 +1322,6 @@ function setupCardCarousel(cardEl){
         setIndex(i);
       });
     });
- 
-    // Remove miniaturas quebradas (evita ícone + texto "ângulo")
-    thumbs.querySelectorAll('img[data-thumbimg="1"]').forEach(imgEl=>{
-      imgEl.addEventListener("error", ()=>{
-        const btn = imgEl.closest("button");
-        if(btn) btn.remove();
-        // se sobrar 0/1, esconde a faixa
-        const left = thumbs.querySelectorAll('button[data-ti]').length;
-        if(left <= 1) thumbs.classList.add("hidden");
-      }, {once:true});
-    });
-
   };
   const setIndex = (i)=>{
     index = (i + srcs.length) % srcs.length;
@@ -1527,7 +1533,7 @@ function addToCart(item, qty, { obs="" } = {}){
       precoFmt,
       qty: qty,
       obs: obs || "",
-      imgSrc: resolveImageSrc(normalizeImgBaseName(item.imagem)),
+      imgSrc: resolveImageSrc(item.imagem),
     });
   }
   saveCartToStorage();
@@ -1784,9 +1790,6 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
           </button>
         </div>
 
-        <div data-cardthumbs="1" class="px-4 pt-3 flex items-center justify-center gap-2"></div>
-
-
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
@@ -2037,7 +2040,7 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
   // imagem principal
   const img = $("pmImage");
   const fallback = $("pmImageFallback");
-  const imgSrc = resolveImageSrc(normalizeImgBaseName(item.imagem));
+  const imgSrc = resolveImageSrc(item.imagem);
   if(imgSrc){
     img.src = imgSrc;
     img.classList.remove("hidden");
@@ -2183,7 +2186,7 @@ $("btnAddToCart").addEventListener("click", ()=>{
     merged.genero = item.genero || "";
     merged.segmento = item.segmento || "";
     merged.categoria = item.categoria || "";
-    merged.imgSrc = resolveImageSrc(normalizeImgBaseName(item.imagem));
+    merged.imgSrc = resolveImageSrc(item.imagem);
 
     merged.qty = Math.max(1, Math.min(9999, Number(qty)||1));
     merged.obs = obs || "";
@@ -2767,3 +2770,4 @@ document.addEventListener("input", (e)=>{
 </script>
 </body>
 </html>
+
