@@ -1,12 +1,3 @@
-
-function clearAllLocalState(){
-  try{
-    localStorage.removeItem(lsKey("cart"));
-    localStorage.removeItem(lsKey("favorites"));
-    localStorage.removeItem(lsKey("productsCache"));
-  }catch(e){}
-}
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -682,10 +673,18 @@ function clearAllLocalState(){
 <script>
 const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_olympikus/", cacheBustOnRefresh: true };
 
-// ===== Namespacing de LocalStorage por projeto (evita "puxar sacola" de outro repo) =====
+// ===== Namespacing de LocalStorage por projeto =====
 const STORAGE_NS = (location.pathname || "/").replace(/\/$/, ""); // ex: /Catalogo-Olympikus_2.0
 const CACHE_VERSION = "v2"; // incrementa para invalidar caches antigos
 function lsKey(k){ return `${STORAGE_NS}:${CACHE_VERSION}:${k}`; }
+
+function clearAllLocalState(){
+  try{
+    localStorage.removeItem(lsKey("cart"));
+    localStorage.removeItem(lsKey("favorites"));
+    localStorage.removeItem(lsKey("productsCache"));
+  }catch(e){}
+}
 
 
 const STORAGE_KEYS = {
