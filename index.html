@@ -348,14 +348,14 @@
             </h2>
             <p class="mt-2 text-oly-muted leading-relaxed">
               Estrutura esperada:
-              <span class="font-mono">/index.html</span> · <span class="font-mono">/Produtos.xlsx</span> · <span class="font-mono">/inclusões_olimpikus/*.png</span>
+              <span class="font-mono">/index.html</span> · <span class="font-mono">/Produtos.xlsx</span> · <span class="font-mono">/imagens_olympikus/*.png</span>
             </p>
 
             <div id="loadHint" class="mt-4 rounded-2xl border border-oly-border bg-oly-bg p-4 text-sm">
               <div class="font-bold">Se não carregar:</div>
               <ul class="mt-1 list-disc pl-5 text-oly-muted">
                 <li>Confirme o nome <b>Produtos.xlsx</b> (exato).</li>
-                <li>Confirme a pasta <b>Catalogo</b>.</li>
+                <li>Confirme a pasta <b>imagens_olympikus</b>.</li>
                 <li>Clique em <b>Atualizar</b> no topo.</li>
               </ul>
             </div>
@@ -671,7 +671,7 @@
   </div>
 
 <script>
-const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./inclusões_olimpikus/", cacheBustOnRefresh: true };
+const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_olympikus/", cacheBustOnRefresh: true };
 const STORAGE_KEYS = {
   cart: "olympikus_cart_v5",
   customer: "olympikus_customer_v1",
@@ -978,7 +978,7 @@ async function loadCatalog({ cacheBust=false } = {}){
      }
     $("loadHint").innerHTML = `
       <div class="font-bold text-red-700">Falha ao carregar Produtos.xlsx</div>
-      <div class="mt-2 text-sm text-oly-muted">Verifique nome do arquivo e a pasta <b>Catalogo</b>.</div>
+      <div class="mt-2 text-sm text-oly-muted">Verifique nome do arquivo e a pasta <b>imagens_olympikus</b>.</div>
     `;
   }
 }
