@@ -169,6 +169,56 @@
       #pmTitle{ display:none !important; }
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
+
+/* === Card Carousel (4 imagens) === */
+.carouselViewport{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.carouselViewport::-webkit-scrollbar{ display:none; }
+.carouselTrack{
+  display:flex;
+  width:100%;
+  height:100%;
+}
+.carouselSlide{
+  flex: 0 0 100%;
+  height:100%;
+  scroll-snap-align: start;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.thumbRow{
+  display:flex;
+  gap:10px;
+  padding:10px 12px 12px;
+  border-top: 1px solid var(--oly-border);
+  background: rgba(255,255,255,0.8);
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+}
+.thumbRow::-webkit-scrollbar{ display:none; }
+.thumbBtn{
+  width:56px;
+  height:56px;
+  border-radius:16px;
+  border:1px solid var(--oly-border);
+  background: #fff;
+  overflow:hidden;
+  flex: 0 0 auto;
+}
+.thumbBtn.isActive{
+  outline: 2px solid var(--oly-blue);
+  outline-offset: 0px;
+}
+
 </style>
 </head>
 
@@ -1190,23 +1240,203 @@ function refreshView(resetPaging){
   $("btnLoadMore").classList.toggle("hidden", !(state.pagination.shown < state.productsView.length) || state.productsView.length===0);
 }
 
+// === Imagens (multi-foto por referência/cor) ===
+// Extensões tentadas automaticamente (ordem importa)
+const IMG_EXTS = [".jpg", ".png", ".webp", ".jpeg"];
+
+function imgUrlFromName(name, extIndex=0){
+  const basePath = String((window.DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "");
+  const ext = IMG_EXTS[Math.max(0, Math.min(extIndex, IMG_EXTS.length-1))];
+  return `${basePath}${encodeURIComponent(String(name||"") + ext)}`;
+}
+
+// Fallback automático de extensão: .jpg -> .png -> .webp -> .jpeg
+// Retorna true quando tenta outra URL; false quando esgotou
+window.__imgFallback = function(imgEl){
+  try{
+    const name = imgEl?.dataset?.imgName;
+    if(!name) return false;
+
+    const cur = Number(imgEl.dataset.extIndex || 0);
+    const next = cur + 1;
+
+    if(next < IMG_EXTS.length){
+      imgEl.dataset.extIndex = String(next);
+      imgEl.src = imgUrlFromName(name, next);
+      return true;
+    }
+    return false;
+  }catch(e){
+    return false;
+  }
+};
+
+// Mantém compatibilidade: resolve uma imagem "principal" (primeira tentativa)
+// - Se vier URL/caminho/extensão, respeita.
+// - Se vier apenas o nome base do XLSX, tenta com IMG_EXTS[0] (.jpg).
 function resolveImageSrc(imagemValue){
-  // Usa exatamente o conteúdo da coluna "Imagem" do XLSX, sem forçar extensão.
-  // Mantém imagesBasePath apenas quando a célula traz somente o nome do arquivo.
   const raw = String(imagemValue || "").trim();
   if(!raw) return "";
 
   const isAbsoluteUrl = /^https?:\/\//i.test(raw);
   const isDataUrl = /^data:/i.test(raw);
   const looksLikePath = raw.startsWith("/") || raw.startsWith("./") || raw.startsWith("../") || raw.includes("/");
+  const hasExt = /\.[a-z0-9]+$/i.test(raw);
 
-  if(isAbsoluteUrl || isDataUrl || looksLikePath){
+  if(isAbsoluteUrl || isDataUrl || looksLikePath || hasExt){
     return raw;
   }
-
-  const base = String((window.DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "");
-  return `${base}${encodeURIComponent(raw)}`;
+  return imgUrlFromName(raw, 0);
 }
+
+// Gera as 4 imagens: BASE, BASE__02, BASE__03, BASE__04
+function buildImageBases(base){
+  const b = String(base || "").trim();
+  if(!b) return [];
+  return [b, `${b}__02`, `${b}__03`, `${b}__04`];
+}
+
+// HTML do carrossel do card (main + miniaturas)
+// - Swipe/arrasto: scroll horizontal com scroll-snap
+// - Clique em miniatura: navega para o slide
+function carouselHtml(base, altText){
+  const bases = buildImageBases(base);
+  const alt = escapeHtml(altText || "Produto");
+
+  if(!bases.length){
+    return `
+      <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
+        <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
+          <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
+        </button>
+        <div class="imgFallback h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted">
+          <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
+          <div class="text-xs font-bold">sem imagem</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const slides = bases.map((n, idx)=>`
+    <div class="carouselSlide">
+      <img loading="lazy" decoding="async" alt="${alt}" class="h-full w-full object-contain bg-white"
+        data-img-name="${escapeHtml(n)}" data-ext-index="0"
+        src="${imgUrlFromName(n,0)}"
+        onerror="if(!window.__imgFallback(this)){ this.remove(); }">
+    </div>
+  `).join("");
+
+  const thumbs = bases.map((n, idx)=>`
+    <button type="button" class="thumbBtn" data-idx="${idx}" aria-label="Miniatura ${idx+1}">
+      <img loading="lazy" decoding="async" alt="${alt}" class="h-full w-full object-contain bg-white"
+        data-img-name="${escapeHtml(n)}" data-ext-index="0"
+        src="${imgUrlFromName(n,0)}"
+        onerror="if(!window.__imgFallback(this)){ this.remove(); }">
+    </button>
+  `).join("");
+
+  return `
+    <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex flex-col overflow-hidden cursor-pointer relative jsCarouselRoot" data-base="${escapeHtml(base)}">
+      <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg z-10" aria-label="Zoom">
+        <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
+      </button>
+
+      <div class="carouselViewport jsCarouselViewport" role="group" aria-label="Imagens do produto">
+        <div class="carouselTrack">
+          ${slides}
+        </div>
+        <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted">
+          <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
+          <div class="text-xs font-bold">sem imagem</div>
+        </div>
+      </div>
+
+      <div class="thumbRow jsThumbRow" aria-label="Miniaturas">
+        ${thumbs}
+      </div>
+    </div>
+  `;
+}
+
+function initCardCarousels(){
+  const roots = document.querySelectorAll(".jsCarouselRoot");
+  for(const root of roots){
+    const viewport = root.querySelector(".jsCarouselViewport");
+    const thumbRow = root.querySelector(".jsThumbRow");
+    if(!viewport || !thumbRow) continue;
+
+    const thumbs = Array.from(thumbRow.querySelectorAll(".thumbBtn"));
+    const getIdx = () => {
+      const w = viewport.clientWidth || 1;
+      return Math.max(0, Math.min(thumbs.length-1, Math.round(viewport.scrollLeft / w)));
+    };
+
+    const setActive = (idx) => {
+      thumbs.forEach((b,i)=> b.classList.toggle("isActive", i===idx));
+    };
+
+    // Clique em miniatura -> navega
+    thumbs.forEach((btn)=>{
+      btn.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = Number(btn.dataset.idx || 0);
+        const w = viewport.clientWidth || 1;
+        viewport.scrollTo({ left: w * idx, behavior: "smooth" });
+        setActive(idx);
+      });
+    });
+
+    // Atualiza ativo ao arrastar/scroll
+    let raf = 0;
+    viewport.addEventListener("scroll", ()=>{
+      if(raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(()=> setActive(getIdx()));
+    }, { passive: true });
+
+    // Evitar abrir detalhes quando o gesto for swipe (arrasto)
+    let startX = 0, startY = 0, moved = false;
+    viewport.addEventListener("pointerdown", (e)=>{
+      moved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      root.dataset.dragging = "0";
+    });
+    viewport.addEventListener("pointermove", (e)=>{
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      if(dx > 8 && dx > dy){
+        moved = true;
+        root.dataset.dragging = "1";
+      }
+    }, { passive: true });
+    viewport.addEventListener("pointerup", ()=>{
+      if(moved){
+        setTimeout(()=>{ root.dataset.dragging = "0"; }, 80);
+      }
+    });
+
+    // Bloqueia clique se houve swipe
+    viewport.addEventListener("click", (e)=>{
+      if(root.dataset.dragging === "1"){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, true);
+
+    // Estado inicial
+    setActive(0);
+
+    // Se todas as imagens removeram, mostra fallback
+    const ensureFallback = ()=>{
+      const hasImg = viewport.querySelector("img");
+      const fb = viewport.querySelector(".imgFallback");
+      if(fb) fb.classList.toggle("hidden", !!hasImg);
+    };
+    setTimeout(ensureFallback, 0);
+  }
+}
+
 
 /** Key for cart item (variant) */
 function cartKeyFor(item){
@@ -1334,97 +1564,7 @@ function setCardAddStatus(key, status){
 function setCardPending(key){
   // Any qty interaction makes it pending (unless qty is invalid which we don't allow)
   const current = getCardAddStatus(key);
-  if(current !== "pending") setCardAddStatus(key, "pending");
-}
-
-
-/** Add to cart helper (accumulates) */
-function addToCart(item, qty, { obs="" } = {}){
-  const key = cartKeyFor(item);
-  const precoNum = toNumberBR(item.precoRaw ?? 0);
-  const precoFmt = moneyBR(precoNum);
-  const existing = state.cart.get(key);
-  if(existing){
-    existing.qty = Math.min(9999, existing.qty + qty);
-    if(obs) existing.obs = obs;
-    state.cart.set(key, existing);
-  } else {
-    state.cart.set(key, {
-      key,
-      codigo: item.codigo || "",
-      produto: item.produto || "",
-      cor: item.cor || "",
-      corCodigo: item.corCodigo || "",
-      genero: item.genero || "",
-      segmento: item.segmento || "",
-      categoria: item.categoria || "",
-      precoNum,
-      precoFmt,
-      qty: qty,
-      obs: obs || "",
-      imgSrc: resolveImageSrc(item.imagem),
-    });
-  }
-  saveCartToStorage();
-  renderCartUI();
-}
-
-/** ✅ Card add button UI state (only cart) */
-
-
-function updateAddButtonUI(btnAdd, key){
-  if(!btnAdd || !key) return;
-
-  // remove any tailwind bg utilities that might override our CSS
-  Array.from(btnAdd.classList).forEach(c=>{
-    if(c.startsWith("bg-")) btnAdd.classList.remove(c);
-  });
-
-  btnAdd.classList.add("btn-add-status");
-  btnAdd.classList.remove("is-idle","is-pending","is-loading","is-added","pulse-soft");
-  btnAdd.removeAttribute("disabled");
-
-  const status = getCardAddStatus(key);
-
-  let label = "Adicionar";
-  let iconHtml = '<i class="fa-solid fa-bag-shopping"></i>';
-
-  if(status === "pending"){
-    btnAdd.classList.add("is-pending","pulse-soft");
-    label = "Finalizar";
-    iconHtml = '<i class="fa-solid fa-bag-shopping"></i>';
-  } else if(status === "loading"){
-    btnAdd.classList.add("is-loading");
-    btnAdd.setAttribute("disabled","true");
-    label = "Adicionando…";
-    iconHtml = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-  } else if(status === "added"){
-    btnAdd.classList.add("is-added");
-    label = "Adicionado";
-    iconHtml = '<i class="fa-solid fa-check"></i>';
-  } else {
-    btnAdd.classList.add("is-idle");
-    label = "Adicionar";
-    iconHtml = '<i class="fa-solid fa-bag-shopping"></i>';
-  }
-
-  const span = btnAdd.querySelector("span");
-  if(span) span.textContent = label;
-
-  const icon = btnAdd.querySelector("i");
-  if(icon){
-    const wrap = document.createElement("span");
-    wrap.innerHTML = iconHtml;
-    icon.replaceWith(wrap.firstChild);
-  } else {
-    btnAdd.insertAdjacentHTML("afterbegin", iconHtml);
-  }
-}
-
-
-
-/** Cards */
-function renderCards(){
+  if(current !== "pending") setCardAddStafunction renderCards(){
   const wrap = $("cards");
   wrap.innerHTML = "";
   const slice = state.productsView.slice(0, state.pagination.shown);
@@ -1536,18 +1676,7 @@ function renderCards(){
       const imgSrc = resolveImageSrc(first?.imagem);
 
       card.innerHTML = `
-        <div class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-            <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
-    <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
-  </button>
-
-  <img loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
-            onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
-          <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
-            <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
-            <div class="text-xs font-bold">sem imagem</div>
-          </div>
-        </div>
+        ${carouselHtml(v.imagem, v.produto)}
 
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">
@@ -1692,6 +1821,87 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
 
       btnMinus.addEventListener("click", ()=>{
         const cur = getCardQty(key);
+        const next = Math.max(1, cur - 1);
+        setCardQty(key, next);
+        qtyDisplay.textContent = String(next);
+        setCardPending(key);
+        updateAddButtonUI(btnAdd, key);
+        setCardPending(key);
+        updateCardAddButton(btnAdd, getCardAddStatus(key));
+        updateAddButtonUI(btnAdd, key);
+      });
+      btnPlus.addEventListener("click", ()=>{
+        const cur = getCardQty(key);
+        const next = Math.min(999, cur + 1);
+        setCardQty(key, next);
+        qtyDisplay.textContent = String(next);
+        setCardPending(key);
+        updateAddButtonUI(btnAdd, key);
+        setCardPending(key);
+        updateCardAddButton(btnAdd, getCardAddStatus(key));
+        updateAddButtonUI(btnAdd, key);
+      });
+
+      btnPack6.addEventListener("click", ()=>{
+        applyPackCard(key, 6);
+        qtyDisplay.textContent = String(getCardQty(key));
+        setCardPending(key);
+        updateAddButtonUI(btnAdd, key);
+        setCardPending(key);
+        updateCardAddButton(btnAdd, getCardAddStatus(key));
+        updateAddButtonUI(btnAdd, key);
+      });
+      btnPack12.addEventListener("click", ()=>{
+        applyPackCard(key, 12);
+        qtyDisplay.textContent = String(getCardQty(key));
+        setCardPending(key);
+        updateAddButtonUI(btnAdd, key);
+        setCardPending(key);
+        updateCardAddButton(btnAdd, getCardAddStatus(key));
+        updateAddButtonUI(btnAdd, key);
+      });
+
+      // ✅ adiciona ao clicar em Adicionar (e fica verde); depois zera qtd
+      
+btnAdd.addEventListener("click", ()=>{
+        const status = getCardAddStatus(key);
+        if(status === "loading") return;
+
+        const shouldUseFlow = (status === "pending");
+
+        if(shouldUseFlow){
+          setCardAddStatus(key, "loading");
+          updateAddButtonUI(btnAdd, key);
+
+          setTimeout(()=>{
+            addToCart(v, getCardQty(key));
+            setCardAddStatus(key, "added");
+            updateAddButtonUI(btnAdd, key);
+            resetCardQty(key);
+            qtyDisplay.textContent = "1";
+            toast("Adicionado ✅");
+          }, 350);
+          return;
+        }
+
+        addToCart(v, getCardQty(key));
+        setCardAddStatus(key, "added");
+        updateAddButtonUI(btnAdd, key);
+        resetCardQty(key);
+        qtyDisplay.textContent = "1";
+        toast("Adicionado ✅");
+      });
+
+
+      // inicializa estado do botão
+      updateAddButtonUI(btnAdd, key);
+    }
+
+    wrap.appendChild(card);
+  }
+
+  initCardCarousels();
+}key);
         const next = Math.max(1, cur - 1);
         setCardQty(key, next);
         qtyDisplay.textContent = String(next);
