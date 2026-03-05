@@ -1191,11 +1191,21 @@ function refreshView(resetPaging){
 }
 
 function resolveImageSrc(imagemValue){
+  // Usa exatamente o conteúdo da coluna "Imagem" do XLSX, sem forçar extensão.
+  // Mantém imagesBasePath apenas quando a célula traz somente o nome do arquivo.
   const raw = String(imagemValue || "").trim();
   if(!raw) return "";
-  const hasExt = /\.[a-z0-9]+$/i.test(raw);
-  const filename = hasExt ? raw : `${raw}.png`;
-  return `${DATA_CONFIG.imagesBasePath}${encodeURIComponent(filename)}`;
+
+  const isAbsoluteUrl = /^https?:\/\//i.test(raw);
+  const isDataUrl = /^data:/i.test(raw);
+  const looksLikePath = raw.startsWith("/") || raw.startsWith("./") || raw.startsWith("../") || raw.includes("/");
+
+  if(isAbsoluteUrl || isDataUrl || looksLikePath){
+    return raw;
+  }
+
+  const base = String((window.DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "");
+  return `${base}${encodeURIComponent(raw)}`;
 }
 
 /** Key for cart item (variant) */
