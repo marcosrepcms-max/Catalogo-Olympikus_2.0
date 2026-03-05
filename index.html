@@ -355,7 +355,7 @@
               <div class="font-bold">Se não carregar:</div>
               <ul class="mt-1 list-disc pl-5 text-oly-muted">
                 <li>Confirme o nome <b>Produtos.xlsx</b> (exato).</li>
-                <li>Confirme a pasta <b>Catalogo</b>.</li>
+                <li>Confirme a pasta <b>imagens_olympikus</b>.</li>
                 <li>Clique em <b>Atualizar</b> no topo.</li>
               </ul>
             </div>
@@ -1190,36 +1190,46 @@ function refreshView(resetPaging){
   $("btnLoadMore").classList.toggle("hidden", !(state.pagination.shown < state.productsView.length) || state.productsView.length===0);
 }
 
-function resolveImageSrc(imagemValue){
-  const baseName = normalizeImageBase(imgName);
-const raw = String(imagemValue || "").trim();
-  if(!raw) return "";
-  const hasExt = /\.[a-z0-9]+$/i.test(raw);
-  const filename = hasExt ? raw : `${raw}.png`;
-  return `${DATA_CONFIG.imagesBasePath}${encodeURIComponent(filename)}`;
-}
 
 /** ✅ Multi-ângulo no CARD (swipe) */
 
+
+// ===== Helpers de imagem (robustos) =====
+const IMG_EXTS = [".jpg", ".png", ".jpeg", ".webp"];
+
 function normalizeImageBase(name){
-  // Converte para o padrão de arquivos: PASSO_CHB_PT
+  // Converte para padrão de arquivo: 43341472_ARTMRF (sem extensão)
   return String(name||"")
     .trim()
-    .replace(/\.(png|jpg|jpeg|webp)$/i, "")      // remove extensão se vier
-    .replace(/[\s]+/g, "_")                     // espaços -> _
-    .replace(/[\/\\]+/g, "_")                 // / ou \ -> _
-    .replace(/[^A-Za-z0-9_\-]+/g, "_")          // demais chars -> _
-    .replace(/_+/g, "_")                         // colapsa __
-    .replace(/^_+|_+$/g, "");                    // tira _ nas pontas
+    .replace(/\.(png|jpg|jpeg|webp)$/i, "")     // remove extensão se vier
+    .replace(/\s+/g, "_")                      // espaços -> _
+    .replace(/[\/\\]+/g, "_")                  // / ou \ -> _
+    .replace(/[^A-Za-z0-9_\-]+/g, "_")         // demais chars -> _
+    .replace(/_+/g, "_")                       // colapsa __
+    .replace(/^_+|_+$/g, "");                  // tira _ nas pontas
 }
 
 function buildAngleSrcs(imgBaseName){
   const base = normalizeImageBase(imgBaseName);
   if(!base) return [];
-  const names = [base, `${base}_02`, `${base}_03`, `${base}_04`];
-  // monta as URLs respeitando imagesBasePath
+  const angleNames = [base, `${base}_02`, `${base}_03`, `${base}_04`];
   const basePath = (DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./";
-  return names.map(n => encodeURI(`${basePath}${n}.png`));
+
+  // gera candidatos: base.jpg, base.png, ... depois base_02.jpg, base_02.png, ...
+  const out = [];
+  angleNames.forEach(n=>{
+    IMG_EXTS.forEach(ext=>{
+      out.push(encodeURI(`${basePath}${n}${ext}`));
+    });
+  });
+  // remove duplicados
+  return [...new Set(out)];
+}
+
+function resolveImageSrc(imgBaseName){
+  // retorna o primeiro candidato (o onerror vai tentar os próximos)
+  const srcs = buildAngleSrcs(imgBaseName);
+  return srcs[0] || "";
 }
 
 function setupCardCarousel(cardEl){
@@ -1274,18 +1284,15 @@ function setupCardCarousel(cardEl){
   };
 
   img.addEventListener("error", ()=>{
-    // remove src quebrada e tenta próxima
-    const bad = srcs[index];
-    srcs = srcs.filter(s=>s!==bad);
-    if(srcs.length <= 1){
-      if(dots) dots.classList.add("hidden");
-      return;
-    }
-    index = 0;
+    // tenta próximo candidato (extensões/ângulos)
+    if(!Array.isArray(srcs) || srcs.length===0) return;
+    // remove o atual e tenta o próximo
+    srcs.splice(index, 1);
+    if(srcs.length === 0) return;
+    if(index >= srcs.length) index = 0;
     img.src = srcs[index];
     renderDots();
     renderThumbs();
-  renderThumbs();
   });
 
   renderDots();
@@ -1710,7 +1717,7 @@ function renderCards(){
 card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ item:first, group:v }));
       card.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") openProductModal({ item:first, group:v }); });
     } else {
-      const imgSrc = resolveImageSrc(normalizeImageBase(v.imagem));
+      const imgSrc = resolveImageSrc(v.imagem);
       const key = cartKeyFor(v);
       card.setAttribute("data-card-key", key);
       const qty = getCardQty(key);
