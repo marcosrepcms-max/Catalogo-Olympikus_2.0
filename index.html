@@ -170,13 +170,6 @@
       #pmTitle{ display:none !important; }
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
-
-/* miniaturas no card */
-[data-cardthumbs="1"]{display:flex;gap:.5rem;justify-content:center;align-items:center;padding:.6rem .75rem;}
-.thumbBtn{width:42px;height:42px;border-radius:12px;border:2px solid rgba(37,99,235,.25);background:white;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;transition:transform .12s ease,border-color .12s ease;}
-.thumbBtn img{width:100%;height:100%;object-fit:cover;}
-.thumbBtn.active{border-color:rgba(37,99,235,.95);transform:scale(1.03);}
-
 </style>
 </head>
 
@@ -189,7 +182,7 @@
           <!-- Left: logo always, title only on sm+ -->
           <div class="flex items-center gap-3 min-w-0">
             <div class="h-10 w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden">
-              <img id="brandLogo" src="./logo-olympikus.png.png" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
+              <img id="brandLogo" src="./logo-olympikus.png.png" alt="Olympikus" class="h-full w-full object-contain">
             </div>
             <div class="leading-tight min-w-0 hidden sm:block">
               <div class="text-lg sm:text-xl font-extrabold tracking-tight truncate">Catálogo Olympikus</div>
@@ -1218,7 +1211,7 @@ function refreshView(resetPaging){
 
 
 // ===== Helpers de imagem (robustos) =====
-const IMG_EXTS = ['.jpg'];
+const IMG_EXTS = [".jpg", ".png", ".jpeg", ".webp"];
 
 function normalizeImageBase(name){
   // Converte para padrão de arquivo: 43341472_ARTMRF (sem extensão)
@@ -1233,41 +1226,58 @@ function normalizeImageBase(name){
 }
 
 function buildAngleSrcs(imgBaseName){
-  const base = normalizeImageBase(imgBaseName);
-  if(!base) return [];
-  const basePath = (DATA_CONFIG.imgFolder || "./imagens_olympikus/").replace(/\/?$/, "/");
-  const angleBases = [base, `${base}_02`, `${base}_03`, `${base}_04`];
+  // Gera a lista de URLs candidatas para imagem principal + ângulos.
+  // Suporta variações comuns de nomenclatura:
+  //  - "_" vs "__" (ex.: 43627383_MRFARE vs 43627383__MRFARE)
+  //  - sufixo de ângulo "_02" vs "__02"
+  const base0 = normalizeImageBase(imgBaseName);
+  if(!base0) return [];
 
-  // monta URLs candidatos (ordem importa) - nesta versão usamos .jpg como padrão
+  // Bases equivalentes (dedup no final)
+  const bases = [];
+  const pushBase = (b)=>{ if(b && !bases.includes(b)) bases.push(b); };
+
+  // forma "normal"
+  pushBase(base0);
+  // colapsa múltiplos underscores -> "_"
+  pushBase(base0.replace(/__+/g, "_"));
+  // duplica underscores -> "__"
+  pushBase(base0.replace(/_/g, "__"));
+
+  const basePath = (DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./";
+
+  const IMG_EXTS = [".jpg",".jpeg",".png",".webp"];
   const out = [];
-  for(const b of angleBases){
-    for(const ext of IMG_EXTS){
-      const fname = `${b}${ext}`;
-      out.push(basePath + encodeURIComponent(fname));
-    }
-  }
+
+  // helper: adiciona combinações base + ext (com encode)
+  const add = (name)=>{
+    IMG_EXTS.forEach(ext=>{
+      out.push(encodeURI(`${basePath}${name}${ext}`));
+    });
+  };
+
+  // para cada base, adiciona principal + ângulos
+  bases.forEach(b=>{
+    add(b);
+    // ângulos: aceita _02 e __02 etc
+    ["02","03","04"].forEach(n=>{
+      add(`${b}_${n}`);
+      add(`${b}__${n}`);
+    });
+  });
+
   // remove duplicados preservando ordem
   return [...new Set(out)];
 }
 
+
 function resolveImageSrc(imgBaseName){
+  // retorna o primeiro candidato (o onerror vai tentar os próximos)
   const srcs = buildAngleSrcs(imgBaseName);
   return srcs[0] || "";
 }
 
-
-
-
-function canLoadImage(src){
-  return new Promise((resolve)=>{
-    const im = new Image();
-    im.onload = ()=>resolve(true);
-    im.onerror = ()=>resolve(false);
-    im.src = src;
-  });
-}
-
-async function setupCardCarousel(cardEl){
+function setupCardCarousel(cardEl){
   const img = cardEl.querySelector("[data-cardimg]");
   const wrap = cardEl.querySelector("[data-cardimgwrap]");
   const dots = cardEl.querySelector("[data-carddots]");
@@ -1277,105 +1287,122 @@ async function setupCardCarousel(cardEl){
   let srcs = [];
   try{
     srcs = JSON.parse(cardEl.dataset.angleSrcs || "[]");
-  }catch(e){ srcs = []; }
-  if(!Array.isArray(srcs) || srcs.length===0){
-    srcs = buildAngleSrcs(cardEl.dataset.imgBase || "");
+  }catch(e){
+    srcs = [];
   }
-  // filtra duplicados e vazios
+  if(!Array.isArray(srcs) || srcs.length === 0) return;
   srcs = [...new Set(srcs)].filter(Boolean);
-
-  // valida quais imagens realmente existem (evita miniaturas e logs 404)
-  try{
-    const okArr = await Promise.all(srcs.map(s=>canLoadImage(s)));
-    srcs = srcs.filter((s,i)=>okArr[i]);
-  }catch(e){}
-if(srcs.length <= 1){
-    if(dots) dots.classList.add("hidden");
-    if(wrap) wrap.classList.add("hidden");
-    return;
-  }else{
-    if(wrap) wrap.classList.remove("hidden");
-  }
 
   let index = 0;
 
   const renderDots = ()=>{
     if(!dots) return;
+    // dots só fazem sentido se tiver 2+ imagens potenciais
+    if(srcs.length <= 1){ dots.classList.add("hidden"); return; }
+    dots.classList.remove("hidden");
     dots.innerHTML = srcs.map((_,i)=>`<span class="${i===index?'bg-black':'bg-black/20'} inline-block h-2 w-2 rounded-full"></span>`).join("");
   };
 
   const renderThumbs = ()=>{
     if(!thumbs) return;
-    // com miniaturas, dots podem ficar escondidos
-    if(dots) dots.classList.add("hidden");
-    thumbs.innerHTML = srcs.map((s,i)=>`
-      <button type="button" data-ti="${i}" class="${i===index?'ring-2 ring-oly-blue':'ring-1 ring-oly-border'} rounded-xl overflow-hidden bg-white h-10 w-10 flex items-center justify-center">
-        <img src="${s}" class="h-full w-full object-contain" alt="ângulo ${i+1}" draggable="false"/>
-      </button>
-    `).join("");
-    // clique troca a imagem principal
-    thumbs.querySelectorAll("button[data-ti]").forEach(btn=>{
-      btn.addEventListener("click", (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-        const i = Number(btn.getAttribute("data-ti")||"0");
-        setIndex(i);
-      });
+    thumbs.innerHTML = "";
+    // cria miniaturas para os 4 primeiros candidatos (principal + 3 ângulos)
+    const maxThumbs = Math.min(4, srcs.length);
+    for(let i=0;i<maxThumbs;i++){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "h-12 w-12 rounded-xl border border-oly-border bg-white/90 flex items-center justify-center overflow-hidden hover:bg-oly-bg";
+      b.setAttribute("aria-label", `Ângulo ${i+1}`);
+      const ti = document.createElement("img");
+      ti.src = srcs[i];
+      ti.alt = "";
+      ti.loading = "lazy";
+      ti.decoding = "async";
+      ti.className = "h-full w-full object-contain";
+      ti.onerror = ()=>{ b.style.display = "none"; };
+      b.addEventListener("click", ()=> setIndex(i));
+      b.appendChild(ti);
+      thumbs.appendChild(b);
+    }
+    // mostra thumbs só se pelo menos 2 ficaram visíveis
+    requestAnimationFrame(()=>{
+      const visible = [...thumbs.children].filter(el=>getComputedStyle(el).display !== "none").length;
+      if(visible >= 2){
+        thumbs.classList.remove("hidden");
+      }else{
+        thumbs.classList.add("hidden");
+      }
     });
   };
-  const setIndex = (i)=>{
-    index = (i + srcs.length) % srcs.length;
+
+  const trySetImg = (i)=>{
+    index = Math.max(0, Math.min(i, srcs.length-1));
+    img.dataset.srcIndex = String(index);
     img.src = srcs[index];
     renderDots();
-    renderThumbs();
-  renderThumbs();
+    // não re-renderiza thumbs sempre (evita piscar); só no init
   };
 
+  const setIndex = (i)=>{
+    trySetImg(i);
+  };
+
+  // Fallback em cadeia: se a URL atual falhar, tenta próxima até esgotar
   img.addEventListener("error", ()=>{
-    // tenta próximo candidato (extensões/ângulos)
-    if(!Array.isArray(srcs) || srcs.length===0) return;
-    // remove o atual e tenta o próximo
-    srcs.splice(index, 1);
-    if(srcs.length === 0) return;
-    if(index >= srcs.length) index = 0;
-    img.src = srcs[index];
-    renderDots();
-    renderThumbs();
+    const cur = Number(img.dataset.srcIndex || "0");
+    const next = cur + 1;
+    if(next < srcs.length){
+      trySetImg(next);
+    }else{
+      // esgotou: mostra placeholder
+      const fb = wrap.querySelector(".imgFallback");
+      if(fb){ fb.style.display = "flex"; }
+      img.style.display = "none";
+      if(dots) dots.classList.add("hidden");
+      if(thumbs) thumbs.classList.add("hidden");
+    }
   });
 
-  renderDots();
-  renderThumbs();
+  // click / swipe
+  const next = ()=> setIndex((index + 1) % srcs.length);
+  const prev = ()=> setIndex((index - 1 + srcs.length) % srcs.length);
 
-  const THRESH = 35;
-  let startX = null;
-  let dragging = false;
+  wrap.addEventListener("click", (e)=>{
+    const t = e.target;
+    if(t && t.closest && t.closest("button")) return;
+    next();
+  });
 
-  const onStart = (clientX)=>{ startX = clientX; dragging = true; };
-  const onEnd = (clientX)=>{
-    if(!dragging || startX === null) return;
-    const dx = clientX - startX;
-    dragging = false; startX = null;
-    if(Math.abs(dx) < THRESH) return;
-    if(dx < 0) setIndex(index + 1);
-    else setIndex(index - 1);
-  };
-
+  let startX = 0, startY = 0, moved = false;
   wrap.addEventListener("touchstart", (e)=>{
-    if(!e.touches || e.touches.length!==1) return;
-    onStart(e.touches[0].clientX);
-  }, { passive: true });
-
-  wrap.addEventListener("touchend", (e)=>{
-    const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+    const t = e.touches && e.touches[0];
     if(!t) return;
-    onEnd(t.clientX);
-  }, { passive: true });
+    startX = t.clientX; startY = t.clientY; moved = false;
+  }, {passive:true});
+  wrap.addEventListener("touchmove", (e)=>{
+    const t = e.touches && e.touches[0];
+    if(!t) return;
+    if(Math.abs(t.clientX - startX) > 12 || Math.abs(t.clientY - startY) > 12) moved = true;
+  }, {passive:true});
+  wrap.addEventListener("touchend", (e)=>{
+    if(!moved) return;
+    const t = e.changedTouches && e.changedTouches[0];
+    if(!t) return;
+    const dx = t.clientX - startX;
+    if(Math.abs(dx) > 30){
+      dx < 0 ? next() : prev();
+    }
+  });
 
-  wrap.addEventListener("mousedown", (e)=>{ onStart(e.clientX); });
-  window.addEventListener("mouseup", (e)=>{ if(dragging) onEnd(e.clientX); });
-
-  img.draggable = false;
+  // init
+  if(thumbs){
+    // garante classe base e estado inicial oculto
+    thumbs.classList.add("hidden");
+  }
+  renderThumbs();
+  trySetImg(0);
 }
+
 
 
 
@@ -1626,7 +1653,7 @@ function renderCards(){
       card.innerHTML = `
         <div class="flex items-center gap-3 p-3 sm:p-4">
           <div class="h-16 w-20 rounded-2xl border border-oly-border bg-oly-bg flex items-center justify-center overflow-hidden shrink-0">
-            ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||v.produto||"Produto")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">` : `<div class="text-xs text-oly-muted font-bold">SEM IMG</div>`}
+            ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||v.produto||"Produto")}" class="h-full w-full object-contain bg-white">` : `<div class="text-xs text-oly-muted font-bold">SEM IMG</div>`}
           </div>
 
           <div class="min-w-0 flex-1">
@@ -1716,8 +1743,7 @@ function renderCards(){
     <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
   </button>
 
-  <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
-            onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
+  <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
             <div class="text-xs font-bold">sem imagem</div>
@@ -1774,8 +1800,7 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
 
       card.innerHTML = `
         <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
-            onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
+          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
             <div class="text-xs font-bold">sem imagem</div>
@@ -2076,7 +2101,7 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
 
       const srcImg = resolveImageSrc(rep.imagem);
       btn.innerHTML = srcImg
-        ? `<img src="${srcImg}" alt="${escapeHtml(opt.cor||"Cor")}" onerror="this.style.display='none'; this.parentElement.querySelector('.pm-thumb-fallback').style.display='block';">`
+        ? `<img src="${srcImg}" alt="${escapeHtml(opt.cor||"Cor")}">`
           + `<div class="pm-thumb-fallback" style="display:none">${escapeHtml(opt.cor||"Cor")}</div>`
         : `<div class="pm-thumb-fallback" style="display:block">${escapeHtml(opt.cor||"Cor")}</div>`;
 
@@ -2322,7 +2347,7 @@ const badge = $("cartCountBadge");
     row.innerHTML = `
       <div class="flex gap-3">
         <div class="h-20 w-20 cursor-pointer rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center">
-          ${it.imgSrc ? `<img loading="lazy" decoding="async" src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">`
+          ${it.imgSrc ? `<img loading="lazy" decoding="async" src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white">`
             : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
         </div>
         <div class="min-w-0 flex-1">
