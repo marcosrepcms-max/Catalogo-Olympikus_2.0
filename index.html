@@ -1191,7 +1191,8 @@ function refreshView(resetPaging){
 }
 
 function resolveImageSrc(imagemValue){
-  const raw = String(imagemValue || "").trim();
+  const baseName = normalizeImageBase(imgName);
+const raw = String(imagemValue || "").trim();
   if(!raw) return "";
   const hasExt = /\.[a-z0-9]+$/i.test(raw);
   const filename = hasExt ? raw : `${raw}.png`;
@@ -1199,13 +1200,26 @@ function resolveImageSrc(imagemValue){
 }
 
 /** ✅ Multi-ângulo no CARD (swipe) */
+
+function normalizeImageBase(name){
+  // Converte para o padrão de arquivos: PASSO_CHB_PT
+  return String(name||"")
+    .trim()
+    .replace(/\.(png|jpg|jpeg|webp)$/i, "")      // remove extensão se vier
+    .replace(/[\s]+/g, "_")                     // espaços -> _
+    .replace(/[\/\\]+/g, "_")                 // / ou \ -> _
+    .replace(/[^A-Za-z0-9_\-]+/g, "_")          // demais chars -> _
+    .replace(/_+/g, "_")                         // colapsa __
+    .replace(/^_+|_+$/g, "");                    // tira _ nas pontas
+}
+
 function buildAngleSrcs(imgBaseName){
-  const base = String(imgBaseName||"").trim();
+  const base = normalizeImageBase(imgBaseName);
   if(!base) return [];
   const names = [base, `${base}_02`, `${base}_03`, `${base}_04`];
   // monta as URLs respeitando imagesBasePath
   const basePath = (DATA_CONFIG && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./";
-  return names.map(n => `${basePath}${n}.png`);
+  return names.map(n => encodeURI(`${basePath}${n}.png`));
 }
 
 function setupCardCarousel(cardEl){
@@ -1696,7 +1710,7 @@ function renderCards(){
 card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ item:first, group:v }));
       card.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") openProductModal({ item:first, group:v }); });
     } else {
-      const imgSrc = resolveImageSrc(v.imagem);
+      const imgSrc = resolveImageSrc(normalizeImageBase(v.imagem));
       const key = cartKeyFor(v);
       card.setAttribute("data-card-key", key);
       const qty = getCardQty(key);
