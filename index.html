@@ -1234,15 +1234,19 @@ function buildAngleSrcs(imgBaseName){
   // Precisamos suportar: base, base__02..__04 e (fallback) base_02.._04
   const basePath = "./imagens_olympikus/";
 
-  const clean = String(imgBaseName || "").trim();
+  // ✅ Normaliza o nome: espaços → _, barras → _, remove chars inválidos, colapsa underscores duplos fora dos sufixos
+  const clean = String(imgBaseName || "")
+    .trim()
+    .replace(/\.(png|jpg|jpeg|webp)$/i, "")   // remove extensão se vier
+    .replace(/[\/\\]+/g, "_")                  // / ou \ → _
+    .replace(/\s+/g, "_")                      // espaços → _
+    .replace(/[^A-Za-z0-9_\-]+/g, "_")         // chars inválidos → _
+    .replace(/_{3,}/g, "__")                    // colapsa ___ ou mais em __ (preserva sufixos __02)
+    .replace(/^_+|_+$/g, "");                  // remove _ nas pontas
   if(!clean) return [];
 
-  // tenta também uma variante trocando espaços <-> underscore (caso o XLSX venha inconsistente)
-  const stemVariants = Array.from(new Set([
-    clean,
-    clean.replace(/\s+/g, "_"),
-    clean.replace(/_+/g, "_"), // normaliza múltiplos underscores
-  ])).filter(Boolean);
+  // stem único já normalizado — não precisamos de variantes redundantes
+  const stemVariants = [clean];
 
   // ângulos: principal + 3 variações
   const angleSuffixes = ["", "__02", "__03", "__04", "_02", "_03", "_04"];
