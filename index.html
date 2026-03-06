@@ -158,17 +158,37 @@
 
   
     /* ✅ Ajustes de legibilidade no modal em telas muito pequenas */
-    @media (max-width: 380px){
+    @media (max-width: 480px){
       .pm-meta-row{ padding: 10px 10px; gap: 8px; }
       #pmCodeSeg{ font-size: 12px; }
-    
-      #pmPrecoMain{ font-size: 18px; }
+      #pmPrecoMain{ font-size: 16px !important; }
+    }
+    @media (max-width: 380px){
+      #pmPrecoMain{ font-size: 14px !important; }
     }
 
     /* ✅ Garantia: título do produto no header do modal NÃO aparece no mobile (evita sobrepor ícones) */
     @media (max-width: 767px){
       #pmTitle{ display:none !important; }
       #actionBar{ -webkit-overflow-scrolling: touch; }
+    }
+
+    /* ✅ Gradiente de scroll no actionBar */
+    .actionbar-wrap {
+      position: relative;
+    }
+    .actionbar-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 48px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.97));
+      pointer-events: none;
+      border-radius: 0 999px 999px 0;
+      transition: opacity 0.25s ease;
+    }
+    .actionbar-wrap.at-end::after {
+      opacity: 0;
     }
 </style>
 </head>
@@ -189,6 +209,7 @@
             <div id="headerStatusMobile" class="hidden"></div>
           </div>
 
+          <div class="actionbar-wrap" id="actionBarWrap">
           <div id="actionBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap scroll-smooth -mx-1 px-1 overscroll-x-contain">
             <!-- Search: icon-only -> expands -->
             <div id="searchWrap" class="search-collapsed shrink-0 bg-white border border-oly-border shadow-sm flex items-center gap-2 px-2 py-2">
@@ -242,7 +263,8 @@
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
-          </div>
+          </div><!-- /actionBar -->
+          </div><!-- /actionbar-wrap -->
         </div>
       </div>
     </header>
@@ -474,7 +496,7 @@
 
                     <div class="flex-1 min-w-0">
                       <div class="text-xs text-oly-muted font-bold">Preço</div>
-                      <div id="pmPrecoMain" class="whitespace-nowrap text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight leading-tight tabular-nums">—</div>
+                      <div id="pmPrecoMain" class="whitespace-nowrap text-base sm:text-xl md:text-2xl font-extrabold tracking-tight leading-tight tabular-nums">—</div>
                     </div>
 
                     <div class="min-w-0">
@@ -965,6 +987,7 @@ async function loadCatalog({ cacheBust=false } = {}){
       segmento: String(r["Segmento"] ?? r["SEGMENTO"] ?? "").trim(),
       codigo: String(r["Código"] ?? r["Codigo"] ?? r["CODIGO"] ?? "").trim(),
       produto: String(r["Produto"] ?? r["PRODUTO"] ?? "").trim(),
+      tam: String(r["TAM"] ?? r["Tam"] ?? r["tam"] ?? r["Tamanho"] ?? r["TAMANHO"] ?? "").trim(),
       corCodigo: String(r["Cor código"] ?? r["Cor codigo"] ?? r["COR CÓDIGO"] ?? r["COR CODIGO"] ?? "").trim(),
       cor: String(r["Cor"] ?? r["COR"] ?? "").trim(),
       genero: String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
@@ -1420,40 +1443,61 @@ function setupCardCarousel(cardEl){
     }
   }
 
-  // ✅ Swipe/drag na imagem — visual + touch/mouse
-  let startX = 0, dragging = false, dragOffset = 0;
+  // ✅ Swipe/drag — animação suave para ambos os lados
+  let startX = 0, dragging = false;
 
   wrap.addEventListener("pointerdown", (e)=>{
     startX = e.clientX;
     dragging = true;
-    dragOffset = 0;
     wrap.setPointerCapture(e.pointerId);
     img.style.transition = "none";
   });
 
   wrap.addEventListener("pointermove", (e)=>{
     if(!dragging) return;
-    dragOffset = e.clientX - startX;
-    // feedback visual: translada a imagem enquanto arrasta
-    img.style.transform = `translateX(${Math.max(-60, Math.min(60, dragOffset))}px)`;
+    const dx = e.clientX - startX;
+    img.style.transform = `translateX(${Math.max(-72, Math.min(72, dx))}px)`;
   });
 
   const endDrag = (e) => {
     if(!dragging) return;
     dragging = false;
-    img.style.transition = "transform 0.2s ease";
-    img.style.transform = "translateX(0)";
 
     const dx = (e.clientX !== undefined ? e.clientX : startX) - startX;
+
     if(Math.abs(dx) >= 30 && availableIndexes.length > 1){
       const currPos = availableIndexes.indexOf(index);
       if(currPos !== -1){
         const nextPos = dx < 0 ? currPos + 1 : currPos - 1;
-        const clamped = Math.max(0, Math.min(availableIndexes.length-1, nextPos));
-        index = availableIndexes[clamped];
-        update();
+        const clamped = Math.max(0, Math.min(availableIndexes.length - 1, nextPos));
+
+        if(clamped !== currPos){
+          // desliza a imagem para fora na direção do swipe, depois troca e anima de volta
+          const flyOut = dx < 0 ? -110 : 110;
+          img.style.transition = "transform 0.18s ease-in";
+          img.style.transform = `translateX(${flyOut}%)`;
+
+          setTimeout(()=>{
+            index = availableIndexes[clamped];
+            update();
+            // entra do lado oposto instantaneamente, depois centraliza
+            img.style.transition = "none";
+            img.style.transform = `translateX(${-flyOut}%)`;
+            requestAnimationFrame(()=>{
+              requestAnimationFrame(()=>{
+                img.style.transition = "transform 0.22s ease-out";
+                img.style.transform = "translateX(0)";
+              });
+            });
+          }, 180);
+          return;
+        }
       }
     }
+
+    // sem troca: volta suavemente ao centro
+    img.style.transition = "transform 0.2s ease";
+    img.style.transform = "translateX(0)";
   };
 
   wrap.addEventListener("pointerup", endDrag);
@@ -1859,42 +1903,53 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
       const fav = isFavoriteKey(key);
 
       card.innerHTML = `
-        <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
+        <div data-cardimgwrap="1" class="aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden relative">
+          <div class="imgHit absolute inset-0 cursor-pointer"></div>
+          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white pointer-events-none"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
-          <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
+          <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted pointer-events-none" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
             <div class="text-xs font-bold">sem imagem</div>
           </div>
 
           <!-- Gender icon -->
-          <div class="absolute left-3 top-3 h-9 w-9 rounded-full bg-white/95 border border-oly-border flex items-center justify-center" title="${escapeHtml(g.label)}">
+          <div class="absolute left-3 top-3 h-9 w-9 rounded-full bg-white/95 border border-oly-border flex items-center justify-center pointer-events-none" title="${escapeHtml(g.label)}">
             <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
           </div>
-          <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
+          <button class="btnCardZoom focus-ring absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
             <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
           </button>
-          <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2"></div>
+          <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2 pointer-events-none"></div>
         </div>
 
         <div data-cardthumbs="1" class="px-4 pt-3 flex items-center justify-center gap-2"></div>
 
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <div class="text-base font-extrabold leading-snug line-clamp-2">${escapeHtml(v.produto || "Produto")}</div>
 
-              <!-- Código + Preço (mesma linha) -->
+              <!-- Linha: Código + Preço -->
               <div class="mt-2 flex items-center justify-between gap-2">
                 <span class="inline-flex items-center gap-1 rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
                   <i class="fa-solid fa-hashtag"></i>${escapeHtml(String(v.codigo || "—"))}
                 </span>
                 <div class="text-sm font-extrabold">${escapeHtml(v.priceFmt)}</div>
               </div>
+
+              <!-- Linha: TAM + Cor -->
+              <div class="mt-2 flex items-center gap-2 flex-wrap">
+                ${v.tam ? `<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-oly-border px-3 py-1 text-xs font-bold text-oly-text">
+                  <i class="fa-solid fa-ruler-horizontal text-oly-muted text-[10px]"></i>${escapeHtml(v.tam)}
+                </span>` : ""}
+                ${v.cor ? `<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-oly-border px-3 py-1 text-xs font-bold text-oly-text truncate max-w-[120px]">
+                  <i class="fa-solid fa-palette text-oly-muted text-[10px]"></i><span class="truncate">${escapeHtml(v.cor)}</span>
+                </span>` : ""}
+              </div>
             </div>
 
-            <!-- ✅ Coração (favoritar) no lugar do olho -->
-            <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
+            <!-- Coração -->
+            <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
               <i class="${fav ? "fa-solid" : "fa-regular"} fa-heart text-oly-blue"></i>
             </button>
           </div>
@@ -2994,6 +3049,25 @@ loadCartFromStorage();
 renderCartUI();
 loadCustomerFromStorage();
 updateFavHeaderUI();
+
+/** ✅ Gradiente de scroll no actionBar — some quando chega no fim */
+(function initActionBarGradient(){
+  const bar = $("actionBar");
+  const wrap = $("actionBarWrap");
+  if(!bar || !wrap) return;
+
+  const check = () => {
+    const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4;
+    wrap.classList.toggle("at-end", atEnd);
+  };
+
+  bar.addEventListener("scroll", check, { passive: true });
+  // checa ao redimensionar e ao carregar
+  window.addEventListener("resize", check, { passive: true });
+  check();
+  // re-checa após renderização dos itens dinâmicos (ex: badge de favoritos)
+  setTimeout(check, 600);
+})();
 
 setHeaderStatus("Carregando…");
 loadCatalog({ cacheBust:false });
