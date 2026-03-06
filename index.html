@@ -173,7 +173,66 @@
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
 
-    /* ✅ Gradiente de scroll no actionBar */
+    /* ✅ Modal de Grade */
+    #gradeModal .grade-sheet {
+      transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+      transform: translateY(100%);
+    }
+    #gradeModal.open .grade-sheet {
+      transform: translateY(0);
+    }
+    .grade-size-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 36px 44px 36px;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .grade-size-row:last-child { border-bottom: none; }
+    .grade-size-label {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--text);
+      text-align: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 4px;
+    }
+    .grade-qty-input {
+      width: 44px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 15px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 4px;
+      background: #fff;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .grade-qty-input:focus { border-color: var(--primary); }
+    .grade-qty-input::-webkit-inner-spin-button,
+    .grade-qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .grade-btn-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .grade-btn-sm:hover { background: var(--bg); }
+    .grade-pending-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fff3cd; border: 1px solid #ffc107;
+      color: #856404; border-radius: 999px;
+      padding: 2px 10px; font-size: 11px; font-weight: 800;
+    }
     .actionbar-wrap {
       position: relative;
       min-width: 0;
@@ -680,6 +739,39 @@
   </div>
 </div>
 <img id="viewerImg" alt="Imagem do produto em tela cheia" class="max-h-full max-w-full object-contain" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Grade -->
+    <div id="gradeModal" class="hidden fixed inset-0 z-[75]">
+      <div class="absolute inset-0 bg-black/40" id="gradeBackdrop"></div>
+      <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" style="max-width:520px;margin:0 auto;">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-oly-border shrink-0">
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-oly-muted">Grade de tamanhos</div>
+            <div id="gradeProduto" class="font-extrabold truncate">—</div>
+            <div id="gradeCor" class="text-xs text-oly-muted mt-0.5">—</div>
+          </div>
+          <button id="btnCloseGrade" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0">
+            <i class="fa-solid fa-xmark text-oly-blue"></i>
+          </button>
+        </div>
+
+        <!-- Lista de tamanhos -->
+        <div class="overflow-y-auto px-5 py-2 flex-1 no-scrollbar" id="gradeSizeList"></div>
+
+        <!-- Totais + botão -->
+        <div class="px-5 pb-5 pt-3 border-t border-oly-border shrink-0 space-y-3">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-bold text-oly-muted">Total de pares</span>
+            <span id="gradeTotalPares" class="font-extrabold text-lg text-oly-blue">0</span>
+          </div>
+          <button id="btnConfirmGrade" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-5 py-4 text-sm font-extrabold text-white hover:opacity-95">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>Adicionar Grade à Sacola</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1953,7 +2045,7 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
             </button>
           </div>
 
-          <!-- Bloco Cor + TAM -->
+          <!-- Bloco Cor + TAM (TAM clicável abre grade se for calçado/vestuário) -->
           ${(v.cor || v.tam) ? `
           <div class="mt-3 flex items-stretch rounded-2xl border border-oly-border bg-gray-50 overflow-hidden text-xs font-bold">
             ${v.cor ? `<div class="flex items-center gap-1.5 px-3 py-2 flex-1 min-w-0">
@@ -1961,10 +2053,11 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <span class="truncate text-oly-text">${escapeHtml(v.cor)}</span>
             </div>` : ""}
             ${v.cor && v.tam ? `<div class="w-px bg-oly-border self-stretch"></div>` : ""}
-            ${v.tam ? `<div class="flex items-center gap-1.5 px-3 py-2 shrink-0">
+            ${v.tam ? `<button class="btnOpenGrade flex items-center gap-1.5 px-3 py-2 shrink-0 hover:bg-oly-blue/10 transition-colors" title="Montar grade de tamanhos">
               <i class="fa-solid fa-ruler-horizontal text-oly-blue shrink-0" style="font-size:11px"></i>
-              <span class="text-oly-text">${escapeHtml(v.tam)}</span>
-            </div>` : ""}
+              <span class="text-oly-blue font-extrabold">${escapeHtml(v.tam)}</span>
+              <i class="fa-solid fa-chevron-right text-oly-blue/50" style="font-size:9px"></i>
+            </button>` : ""}
           </div>` : ""}
 
           <!-- Controles: manual + atalho +6/+12 + adicionar -->
@@ -2006,6 +2099,15 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
 
       // ✅ imagem abre detalhes
       imgHit.addEventListener("click", ()=> openProductModal({ item:v, group:null }));
+
+      // ✅ Botão de grade (TAM)
+      const btnOpenGrade = card.querySelector(".btnOpenGrade");
+      if(btnOpenGrade){
+        btnOpenGrade.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          openGradeModal(v);
+        });
+      }
 
 
       const btnCardZoom = card.querySelector(".btnCardZoom");
@@ -2565,48 +2667,62 @@ const badge = $("cartCountBadge");
   }
 
   for(const it of state.cart.values()){
+    const needsGrade = tamNeedsGrade(it.categoria, it.tam);
+    const hasGrade = it.grade && Object.keys(it.grade).length > 0;
+    const isPending = needsGrade && !hasGrade;
+
     const row = document.createElement("div");
-    row.className = "rounded-3xl border border-oly-border bg-white p-4";
+    row.className = "rounded-3xl border border-oly-border bg-white p-4" + (isPending ? " border-amber-300" : "");
     row.innerHTML = `
       <div class="flex gap-3">
-        <div class="h-20 w-20 cursor-pointer rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center">
+        <div class="h-20 w-20 cursor-pointer rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center shrink-0">
           ${it.imgSrc ? `<img loading="lazy" decoding="async" src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">`
             : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
         </div>
         <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0" data-open="true" role="button" tabindex="0" title="Ver/editar item">
-              <div class="font-extrabold leading-snug line-clamp-2">${escapeHtml(it.produto || "Produto")}</div>
-              <div class="mt-2 flex flex-wrap gap-2">
-                <span class="inline-flex items-center gap-2 rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
-                  <i class="fa-solid fa-palette"></i>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1" data-open="true" role="button" tabindex="0" title="Ver/editar item">
+              <div class="font-extrabold leading-snug truncate">${escapeHtml(it.produto || "Produto")}</div>
+              <div class="mt-1 flex flex-wrap gap-1.5">
+                <span class="inline-flex items-center gap-1 rounded-full bg-oly-blue/10 px-2.5 py-1 text-xs font-extrabold text-oly-blue">
+                  <i class="fa-solid fa-palette" style="font-size:10px"></i>
                   <span>${escapeHtml(it.cor || "—")}</span>
                 </span>
-                <span class="inline-flex items-center gap-2 rounded-full bg-white border border-oly-border px-3 py-1 text-xs font-bold">
-                  <i class="fa-solid fa-hashtag text-oly-blue"></i>
-                  <span>${escapeHtml(it.codigo || "—")}</span>
-                </span>
+                ${it.tam ? `<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-oly-border px-2.5 py-1 text-xs font-bold text-oly-text">
+                  <i class="fa-solid fa-ruler-horizontal" style="font-size:10px"></i>
+                  <span>${escapeHtml(it.tam)}</span>
+                </span>` : ""}
+                ${isPending ? `<span class="grade-pending-badge"><i class="fa-solid fa-triangle-exclamation"></i> Grade pendente</span>` : ""}
               </div>
             </div>
-            ${!it.obs ? `<button class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" data-edit="true" aria-label="Editar/Adicionar observação">
-              <i class="fa-solid fa-pen-to-square text-oly-blue"></i>
-            </button>` : ``}
-            <button class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" data-remove="true" aria-label="Remover item">
-              <i class="fa-solid fa-trash text-oly-blue"></i>
-            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              ${needsGrade ? `<button class="focus-ring h-9 w-9 rounded-full border ${isPending ? "border-amber-300 bg-amber-50 hover:bg-amber-100" : "border-oly-border hover:bg-oly-bg"}" data-edit-grade="true" aria-label="Editar grade" title="Editar grade de tamanhos">
+                <i class="fa-solid fa-ruler-horizontal ${isPending ? "text-amber-500" : "text-oly-blue"}" style="font-size:12px"></i>
+              </button>` : ""}
+              <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-edit="true" aria-label="Editar observação">
+                <i class="fa-solid fa-pen-to-square text-oly-blue" style="font-size:12px"></i>
+              </button>
+              <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-remove="true" aria-label="Remover item">
+                <i class="fa-solid fa-trash text-oly-blue" style="font-size:12px"></i>
+              </button>
+            </div>
           </div>
 
-          <div class="mt-3 flex items-center gap-2">
-            <button class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" data-minus="true" aria-label="Diminuir quantidade">
-              <i class="fa-solid fa-minus text-oly-blue"></i>
+          ${hasGrade ? `<div class="mt-2 rounded-xl border border-oly-border bg-oly-bg px-3 py-2 text-xs">
+            <div class="text-oly-muted font-bold mb-1">Grade</div>
+            <div class="font-extrabold text-oly-text leading-relaxed">${escapeHtml(it.gradeResume || "")}</div>
+            <div class="mt-1 text-oly-muted font-bold">${it.qty} pares no total</div>
+          </div>` : `<div class="mt-2 flex items-center gap-2">
+            <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-minus="true" aria-label="Diminuir quantidade">
+              <i class="fa-solid fa-minus text-oly-blue" style="font-size:12px"></i>
             </button>
-            <div class="min-w-[52px] text-center font-extrabold">${it.qty}</div>
-            <button class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" data-plus="true" aria-label="Aumentar quantidade">
-              <i class="fa-solid fa-plus text-oly-blue"></i>
+            <div class="min-w-[44px] text-center font-extrabold text-sm">${it.qty}</div>
+            <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-plus="true" aria-label="Aumentar quantidade">
+              <i class="fa-solid fa-plus text-oly-blue" style="font-size:12px"></i>
             </button>
-          </div>
+          </div>`}
 
-          ${it.obs ? `<div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg px-3 py-2 text-xs">
+          ${it.obs ? `<div class="mt-2 rounded-xl border border-oly-border bg-oly-bg px-3 py-2 text-xs">
             <div class="text-oly-muted font-bold">Obs.</div>
             <div class="font-semibold">${escapeHtml(it.obs)}</div>
           </div>` : ""}
@@ -2619,6 +2735,7 @@ const badge = $("cartCountBadge");
       const mn = e.target?.closest?.("[data-minus='true']");
       const pl = e.target?.closest?.("[data-plus='true']");
       const ed = e.target?.closest?.("[data-edit='true']");
+      const eg = e.target?.closest?.("[data-edit-grade='true']");
 
       if(rm){
         state.cart.delete(it.key);
@@ -2641,14 +2758,26 @@ const badge = $("cartCountBadge");
         renderCartUI();
         return;
       }
+      if(eg){
+        // Abre modal de grade a partir da sacola
+        const variant = findProductVariantFromCartItem(it);
+        if(variant){
+          closeCartModal();
+          openGradeModal(variant, { fromCart: true, cartKey: it.key });
+          // Ao confirmar a grade, reabre a sacola
+          gradeState.fromCart = true;
+        }
+        return;
+      }
 
-      // Qualquer outro clique no item (incluindo imagem) abre detalhes.
+      // Qualquer outro clique abre detalhes
       const variant = findProductVariantFromCartItem(it);
-      if(variant){
+      if(variant && !ed){
         closeCartModal();
-        openProductModal({ item: variant, group: null, fromCart:true, editing: !!ed, editKey: it.key });
-        // Observação já vem preenchida via preset; se clicou em editar e não tinha obs, foca
-        if(ed && !it.obs){ $("pmObs")?.focus?.(); }
+        openProductModal({ item: variant, group: null, fromCart:true, editing: false, editKey: it.key });
+      } else if(variant && ed){
+        closeCartModal();
+        openProductModal({ item: variant, group: null, fromCart:true, editing: true, editKey: it.key });
       }
     });
 
@@ -2675,7 +2804,12 @@ function buildWhatsMessage(){
     lines.push(`${i}. *${it.produto}*`);
     lines.push(`   Código: ${it.codigo}`);
     lines.push(`   Cor: ${it.cor}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`);
-    lines.push(`   Qtd: ${it.qty}`);
+    if(it.gradeResume){
+      lines.push(`   Grade: ${it.gradeResume}`);
+      lines.push(`   Total: ${it.qty} pares`);
+    } else {
+      lines.push(`   Qtd: ${it.qty}`);
+    }
     if(it.obs) lines.push(`   Obs: ${it.obs}`);
     lines.push("");
     i++;
@@ -2698,10 +2832,31 @@ function exportOrderXlsx(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
   const rows = [];
   for(const it of state.cart.values()){
-    rows.push({ "Código": it.codigo, "Produto": it.produto, "Cor": it.cor, "Cor código": it.corCodigo, "Quantidade": it.qty });
+    if(it.grade && Object.keys(it.grade).length > 0){
+      // Uma linha por tamanho da grade
+      for(const [tam, qty] of Object.entries(it.grade)){
+        rows.push({
+          "Código": it.codigo,
+          "Produto": it.produto,
+          "Cor": it.cor,
+          "Cor código": it.corCodigo,
+          "Tamanho": tam,
+          "Quantidade": qty
+        });
+      }
+    } else {
+      rows.push({
+        "Código": it.codigo,
+        "Produto": it.produto,
+        "Cor": it.cor,
+        "Cor código": it.corCodigo,
+        "Tamanho": it.tam || "",
+        "Quantidade": it.qty
+      });
+    }
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws["!cols"] = [{wch:14},{wch:38},{wch:18},{wch:12},{wch:12}];
+  ws["!cols"] = [{wch:14},{wch:38},{wch:18},{wch:12},{wch:10},{wch:12}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Pedido");
   const now = new Date();
@@ -3055,6 +3210,206 @@ function handleTrapKeydown(e){
   if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
   else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
 }
+
+/** ✅ Sistema de Grade de Tamanhos */
+
+// Categorias que usam grade (FTW = calçados, V&A = vestuário, CHI = infantil)
+function tamNeedsGrade(categoria, tam){
+  if(!tam || tam === "Único") return false;
+  const cat = String(categoria || "").toUpperCase().trim();
+  if(cat === "ACC" || cat === "MEIA") return false;
+  return true;
+}
+
+// Expande TAM em array de tamanhos individuais
+// "34/44" → [34,35,36,...,44]
+// "P-M-G-GG" → ["P","M","G","GG"]
+// "PP-P-M-G-GG" → ["PP","P","M","G","GG"]
+function expandTam(tam){
+  if(!tam) return [];
+  const s = String(tam).trim();
+  // Range numérico: "34/44"
+  if(/^\d+\/\d+$/.test(s)){
+    const [a, b] = s.split("/").map(Number);
+    const result = [];
+    for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
+    return result;
+  }
+  // Lista textual: "P-M-G-GG" ou "PP-P-M-G-GG-G1"
+  if(s.includes("-")){
+    return s.split("-").map(x => x.trim()).filter(Boolean);
+  }
+  // Valor único
+  return [s];
+}
+
+// gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
+const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null };
+
+function openGradeModal(item, opts={}){
+  gradeState.item = item;
+  gradeState.fromCart = !!opts.fromCart;
+  gradeState.cartKey = opts.cartKey || null;
+
+  const sizes = expandTam(item.tam);
+  // Recupera qtds já salvas na sacola se existir grade
+  const existing = state.cart.get(cartKeyFor(item));
+  const existingGrade = existing?.grade || {};
+
+  gradeState.sizes = sizes.map(tam => ({
+    tam,
+    qty: Number(existingGrade[tam] || 0)
+  }));
+
+  // Header do modal
+  $("gradeProduto").textContent = item.produto || "Produto";
+  $("gradeCor").textContent = `${item.cor || ""}${item.corCodigo ? " · " + item.corCodigo : ""}`;
+
+  renderGradeSizeList();
+
+  // Abre com animação
+  const modal = $("gradeModal");
+  modal.classList.remove("hidden");
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{ modal.classList.add("open"); });
+  });
+  document.body.style.overflow = "hidden";
+}
+
+function closeGradeModal(){
+  const modal = $("gradeModal");
+  modal.classList.remove("open");
+  setTimeout(()=>{
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  }, 300);
+}
+
+function renderGradeSizeList(){
+  const list = $("gradeSizeList");
+  list.innerHTML = "";
+
+  for(let i = 0; i < gradeState.sizes.length; i++){
+    const s = gradeState.sizes[i];
+    const row = document.createElement("div");
+    row.className = "grade-size-row";
+    row.innerHTML = `
+      <div class="grade-size-label">${escapeHtml(s.tam)}</div>
+      <div></div>
+      <button class="grade-btn-sm" data-gm="true" data-idx="${i}" aria-label="Diminuir">
+        <i class="fa-solid fa-minus" style="font-size:12px"></i>
+      </button>
+      <input type="number" class="grade-qty-input" min="0" max="999" value="${s.qty}" data-idx="${i}" inputmode="numeric"/>
+      <button class="grade-btn-sm" data-gp="true" data-idx="${i}" aria-label="Aumentar">
+        <i class="fa-solid fa-plus" style="font-size:12px"></i>
+      </button>
+    `;
+    list.appendChild(row);
+  }
+
+  updateGradeTotal();
+
+  // Eventos dos inputs e botões
+  list.addEventListener("click", (e)=>{
+    const minus = e.target?.closest?.("[data-gm='true']");
+    const plus  = e.target?.closest?.("[data-gp='true']");
+    if(minus){
+      const idx = parseInt(minus.dataset.idx, 10);
+      gradeState.sizes[idx].qty = Math.max(0, gradeState.sizes[idx].qty - 1);
+      const input = list.querySelector(`input[data-idx="${idx}"]`);
+      if(input) input.value = gradeState.sizes[idx].qty;
+      updateGradeTotal();
+    }
+    if(plus){
+      const idx = parseInt(plus.dataset.idx, 10);
+      gradeState.sizes[idx].qty = Math.min(999, gradeState.sizes[idx].qty + 1);
+      const input = list.querySelector(`input[data-idx="${idx}"]`);
+      if(input) input.value = gradeState.sizes[idx].qty;
+      updateGradeTotal();
+    }
+  });
+
+  list.addEventListener("input", (e)=>{
+    if(e.target.classList.contains("grade-qty-input")){
+      const idx = parseInt(e.target.dataset.idx, 10);
+      const v = Math.max(0, Math.min(999, parseInt(e.target.value, 10) || 0));
+      gradeState.sizes[idx].qty = v;
+      e.target.value = v;
+      updateGradeTotal();
+    }
+  });
+}
+
+function updateGradeTotal(){
+  const total = gradeState.sizes.reduce((s, x) => s + x.qty, 0);
+  $("gradeTotalPares").textContent = String(total);
+}
+
+function gradeToCartEntry(){
+  // Converte o estado da grade para objeto salvo na sacola
+  const item = gradeState.item;
+  const gradeMap = {};
+  let totalQty = 0;
+  for(const s of gradeState.sizes){
+    if(s.qty > 0){ gradeMap[s.tam] = s.qty; totalQty += s.qty; }
+  }
+
+  // Texto resumido: "34×2 | 36×4 | ..."
+  const gradeResume = Object.entries(gradeMap)
+    .map(([t, q]) => `${t}×${q}`)
+    .join(" | ");
+
+  const key = cartKeyFor(item);
+  const precoNum = toNumberBR(item.precoRaw ?? 0);
+  const precoFmt = moneyBR(precoNum);
+
+  return {
+    key,
+    codigo: item.codigo || "",
+    produto: item.produto || "",
+    cor: item.cor || "",
+    corCodigo: item.corCodigo || "",
+    genero: item.genero || "",
+    segmento: item.segmento || "",
+    categoria: item.categoria || "",
+    tam: item.tam || "",
+    precoNum,
+    precoFmt,
+    qty: totalQty,
+    grade: gradeMap,
+    gradeResume,
+    obs: state.cart.get(key)?.obs || "",
+    imgSrc: resolveImageSrc(item.imagem),
+  };
+}
+
+$("btnConfirmGrade").addEventListener("click", ()=>{
+  const entry = gradeToCartEntry();
+  if(entry.qty === 0){
+    toast("Adicione ao menos 1 par ✅");
+    return;
+  }
+  const fromCart = gradeState.fromCart;
+  state.cart.set(entry.key, entry);
+  saveCartToStorage();
+  renderCartUI();
+  setCardAddStatus(entry.key, "added");
+  refreshVisibleCardAddButtons();
+  closeGradeModal();
+  toast("Grade adicionada ✅");
+  if(fromCart) setTimeout(()=> openCartModal(), 320);
+});
+
+$("btnCloseGrade").addEventListener("click", ()=>{
+  const fromCart = gradeState.fromCart;
+  closeGradeModal();
+  if(fromCart) setTimeout(()=> openCartModal(), 320);
+});
+$("gradeBackdrop").addEventListener("click", ()=>{
+  const fromCart = gradeState.fromCart;
+  closeGradeModal();
+  if(fromCart) setTimeout(()=> openCartModal(), 320);
+});
 
 /** Init */
 loadFavsFromStorage();
