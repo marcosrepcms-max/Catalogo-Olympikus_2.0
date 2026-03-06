@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -3200,6 +3199,11 @@ document.addEventListener("keydown", (e)=>{
     return;
   }
   if(e.key === "Escape"){
+    // Grade modal tem prioridade sobre os outros
+    if(!$("gradeModal").classList.contains("hidden")){
+      closeGradeWithoutAdding();
+      return;
+    }
     if(state.productModal.open) closeProductModal();
     else if(isCartOpen()) closeCartModal();
     else if(!$("filtersDrawerWrap").classList.contains("hidden")) closeFiltersDrawer();
@@ -3332,8 +3336,10 @@ function closeGradeModal(){
 }
 
 function renderGradeSizeList(){
-  const list = $("gradeSizeList");
-  list.innerHTML = "";
+  // Clona o elemento para remover todos os listeners acumulados de aberturas anteriores
+  const oldList = $("gradeSizeList");
+  const list = oldList.cloneNode(false);
+  oldList.parentNode.replaceChild(list, oldList);
 
   for(let i = 0; i < gradeState.sizes.length; i++){
     const s = gradeState.sizes[i];
@@ -3355,7 +3361,7 @@ function renderGradeSizeList(){
 
   updateGradeTotal();
 
-  // Eventos dos inputs e botões
+  // Evento único de click delegado no novo elemento (sem acúmulo)
   list.addEventListener("click", (e)=>{
     const minus = e.target?.closest?.("[data-gm='true']");
     const plus  = e.target?.closest?.("[data-gp='true']");
@@ -3375,7 +3381,7 @@ function renderGradeSizeList(){
     }
   });
 
-  // Input direto: só aplica ao sair do campo (blur) ou Enter, evita bug de múltiplos dígitos
+  // Input direto: só aplica ao sair do campo (blur) ou Enter
   list.addEventListener("blur", (e)=>{
     if(!e.target.classList.contains("grade-qty-input")) return;
     const idx = parseInt(e.target.dataset.idx, 10);
@@ -3495,11 +3501,16 @@ $("btnGradeLater").addEventListener("click", ()=>{
   toast("Adicionado — preencha a grade depois ✅");
   if(fromCart) setTimeout(()=> openCartModal(), 320);
 });
-$("gradeBackdrop").addEventListener("click", ()=>{
+
+// ✅ Fecha grade sem adicionar nada — NÃO marca o botão como verde
+function closeGradeWithoutAdding(){
   const fromCart = gradeState.fromCart;
   closeGradeModal();
   if(fromCart) setTimeout(()=> openCartModal(), 320);
-});
+}
+
+$("btnCloseGrade").addEventListener("click", closeGradeWithoutAdding);
+$("gradeBackdrop").addEventListener("click", closeGradeWithoutAdding);
 
 /** Init */
 loadFavsFromStorage();
