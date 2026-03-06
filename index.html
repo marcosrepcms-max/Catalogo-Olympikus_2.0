@@ -703,7 +703,7 @@ const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_ol
 
 // ===== Namespacing de LocalStorage por projeto =====
 const STORAGE_NS = (location.pathname || "/").replace(/\/$/, ""); // ex: /Catalogo-Olympikus_2.0
-const CACHE_VERSION = "v2"; // incrementa para invalidar caches antigos
+const CACHE_VERSION = "v3"; // incrementa para invalidar caches antigos
 function lsKey(k){ return `${STORAGE_NS}:${CACHE_VERSION}:${k}`; }
 
 function clearAllLocalState(){
@@ -983,6 +983,15 @@ async function loadCatalog({ cacheBust=false } = {}){
     const ws = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
 
+    // Sanitiza o campo TAM: remove valores inválidos do Excel e normaliza
+    const TAM_INVALIDOS = new Set(["#n/a", "#na", "cor", "n/a", ""]);
+    function sanitizeTam(raw){
+      const v = String(raw ?? "").trim();
+      if(TAM_INVALIDOS.has(v.toLowerCase())) return "";
+      if(v.toUpperCase() === "U") return "Único";
+      return v;
+    }
+
     const rows = json.map((r, idx)=>({
       _row: idx+2,
       imagem: String(r["Imagem"] ?? r["IMAGEM"] ?? r["imagem"] ?? "").trim(),
@@ -990,7 +999,7 @@ async function loadCatalog({ cacheBust=false } = {}){
       segmento: String(r["Segmento"] ?? r["SEGMENTO"] ?? "").trim(),
       codigo: String(r["Código"] ?? r["Codigo"] ?? r["CODIGO"] ?? "").trim(),
       produto: String(r["Produto"] ?? r["PRODUTO"] ?? "").trim(),
-      tam: String(r["TAM"] ?? r["Tam"] ?? r["tam"] ?? r["Tamanho"] ?? r["TAMANHO"] ?? "").trim(),
+      tam: sanitizeTam(r["TAM"] ?? r["Tam"] ?? r["tam"] ?? r["Tamanho"] ?? r["TAMANHO"] ?? ""),
       corCodigo: String(r["Cor código"] ?? r["Cor codigo"] ?? r["COR CÓDIGO"] ?? r["COR CODIGO"] ?? "").trim(),
       cor: String(r["Cor"] ?? r["COR"] ?? "").trim(),
       genero: String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
