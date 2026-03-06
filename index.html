@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -770,10 +771,6 @@
           <button id="btnConfirmGrade" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-5 py-4 text-sm font-extrabold text-white hover:opacity-95">
             <i class="fa-solid fa-bag-shopping"></i>
             <span>Adicionar Grade à Sacola</span>
-          </button>
-          <button id="btnGradeLater" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-5 py-3 text-sm font-bold text-oly-muted hover:bg-oly-bg">
-            <i class="fa-regular fa-clock"></i>
-            <span>Preencher depois</span>
           </button>
         </div>
       </div>
@@ -2159,10 +2156,6 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
       });
 
       btnPack6.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
         applyPackCard(key, 6);
         qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
@@ -2172,10 +2165,6 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         updateAddButtonUI(btnAdd, key);
       });
       btnPack12.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
         applyPackCard(key, 12);
         qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
@@ -2707,9 +2696,9 @@ const badge = $("cartCountBadge");
               </div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button class="focus-ring h-9 w-9 rounded-full border ${isPending ? "border-amber-300 bg-amber-50 hover:bg-amber-100" : "border-oly-border hover:bg-oly-bg"}" data-edit-grade="true" aria-label="Editar grade" title="${needsGrade ? "Editar grade de tamanhos" : "Tamanhos"}">
+              ${needsGrade ? `<button class="focus-ring h-9 w-9 rounded-full border ${isPending ? "border-amber-300 bg-amber-50 hover:bg-amber-100" : "border-oly-border hover:bg-oly-bg"}" data-edit-grade="true" aria-label="Editar grade" title="Editar grade de tamanhos">
                 <i class="fa-solid fa-ruler-horizontal ${isPending ? "text-amber-500" : "text-oly-blue"}" style="font-size:12px"></i>
-              </button>
+              </button>` : ""}
               <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-edit="true" aria-label="Editar observação">
                 <i class="fa-solid fa-pen-to-square text-oly-blue" style="font-size:12px"></i>
               </button>
@@ -2719,28 +2708,11 @@ const badge = $("cartCountBadge");
             </div>
           </div>
 
-          ${hasGrade ? `
-          <div class="mt-2">
-            <div class="text-xs font-bold text-oly-muted mb-1.5">Grade</div>
-            <div class="flex flex-wrap gap-1.5">
-              ${Object.entries(it.grade).map(([tam, qty]) => `
-                <div class="flex flex-col items-center rounded-xl border border-oly-border bg-white min-w-[40px] px-2 py-1.5">
-                  <span class="text-sm font-extrabold text-oly-blue leading-none">${qty}</span>
-                  <span class="text-[10px] font-bold text-oly-muted mt-1 leading-none">${escapeHtml(tam)}</span>
-                </div>`).join("")}
-            </div>
-            <div class="mt-1.5 text-xs font-bold text-oly-muted">${it.qty} pares no total</div>
-          </div>` : needsGrade ? `
-          <div class="mt-2 flex items-center gap-1.5">
-            <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-minus="true" aria-label="Diminuir quantidade">
-              <i class="fa-solid fa-minus text-oly-blue" style="font-size:12px"></i>
-            </button>
-            <div class="min-w-[44px] text-center font-extrabold text-sm">${it.qty || 0}</div>
-            <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-plus="true" aria-label="Aumentar quantidade">
-              <i class="fa-solid fa-plus text-oly-blue" style="font-size:12px"></i>
-            </button>
-          </div>` : `
-          <div class="mt-2 flex items-center gap-1.5">
+          ${hasGrade ? `<div class="mt-2 rounded-xl border border-oly-border bg-oly-bg px-3 py-2 text-xs">
+            <div class="text-oly-muted font-bold mb-1">Grade</div>
+            <div class="font-extrabold text-oly-text leading-relaxed">${escapeHtml(it.gradeResume || "")}</div>
+            <div class="mt-1 text-oly-muted font-bold">${it.qty} pares no total</div>
+          </div>` : `<div class="mt-2 flex items-center gap-2">
             <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-minus="true" aria-label="Diminuir quantidade">
               <i class="fa-solid fa-minus text-oly-blue" style="font-size:12px"></i>
             </button>
@@ -3250,40 +3222,23 @@ function tamNeedsGrade(categoria, tam){
 }
 
 // Expande TAM em array de tamanhos individuais
-// "34/44"         → ["34","35","36",...,"44"]
-// "P-M-G-GG"      → ["P","M","G","GG"]
-// "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]  (chinelos)
+// "34/44" → [34,35,36,...,44]
+// "P-M-G-GG" → ["P","M","G","GG"]
+// "PP-P-M-G-GG" → ["PP","P","M","G","GG"]
 function expandTam(tam){
   if(!tam) return [];
   const s = String(tam).trim();
-
-  // Grade conjugada: "33/34 a 43/44" ou "33/34 a 45/46"
-  if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
-    const parts = s.split(/\s+a\s+/);
-    const [aLow, aHigh] = parts[0].split("/").map(Number);
-    const [bLow]        = parts[1].split("/").map(Number);
-    const result = [];
-    let lo = aLow, hi = aHigh;
-    while(lo <= bLow){
-      result.push(`${lo}/${hi}`);
-      lo += 2; hi += 2;
-    }
-    return result;
-  }
-
-  // Range numérico simples: "34/44"
+  // Range numérico: "34/44"
   if(/^\d+\/\d+$/.test(s)){
     const [a, b] = s.split("/").map(Number);
     const result = [];
     for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
     return result;
   }
-
   // Lista textual: "P-M-G-GG" ou "PP-P-M-G-GG-G1"
   if(s.includes("-")){
     return s.split("-").map(x => x.trim()).filter(Boolean);
   }
-
   // Valor único
   return [s];
 }
@@ -3374,25 +3329,13 @@ function renderGradeSizeList(){
     }
   });
 
-  // Input direto: só aplica ao sair do campo (blur) ou Enter, evita bug de múltiplos dígitos
-  list.addEventListener("blur", (e)=>{
-    if(!e.target.classList.contains("grade-qty-input")) return;
-    const idx = parseInt(e.target.dataset.idx, 10);
-    const v = Math.max(0, Math.min(999, parseInt(e.target.value, 10) || 0));
-    gradeState.sizes[idx].qty = v;
-    e.target.value = v;
-    updateGradeTotal();
-  }, true);
-
-  list.addEventListener("keydown", (e)=>{
-    if(!e.target.classList.contains("grade-qty-input")) return;
-    if(e.key === "Enter"){
+  list.addEventListener("input", (e)=>{
+    if(e.target.classList.contains("grade-qty-input")){
       const idx = parseInt(e.target.dataset.idx, 10);
       const v = Math.max(0, Math.min(999, parseInt(e.target.value, 10) || 0));
       gradeState.sizes[idx].qty = v;
       e.target.value = v;
       updateGradeTotal();
-      e.target.blur();
     }
   });
 }
@@ -3457,43 +3400,7 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
   if(fromCart) setTimeout(()=> openCartModal(), 320);
 });
 
-$("btnGradeLater").addEventListener("click", ()=>{
-  const item = gradeState.item;
-  if(!item) return closeGradeModal();
-  const fromCart = gradeState.fromCart;
-
-  // Adiciona na sacola sem grade (grade pendente)
-  const key = cartKeyFor(item);
-  const precoNum = toNumberBR(item.precoRaw ?? 0);
-  const existing = state.cart.get(key);
-  if(!existing){
-    state.cart.set(key, {
-      key,
-      codigo: item.codigo || "",
-      produto: item.produto || "",
-      cor: item.cor || "",
-      corCodigo: item.corCodigo || "",
-      genero: item.genero || "",
-      segmento: item.segmento || "",
-      categoria: item.categoria || "",
-      tam: item.tam || "",
-      precoNum,
-      precoFmt: moneyBR(precoNum),
-      qty: 0,
-      grade: {},
-      gradeResume: "",
-      obs: "",
-      imgSrc: resolveImageSrc(item.imagem),
-    });
-  }
-  saveCartToStorage();
-  renderCartUI();
-  setCardAddStatus(key, "added");
-  refreshVisibleCardAddButtons();
-  closeGradeModal();
-  toast("Adicionado — preencha a grade depois ✅");
-  if(fromCart) setTimeout(()=> openCartModal(), 320);
-});
+$("btnCloseGrade").addEventListener("click", ()=>{
   const fromCart = gradeState.fromCart;
   closeGradeModal();
   if(fromCart) setTimeout(()=> openCartModal(), 320);
