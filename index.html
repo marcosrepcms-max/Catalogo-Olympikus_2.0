@@ -2238,22 +2238,22 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         btnFav.title = nowFav ? "Remover dos favoritos" : "Adicionar aos favoritos";
       });
 
-      btnMinus.addEventListener("click", ()=>{
+      if(btnMinus) btnMinus.addEventListener("click", ()=>{
         const cur = getCardQty(key);
         const next = Math.max(1, cur - 1);
         setCardQty(key, next);
-        qtyDisplay.textContent = String(next);
+        if(qtyDisplay) qtyDisplay.textContent = String(next);
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
         updateCardAddButton(btnAdd, getCardAddStatus(key));
         updateAddButtonUI(btnAdd, key);
       });
-      btnPlus.addEventListener("click", ()=>{
+      if(btnPlus) btnPlus.addEventListener("click", ()=>{
         const cur = getCardQty(key);
         const next = Math.min(999, cur + 1);
         setCardQty(key, next);
-        qtyDisplay.textContent = String(next);
+        if(qtyDisplay) qtyDisplay.textContent = String(next);
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
@@ -2261,26 +2261,18 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         updateAddButtonUI(btnAdd, key);
       });
 
-      btnPack6.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
+      if(btnPack6) btnPack6.addEventListener("click", ()=>{
         applyPackCard(key, 6);
-        qtyDisplay.textContent = String(getCardQty(key));
+        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
         updateCardAddButton(btnAdd, getCardAddStatus(key));
         updateAddButtonUI(btnAdd, key);
       });
-      btnPack12.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
+      if(btnPack12) btnPack12.addEventListener("click", ()=>{
         applyPackCard(key, 12);
-        qtyDisplay.textContent = String(getCardQty(key));
+        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
