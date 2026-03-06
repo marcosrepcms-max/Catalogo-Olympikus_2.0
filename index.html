@@ -837,7 +837,7 @@ const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_ol
 
 // ===== Namespacing de LocalStorage por projeto =====
 const STORAGE_NS = (location.pathname || "/").replace(/\/$/, ""); // ex: /Catalogo-Olympikus_2.0
-const CACHE_VERSION = "v3"; // incrementa para invalidar caches antigos
+const CACHE_VERSION = "v4"; // incrementa para invalidar caches antigos
 function lsKey(k){ return `${STORAGE_NS}:${CACHE_VERSION}:${k}`; }
 
 function clearAllLocalState(){
