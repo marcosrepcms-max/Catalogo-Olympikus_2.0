@@ -172,6 +172,45 @@
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
 
+    /* ✅ Botão de grade pulsante */
+    @keyframes grade-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(40,54,212,0.35); }
+      50%       { box-shadow: 0 0 0 6px rgba(40,54,212,0); }
+    }
+    @keyframes grade-fade-in  { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes grade-fade-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-3px); } }
+
+    .btn-open-grade {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px 5px 8px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(40,54,212,0.35);
+      background: rgba(40,54,212,0.06);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+      color: #2836D4;
+      animation: grade-pulse 2s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+      justify-content: center;
+    }
+    .btn-open-grade:hover {
+      background: rgba(40,54,212,0.12);
+      animation: none;
+      box-shadow: 0 0 0 3px rgba(40,54,212,0.2);
+    }
+    .btn-open-grade .grade-label {
+      display: inline-flex; align-items: center; gap: 4px;
+      position: absolute;
+      transition: none;
+    }
+    .btn-open-grade .grade-label.visible  { animation: grade-fade-in  0.4s ease forwards; }
+    .btn-open-grade .grade-label.hidden-out { animation: grade-fade-out 0.4s ease forwards; }
+
     /* ✅ Modal de Grade */
     #gradeModal .grade-sheet {
       transition: transform 0.3s cubic-bezier(.4,0,.2,1);
@@ -837,6 +876,40 @@ const state = {
 };
 
 const $ = (id)=>document.getElementById(id);
+
+// ✅ Grade helpers — declarados cedo pois são usados nos templates de card
+// Categorias que usam grade (FTW = calçados, V&A = vestuário, CHI = infantil)
+function tamNeedsGrade(categoria, tam){
+  if(!tam || tam === "Único") return false;
+  const cat = String(categoria || "").toUpperCase().trim();
+  if(cat === "ACC" || cat === "MEIA") return false;
+  return true;
+}
+// Expande TAM em array de tamanhos individuais
+// "34/44"         → ["34","35","36",...,"44"]
+// "P-M-G-GG"      → ["P","M","G","GG"]
+// "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]
+function expandTam(tam){
+  if(!tam) return [];
+  const s = String(tam).trim();
+  if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
+    const parts = s.split(/\s+a\s+/);
+    const [aLow, aHigh] = parts[0].split("/").map(Number);
+    const [bLow] = parts[1].split("/").map(Number);
+    const result = [];
+    let lo = aLow, hi = aHigh;
+    while(lo <= bLow){ result.push(`${lo}/${hi}`); lo += 2; hi += 2; }
+    return result;
+  }
+  if(/^\d+\/\d+$/.test(s)){
+    const [a, b] = s.split("/").map(Number);
+    const result = [];
+    for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
+    return result;
+  }
+  if(s.includes("-")) return s.split("-").map(x => x.trim()).filter(Boolean);
+  return [s];
+}
 
 function normalizeName(s){
   if(!s) return "";
@@ -2056,10 +2129,15 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <span class="truncate text-oly-text">${escapeHtml(v.cor)}</span>
             </div>` : ""}
             ${v.cor && v.tam ? `<div class="w-px bg-oly-border self-stretch"></div>` : ""}
-            ${v.tam ? `<button class="btnOpenGrade flex items-center gap-1.5 px-3 py-2 shrink-0 hover:bg-oly-blue/10 transition-colors" title="Montar grade de tamanhos">
-              <i class="fa-solid fa-ruler-horizontal text-oly-blue shrink-0" style="font-size:11px"></i>
-              <span class="text-oly-blue font-extrabold">${escapeHtml(v.tam)}</span>
-              <i class="fa-solid fa-chevron-right text-oly-blue/50" style="font-size:9px"></i>
+            ${v.tam ? `<button class="btnOpenGrade btn-open-grade" title="Montar grade de tamanhos">
+              <span class="grade-label visible" data-label="a">
+                <i class="fa-solid fa-ruler-horizontal" style="font-size:10px"></i>
+                <span>${escapeHtml(v.tam)}</span>
+              </span>
+              <span class="grade-label hidden-out" data-label="b" style="opacity:0">
+                <i class="fa-solid fa-plus" style="font-size:10px"></i>
+                <span>grade</span>
+              </span>
             </button>` : ""}
           </div>` : ""}
 
@@ -2116,6 +2194,25 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
           e.stopPropagation();
           openGradeModal(v);
         });
+
+        // Crossfade entre régua/tam e "+ grade" a cada 2.5s
+        const labelA = btnOpenGrade.querySelector('[data-label="a"]');
+        const labelB = btnOpenGrade.querySelector('[data-label="b"]');
+        if(labelA && labelB){
+          let showingA = true;
+          setInterval(()=>{
+            if(showingA){
+              labelA.classList.remove("visible"); labelA.classList.add("hidden-out");
+              labelB.style.opacity = "";
+              labelB.classList.remove("hidden-out"); labelB.classList.add("visible");
+            } else {
+              labelB.classList.remove("visible"); labelB.classList.add("hidden-out");
+              labelA.style.opacity = "";
+              labelA.classList.remove("hidden-out"); labelA.classList.add("visible");
+            }
+            showingA = !showingA;
+          }, 2500);
+        }
       }
 
 
@@ -3535,53 +3632,6 @@ function handleTrapKeydown(e){
 }
 
 /** ✅ Sistema de Grade de Tamanhos */
-
-// Categorias que usam grade (FTW = calçados, V&A = vestuário, CHI = infantil)
-function tamNeedsGrade(categoria, tam){
-  if(!tam || tam === "Único") return false;
-  const cat = String(categoria || "").toUpperCase().trim();
-  if(cat === "ACC" || cat === "MEIA") return false;
-  return true;
-}
-
-// Expande TAM em array de tamanhos individuais
-// "34/44"         → ["34","35","36",...,"44"]
-// "P-M-G-GG"      → ["P","M","G","GG"]
-// "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]  (chinelos)
-function expandTam(tam){
-  if(!tam) return [];
-  const s = String(tam).trim();
-
-  // Grade conjugada: "33/34 a 43/44" ou "33/34 a 45/46"
-  if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
-    const parts = s.split(/\s+a\s+/);
-    const [aLow, aHigh] = parts[0].split("/").map(Number);
-    const [bLow]        = parts[1].split("/").map(Number);
-    const result = [];
-    let lo = aLow, hi = aHigh;
-    while(lo <= bLow){
-      result.push(`${lo}/${hi}`);
-      lo += 2; hi += 2;
-    }
-    return result;
-  }
-
-  // Range numérico simples: "34/44"
-  if(/^\d+\/\d+$/.test(s)){
-    const [a, b] = s.split("/").map(Number);
-    const result = [];
-    for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
-    return result;
-  }
-
-  // Lista textual: "P-M-G-GG" ou "PP-P-M-G-GG-G1"
-  if(s.includes("-")){
-    return s.split("-").map(x => x.trim()).filter(Boolean);
-  }
-
-  // Valor único
-  return [s];
-}
 
 // gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
 const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null };
