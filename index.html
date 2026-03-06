@@ -2065,6 +2065,14 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
 
           <!-- Controles: manual + atalho +6/+12 + adicionar -->
           <div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg p-3">
+            ${tamNeedsGrade(v.categoria, v.tam) ? `
+            <button class="btnAdd btn-add-status is-idle focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
+              <i class="fa-solid fa-bag-shopping"></i>
+              <span>Adicionar</span>
+            </button>
+            <div class="mt-2 text-center text-xs text-oly-muted">
+              <i class="fa-solid fa-ruler-horizontal mr-1"></i>Use a régua para montar a grade
+            </div>` : `
             <div class="flex items-center gap-2">
               <button class="btnMinus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Diminuir">
                 <i class="fa-solid fa-minus text-oly-blue"></i>
@@ -2073,15 +2081,13 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <button class="btnPlus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Aumentar">
                 <i class="fa-solid fa-plus text-oly-blue"></i>
               </button>
-
               <button class="btnPack6 focus-ring flex-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-extrabold hover:bg-white/90">+6</button>
               <button class="btnPack12 focus-ring flex-1 rounded-2xl bg-oly-blue px-3 py-2 text-xs font-extrabold text-white hover:opacity-95">+12</button>
             </div>
-
             <button class="btnAdd btn-add-status is-idle focus-ring mt-2 w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
               <i class="fa-solid fa-bag-shopping"></i>
               <span>Adicionar</span>
-            </button>
+            </button>`}
           </div>
         </div>
       `;
@@ -2725,8 +2731,8 @@ const badge = $("cartCountBadge");
             <div class="flex flex-wrap gap-1.5">
               ${Object.entries(it.grade).map(([tam, qty]) => `
                 <div class="flex flex-col items-center rounded-xl border border-oly-border bg-white min-w-[40px] px-2 py-1.5">
-                  <span class="text-sm font-extrabold text-oly-blue leading-none">${qty}</span>
-                  <span class="text-[10px] font-bold text-oly-muted mt-1 leading-none">${escapeHtml(tam)}</span>
+                  <span class="text-[10px] font-bold text-oly-muted leading-none">${escapeHtml(tam)}</span>
+                  <span class="text-sm font-extrabold text-oly-blue leading-none mt-1">${qty}</span>
                 </div>`).join("")}
             </div>
             <div class="mt-1.5 text-xs font-bold text-oly-muted">${it.qty} pares no total</div>
@@ -2941,99 +2947,383 @@ async function exportOrderPdf(){
   const logo = logoSrc ? await loadImgForPdf(logoSrc) : null;
 
   const items = Array.from(state.cart.values());
-
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 40;
+  const contentW = pageW - margin * 2;
 
-  const headerH = 95;
-  const gridTop = margin + headerH;
-  const gap = 12;
+  // ── Cores e helpers ──────────────────────────────────────────
+  const C = {
+    blue: [40, 54, 212],
+    text: [17, 24, 39],
+    muted: [107, 114, 128],
+    border: [229, 231, 235],
+    bg: [246, 247, 251],
+    white: [255, 255, 255],
+    orange: [217, 119, 6],
+  };
+  const setColor = (rgb, type="text") => {
+    if(type==="fill") doc.setFillColor(...rgb);
+    else if(type==="draw") doc.setDrawColor(...rgb);
+    else doc.setTextColor(...rgb);
+  };
 
-  // Mais itens por página: 2 colunas x 3 linhas = 6
-  const cols = 2;
-  const cardW = (pageW - margin*2 - gap) / cols;
-  const cardH = 170; // menor
-  const rowsPerPage = 3;
-  const perPage = cols * rowsPerPage;
+  // ── Cabeçalho da página ──────────────────────────────────────
+  function drawPageHeader(){
+    // Fundo topo
+    setColor(C.blue,"fill"); doc.setFillColor(40,54,212);
+    doc.rect(0, 0, pageW, 56, "F");
 
-  function header(){
-    if(logo?.dataUrl) doc.addImage(logo.dataUrl, "PNG", margin, margin-8, 80, 38);
-    doc.setFont("helvetica","bold"); doc.setFontSize(15);
-    doc.text("Pedido — Catálogo Olympikus", margin + 95, margin + 16);
-    doc.setFont("helvetica","normal"); doc.setFontSize(10);
-    doc.setTextColor(107,114,128);
-    doc.text(`Data: ${dateStr}`, margin + 95, margin + 34);
-    doc.setTextColor(17,24,39);
-
-    let y = margin + 58;
-    doc.setFontSize(11);
-    if(name) { doc.text(`Cliente: ${name}`, margin, y); y += 16; }
-    if(city) { doc.text(`Cidade/UF: ${city}`, margin, y); }
+    if(logo?.dataUrl){
+      doc.addImage(logo.dataUrl, "PNG", margin, 10, 70, 34);
+    }
+    doc.setFont("helvetica","bold"); doc.setFontSize(14);
+    doc.setTextColor(255,255,255);
+    doc.text("Pedido — Catálogo Olympikus", margin + (logo ? 82 : 0), 28);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.setTextColor(200,210,255);
+    doc.text(`${dateStr}${name ? "  ·  "+name : ""}${city ? "  ·  "+city : ""}`, margin + (logo ? 82 : 0), 44);
+    setColor(C.text);
   }
 
-  for(let i=0;i<items.length;i++){
-    const pageIndex = Math.floor(i / perPage);
-    const idx = i % perPage;
-    if(idx === 0){
-      if(pageIndex>0) doc.addPage();
-      header();
-    }
+  // ── Linha separadora ─────────────────────────────────────────
+  function drawHRule(y, color=C.border){
+    setColor(color,"draw");
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+  }
 
-    const r = Math.floor(idx / cols);
-    const c = idx % cols;
-    const x = margin + c*(cardW + gap);
-    const y = gridTop + r*(cardH + gap);
+  // ── Desenha um item na posição Y, retorna próximo Y ──────────
+  const imgBoxW = 90, imgBoxH = 90;
+  const rowPad = 14;
+  const minRowH = imgBoxH + rowPad * 2;
 
-    doc.setDrawColor(229,231,235);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(x, y, cardW, cardH, 14, 14, "FD");
+  async function drawItem(it, yStart){
+    let y = yStart + rowPad;
 
-    // image box
-    const imgBoxH = 78;
-    doc.setFillColor(246,247,251);
-    doc.roundedRect(x+10, y+10, cardW-20, imgBoxH, 12, 12, "F");
+    // Card background
+    setColor(C.border,"draw"); doc.setLineWidth(0.5);
+    setColor(C.white,"fill");
+    // será desenhado depois que soubermos a altura total
 
-    const it = items[i];
+    // Imagem
+    const imgX = margin + 8, imgY = y;
+    setColor(C.bg,"fill"); setColor(C.border,"draw");
+    doc.roundedRect(imgX, imgY, imgBoxW, imgBoxH, 8, 8, "FD");
+
     const img = it.imgSrc ? await loadImgForPdf(it.imgSrc) : null;
     if(img?.dataUrl){
-      const innerW = cardW - 28;
-      const innerH = imgBoxH - 10;
-      const fit = fitRect(img.w, img.h, innerW, innerH);
-      doc.addImage(img.dataUrl, "PNG", x+14+fit.x, y+14+fit.y, fit.w, fit.h, undefined, "FAST");
+      const fit = fitRect(img.w, img.h, imgBoxW - 8, imgBoxH - 8);
+      doc.addImage(img.dataUrl, "PNG", imgX+4+fit.x, imgY+4+fit.y, fit.w, fit.h, undefined, "FAST");
     }
 
-    // text
-    let ty = y + 10 + imgBoxH + 22;
-    doc.setFont("helvetica","bold"); doc.setFontSize(11);
-    doc.text(String(it.produto || "Produto").slice(0, 26), x+12, ty);
+    // Dados textuais (à direita da imagem)
+    const txtX = margin + imgBoxW + 20;
+    const txtMaxW = contentW - imgBoxW - 24;
+    let ty = y + 13;
 
+    // Categoria badge
+    setColor(C.blue,"fill");
+    doc.roundedRect(txtX, ty - 9, 52, 14, 3, 3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+    doc.setTextColor(255,255,255);
+    doc.text(categoryLabel(it.categoria).toUpperCase(), txtX + 4, ty);
+    setColor(C.text);
+
+    // Nome do produto
     ty += 14;
-    doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
-    doc.setTextColor(40,54,212);
-    doc.text(categoryLabel(it.categoria), x+12, ty);
-    doc.setTextColor(107,114,128);
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    const prodName = String(it.produto || "Produto");
+    const prodLines = doc.splitTextToSize(prodName, txtMaxW - 10);
+    doc.text(prodLines.slice(0,2), txtX, ty);
+    ty += prodLines.slice(0,2).length * 13;
 
-    ty += 14; doc.text("Código:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(String(it.codigo||"-"), x+54, ty);
+    // Código · Cor
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+    setColor(C.muted);
+    doc.text(`Código: `, txtX, ty);
+    setColor(C.text);
+    doc.text(String(it.codigo||"-"), txtX + 36, ty);
 
-    ty += 12; doc.setTextColor(107,114,128); doc.text("Cor:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(`${it.cor||"-"}${it.corCodigo?" ("+it.corCodigo+")":""}`.slice(0, 22), x+40, ty);
+    ty += 12;
+    setColor(C.muted); doc.text("Cor: ", txtX, ty);
+    setColor(C.text);
+    const corTxt = `${it.cor||"-"}${it.corCodigo?" ("+it.corCodigo+")":""}`;
+    doc.text(corTxt.slice(0,32), txtX + 22, ty);
 
-    ty += 12; doc.setTextColor(107,114,128); doc.text("Qtd:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(String(it.qty||0), x+40, ty);
+    ty += 12;
 
-    // Observações (se houver)
-    if(it.obs){
+    // ── Grade ou Qtd simples ─────────────────────────────────
+    if(it.grade && Object.keys(it.grade).length > 0){
+      const gradeEntries = Object.entries(it.grade);
+
+      // Linha "Grade:" label
+      setColor(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(8);
+      doc.text("Grade:", txtX, ty);
+      ty += 11;
+
+      // Células de tamanho: [TAM / QTD] lado a lado
+      const cellW = 32, cellH = 22, cellGap = 4;
+      let cx = txtX;
+      const cellsPerRow = Math.floor((txtMaxW) / (cellW + cellGap));
+      let col = 0;
+
+      for(const [tam, qty] of gradeEntries){
+        if(col >= cellsPerRow){ col = 0; cx = txtX; ty += cellH + cellGap; }
+
+        // Célula
+        setColor(C.border,"draw"); setColor(C.bg,"fill");
+        doc.roundedRect(cx, ty, cellW, cellH, 3, 3, "FD");
+
+        // Tamanho (em cima)
+        doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        setColor(C.muted);
+        const tamStr = String(tam);
+        const tamW = doc.getTextWidth(tamStr);
+        doc.text(tamStr, cx + (cellW - tamW)/2, ty + 8);
+
+        // Qtd (embaixo, azul)
+        doc.setFont("helvetica","bold"); doc.setFontSize(9);
+        setColor(C.blue);
+        const qtyStr = String(qty);
+        const qtyW = doc.getTextWidth(qtyStr);
+        doc.text(qtyStr, cx + (cellW - qtyW)/2, ty + 18);
+
+        cx += cellW + cellGap;
+        col++;
+      }
+
+      ty += cellH + 8;
+
+      // Total de pares
+      doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+      setColor(C.muted);
+      doc.text(`Total: `, txtX, ty);
+      setColor(C.text);
+      doc.text(`${it.qty} pares`, txtX + 28, ty);
       ty += 12;
-      doc.setTextColor(107,114,128);
-      doc.text("Obs:", x+12, ty);
-      doc.setTextColor(17,24,39);
-      const obsTxt = String(it.obs).replace(/\s+/g," ").trim();
-      doc.text(obsTxt.slice(0, 38), x+40, ty);
+
+    } else {
+      // Sem grade: quantidade simples
+      setColor(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      doc.text("Qtd: ", txtX, ty);
+      setColor(C.text);
+      doc.text(String(it.qty||0), txtX + 22, ty);
+      ty += 12;
     }
 
-    doc.setTextColor(17,24,39);
+    // Obs
+    if(it.obs){
+      setColor(C.muted); doc.setFontSize(8);
+      doc.text("Obs: ", txtX, ty);
+      setColor(C.text);
+      doc.text(String(it.obs).slice(0,50), txtX + 22, ty);
+      ty += 12;
+    }
+
+    const rowH = Math.max(minRowH, ty - yStart + rowPad);
+
+    // Desenha borda do card (retroativamente)
+    setColor(C.border,"draw"); setColor([250,250,252],"fill");
+    doc.roundedRect(margin, yStart, contentW, rowH, 8, 8, "FD");
+
+    // Redesenha imagem sobre o fundo (pois o rect cobriu)
+    setColor(C.bg,"fill"); setColor(C.border,"draw");
+    doc.roundedRect(imgX, imgY, imgBoxW, imgBoxH, 8, 8, "FD");
+    if(img?.dataUrl){
+      const fit = fitRect(img.w, img.h, imgBoxW - 8, imgBoxH - 8);
+      doc.addImage(img.dataUrl, "PNG", imgX+4+fit.x, imgY+4+fit.y, fit.w, fit.h, undefined, "FAST");
+    }
+
+    // Redesenha texto sobre o fundo
+    let ty2 = yStart + rowPad + 13;
+
+    setColor(C.blue,"fill");
+    doc.roundedRect(txtX, ty2 - 9, 52, 14, 3, 3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+    doc.setTextColor(255,255,255);
+    doc.text(categoryLabel(it.categoria).toUpperCase(), txtX + 4, ty2);
+    setColor(C.text);
+
+    ty2 += 14;
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.text(prodLines.slice(0,2), txtX, ty2);
+    ty2 += prodLines.slice(0,2).length * 13;
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+    setColor(C.muted); doc.text("Código: ", txtX, ty2);
+    setColor(C.text); doc.text(String(it.codigo||"-"), txtX + 36, ty2);
+    ty2 += 12;
+    setColor(C.muted); doc.text("Cor: ", txtX, ty2);
+    setColor(C.text); doc.text(corTxt.slice(0,32), txtX + 22, ty2);
+    ty2 += 12;
+
+    if(it.grade && Object.keys(it.grade).length > 0){
+      const gradeEntries = Object.entries(it.grade);
+      setColor(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(8);
+      doc.text("Grade:", txtX, ty2);
+      ty2 += 11;
+
+      const cellW = 32, cellH = 22, cellGap = 4;
+      let cx = txtX, col = 0;
+      const cellsPerRow = Math.floor(txtMaxW / (cellW + cellGap));
+
+      for(const [tam, qty] of gradeEntries){
+        if(col >= cellsPerRow){ col = 0; cx = txtX; ty2 += cellH + cellGap; }
+        setColor(C.border,"draw"); setColor(C.bg,"fill");
+        doc.roundedRect(cx, ty2, cellW, cellH, 3, 3, "FD");
+        doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        setColor(C.muted);
+        const tamStr = String(tam);
+        doc.text(tamStr, cx + (cellW - doc.getTextWidth(tamStr))/2, ty2 + 8);
+        doc.setFontSize(9); setColor(C.blue);
+        const qtyStr = String(qty);
+        doc.text(qtyStr, cx + (cellW - doc.getTextWidth(qtyStr))/2, ty2 + 18);
+        cx += cellW + cellGap; col++;
+      }
+      ty2 += cellH + 8;
+      doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+      setColor(C.muted); doc.text("Total: ", txtX, ty2);
+      setColor(C.text); doc.text(`${it.qty} pares`, txtX + 28, ty2);
+    } else {
+      setColor(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      doc.text("Qtd: ", txtX, ty2);
+      setColor(C.text); doc.text(String(it.qty||0), txtX + 22, ty2);
+    }
+
+    if(it.obs){
+      // já desenhado acima
+    }
+
+    return yStart + rowH + 10;
   }
+
+  // ── Página de resumo ─────────────────────────────────────────
+  async function drawSummaryPage(){
+    doc.addPage();
+    drawPageHeader();
+
+    let y = 75;
+    doc.setFont("helvetica","bold"); doc.setFontSize(14);
+    setColor(C.text);
+    doc.text("Resumo do Pedido", margin, y);
+    y += 22;
+
+    // Totais por categoria
+    const byCategory = {};
+    let grandTotal = 0;
+    for(const it of items){
+      const cat = categoryLabel(it.categoria) || it.categoria || "Outros";
+      if(!byCategory[cat]) byCategory[cat] = 0;
+      byCategory[cat] += Number(it.qty) || 0;
+      grandTotal += Number(it.qty) || 0;
+    }
+
+    // Tabela de resumo
+    const colW = [contentW * 0.55, contentW * 0.25, contentW * 0.2];
+    const rowH = 28;
+
+    // Header da tabela
+    setColor(C.blue,"fill");
+    doc.rect(margin, y, contentW, rowH, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(9);
+    doc.setTextColor(255,255,255);
+    doc.text("Categoria", margin + 12, y + 18);
+    doc.text("Qtd. de Pares", margin + colW[0] + 8, y + 18);
+    doc.text("% do Pedido", margin + colW[0] + colW[1] + 8, y + 18);
+    y += rowH;
+
+    let rowIdx = 0;
+    for(const [cat, qty] of Object.entries(byCategory).sort((a,b)=>b[1]-a[1])){
+      const pct = grandTotal > 0 ? ((qty / grandTotal) * 100).toFixed(1) : "0.0";
+      // Zebra
+      if(rowIdx % 2 === 0){
+        setColor([245,247,255],"fill");
+        doc.rect(margin, y, contentW, rowH, "F");
+      }
+      setColor(C.border,"draw"); doc.setLineWidth(0.3);
+      doc.line(margin, y + rowH, margin + contentW, y + rowH);
+
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+      setColor(C.text);
+      doc.text(cat, margin + 12, y + 18);
+      doc.setFont("helvetica","bold");
+      setColor(C.blue);
+      doc.text(String(qty), margin + colW[0] + 8, y + 18);
+      doc.setFont("helvetica","normal"); setColor(C.muted);
+      doc.text(`${pct}%`, margin + colW[0] + colW[1] + 8, y + 18);
+      y += rowH; rowIdx++;
+    }
+
+    // Total geral
+    y += 4;
+    setColor(C.text,"fill");
+    doc.rect(margin, y, contentW, rowH + 4, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text("TOTAL GERAL", margin + 12, y + 20);
+    doc.text(String(grandTotal) + " pares", margin + colW[0] + 8, y + 20);
+    y += rowH + 20;
+
+    // Lista de itens com grade (resumo compacto)
+    doc.setFont("helvetica","bold"); doc.setFontSize(12);
+    setColor(C.text);
+    doc.text("Itens do Pedido", margin, y);
+    y += 16;
+    drawHRule(y); y += 12;
+
+    for(const it of items){
+      if(y > pageH - 60){ doc.addPage(); drawPageHeader(); y = 75; }
+
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      setColor(C.text);
+      doc.text(`${it.produto || "Produto"}`, margin, y);
+
+      doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      setColor(C.muted);
+      const meta = `${it.codigo}  ·  ${it.cor}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`;
+      doc.text(meta, margin, y + 12);
+
+      if(it.gradeResume){
+        setColor(C.blue);
+        doc.setFont("helvetica","bold"); doc.setFontSize(8);
+        doc.text(it.gradeResume, margin, y + 22);
+        setColor(C.muted); doc.setFont("helvetica","normal");
+        doc.text(`${it.qty} pares`, margin, y + 32);
+        y += 42;
+      } else {
+        setColor(C.text); doc.setFont("helvetica","bold");
+        doc.text(`${it.qty} ${it.qty === 1 ? "par" : "pares"}`, pageW - margin - 40, y, { align:"right" });
+        y += 22;
+      }
+
+      drawHRule(y, C.border); y += 10;
+    }
+  }
+
+  // ── Renderização principal ───────────────────────────────────
+  let curY = 0;
+  drawPageHeader();
+  curY = 75;
+
+  for(let i = 0; i < items.length; i++){
+    const it = items[i];
+
+    // Estimar altura mínima do item para decidir quebra de página
+    const gradeLines = it.grade ? Math.ceil(Object.keys(it.grade).length / 8) : 0;
+    const estH = minRowH + gradeLines * 28 + 30;
+
+    if(curY + estH > pageH - margin){
+      doc.addPage();
+      drawPageHeader();
+      curY = 75;
+    }
+
+    curY = await drawItem(it, curY);
+  }
+
+  // Página de resumo sempre ao final
+  await drawSummaryPage();
 
   doc.save(`pedido_olympikus_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.pdf`);
   toast("PDF gerado ✅");
