@@ -1933,32 +1933,30 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         <div class="p-4">
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0 flex-1">
-              <div class="text-base font-extrabold leading-snug line-clamp-2">${escapeHtml(v.produto || "Produto")}</div>
-
-              <!-- Linha: Código + Preço -->
-              <div class="mt-2 flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1 rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
-                  <i class="fa-solid fa-hashtag"></i>${escapeHtml(String(v.codigo || "—"))}
-                </span>
-                <div class="text-sm font-extrabold">${escapeHtml(v.priceFmt)}</div>
-              </div>
-
-              <!-- Linha: TAM + Cor -->
-              <div class="mt-2 flex items-center gap-2 flex-wrap">
-                ${v.tam ? `<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-oly-border px-2 py-1 text-xs font-bold text-oly-text">
-                  <i class="fa-solid fa-ruler-horizontal text-oly-muted" style="font-size:10px"></i>${escapeHtml(v.tam)}
-                </span>` : ""}
-                ${v.cor ? `<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-oly-border px-2 py-1 text-xs font-bold text-oly-text" style="max-width:130px">
-                  <i class="fa-solid fa-palette text-oly-muted" style="font-size:10px;flex-shrink:0"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(v.cor)}</span>
-                </span>` : ""}
-              </div>
+              <!-- Nome truncado 1 linha + coração -->
+              <div class="text-base font-extrabold leading-snug truncate">${escapeHtml(v.produto || "Produto")}</div>
+              <!-- Preço em linha própria, destaque -->
+              <div class="mt-1 text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</div>
             </div>
-
             <!-- Coração -->
             <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
               <i class="${fav ? "fa-solid" : "fa-regular"} fa-heart text-oly-blue"></i>
             </button>
           </div>
+
+          <!-- Bloco Cor + TAM -->
+          ${(v.cor || v.tam) ? `
+          <div class="mt-3 flex items-stretch rounded-2xl border border-oly-border bg-gray-50 overflow-hidden text-xs font-bold">
+            ${v.cor ? `<div class="flex items-center gap-1.5 px-3 py-2 flex-1 min-w-0">
+              <i class="fa-solid fa-palette text-oly-blue shrink-0" style="font-size:11px"></i>
+              <span class="truncate text-oly-text">${escapeHtml(v.cor)}</span>
+            </div>` : ""}
+            ${v.cor && v.tam ? `<div class="w-px bg-oly-border self-stretch"></div>` : ""}
+            ${v.tam ? `<div class="flex items-center gap-1.5 px-3 py-2 shrink-0">
+              <i class="fa-solid fa-ruler-horizontal text-oly-blue shrink-0" style="font-size:11px"></i>
+              <span class="text-oly-text">${escapeHtml(v.tam)}</span>
+            </div>` : ""}
+          </div>` : ""}
 
           <!-- Controles: manual + atalho +6/+12 + adicionar -->
           <div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg p-3">
