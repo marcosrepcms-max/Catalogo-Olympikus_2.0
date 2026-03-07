@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -138,42 +137,29 @@
 .pm-thumb img{ width:100%; height:100%; object-fit:contain; background:#fff; }
 .pm-thumb .pm-thumb-fallback{ font-size:11px; font-weight:800; color: var(--muted); padding:6px; text-align:center; }
   
-    /* Favoritos: botão voltar com crossfade */
-    @keyframes favs-fade-in  { from{opacity:0} to{opacity:1} }
-    @keyframes favs-fade-out { from{opacity:1} to{opacity:0} }
+    /* Favoritos: botão voltar laranja pulsante com crossfade */
     .btn-favs-return {
       background: #f97316 !important;
       color: #ffffff !important;
       border-color: rgba(249,115,22,.4) !important;
       animation: softPulse 1.8s ease-in-out infinite !important;
-      position: relative;
       min-width: 96px;
     }
     .btn-favs-return i { color:#ffffff !important; }
-    /* Esconde os elementos originais do botão quando em modo voltar */
     .btn-favs-return #btnFavsIcon,
     .btn-favs-return #btnFavsText { display:none !important; }
-
     .favs-crossfade {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      width: 100%;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 5px; width: 100%;
     }
-    .favs-cf-frame {
-      display: grid;
-      align-items: center;
-      justify-items: center;
-    }
-    .favs-cf-frame > * { grid-area: 1/1; }
+    .favs-cf-frame { display:grid; align-items:center; justify-items:center; }
+    .favs-cf-frame > * { grid-area:1/1; }
     .favs-label-a, .favs-label-b {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 13px; font-weight: 800; color: #fff;
-      transition: opacity 0.4s ease;
-      white-space: nowrap;
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:13px; font-weight:800; color:#fff;
+      transition: opacity 0.4s ease; white-space:nowrap;
     }
-    .favs-label-b { opacity: 0; }
+    .favs-label-b { opacity:0; }
 
     /* Régua na sacola pulsante para grade pendente */
     @keyframes ruler-pulse {
@@ -184,27 +170,17 @@
       animation: ruler-pulse 1.8s ease-in-out infinite;
       border-color: rgba(249,115,22,.5) !important;
       background: rgba(249,115,22,.08) !important;
-      min-width: 64px;
-      width: auto !important;
-      padding: 0 10px;
-      display: inline-flex !important;
-      align-items: center;
-      justify-content: center;
+      min-width: 64px; width:auto !important; padding:0 10px;
+      display:inline-flex !important; align-items:center; justify-content:center;
     }
-    .ruler-cf-frame {
-      display: grid;
-      align-items: center;
-      justify-items: center;
-    }
-    .ruler-cf-frame > * { grid-area: 1/1; }
+    .ruler-cf-frame { display:grid; align-items:center; justify-items:center; }
+    .ruler-cf-frame > * { grid-area:1/1; }
     .ruler-label-a, .ruler-label-b {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 10px; font-weight: 800;
-      color: #f97316;
-      transition: opacity 0.4s ease;
-      white-space: nowrap;
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:10px; font-weight:800; color:#f97316;
+      transition: opacity 0.4s ease; white-space:nowrap;
     }
-    .ruler-label-b { opacity: 0; }
+    .ruler-label-b { opacity:0; }
 
     /* Modal: bloco compacto sem sobrepor imagem */
     .pm-meta-row{
@@ -231,6 +207,45 @@
       #pmTitle{ display:none !important; }
       #actionBar{ -webkit-overflow-scrolling: touch; }
     }
+
+    /* ✅ Botão de grade pulsante */
+    @keyframes grade-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(40,54,212,0.35); }
+      50%       { box-shadow: 0 0 0 6px rgba(40,54,212,0); }
+    }
+    @keyframes grade-fade-in  { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes grade-fade-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-3px); } }
+
+    .btn-open-grade {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px 5px 8px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(40,54,212,0.35);
+      background: rgba(40,54,212,0.06);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+      color: #2836D4;
+      animation: grade-pulse 2s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+      justify-content: center;
+    }
+    .btn-open-grade:hover {
+      background: rgba(40,54,212,0.12);
+      animation: none;
+      box-shadow: 0 0 0 3px rgba(40,54,212,0.2);
+    }
+    .btn-open-grade .grade-label {
+      display: inline-flex; align-items: center; gap: 4px;
+      position: absolute;
+      transition: none;
+    }
+    .btn-open-grade .grade-label.visible  { animation: grade-fade-in  0.4s ease forwards; }
+    .btn-open-grade .grade-label.hidden-out { animation: grade-fade-out 0.4s ease forwards; }
 
     /* ✅ Modal de Grade */
     #gradeModal .grade-sheet {
@@ -859,7 +874,7 @@ const DATA_CONFIG = { xlsxPath: "./Produtos.xlsx", imagesBasePath: "./imagens_ol
 
 // ===== Namespacing de LocalStorage por projeto =====
 const STORAGE_NS = (location.pathname || "/").replace(/\/$/, ""); // ex: /Catalogo-Olympikus_2.0
-const CACHE_VERSION = "v3"; // incrementa para invalidar caches antigos
+const CACHE_VERSION = "v4"; // incrementa para invalidar caches antigos
 function lsKey(k){ return `${STORAGE_NS}:${CACHE_VERSION}:${k}`; }
 
 function clearAllLocalState(){
@@ -898,6 +913,40 @@ const state = {
 };
 
 const $ = (id)=>document.getElementById(id);
+
+// ✅ Grade helpers — declarados cedo pois são usados nos templates de card
+// Categorias que usam grade (FTW = calçados, V&A = vestuário, CHI = infantil)
+function tamNeedsGrade(categoria, tam){
+  if(!tam || tam === "Único") return false;
+  const cat = String(categoria || "").toUpperCase().trim();
+  if(cat === "ACC" || cat === "MEIA") return false;
+  return true;
+}
+// Expande TAM em array de tamanhos individuais
+// "34/44"         → ["34","35","36",...,"44"]
+// "P-M-G-GG"      → ["P","M","G","GG"]
+// "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]
+function expandTam(tam){
+  if(!tam) return [];
+  const s = String(tam).trim();
+  if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
+    const parts = s.split(/\s+a\s+/);
+    const [aLow, aHigh] = parts[0].split("/").map(Number);
+    const [bLow] = parts[1].split("/").map(Number);
+    const result = [];
+    let lo = aLow, hi = aHigh;
+    while(lo <= bLow){ result.push(`${lo}/${hi}`); lo += 2; hi += 2; }
+    return result;
+  }
+  if(/^\d+\/\d+$/.test(s)){
+    const [a, b] = s.split("/").map(Number);
+    const result = [];
+    for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
+    return result;
+  }
+  if(s.includes("-")) return s.split("-").map(x => x.trim()).filter(Boolean);
+  return [s];
+}
 
 function normalizeName(s){
   if(!s) return "";
@@ -1065,25 +1114,18 @@ function updateFavHeaderUI(){
 
     if(!btn.dataset.favsAnim){
       btn.dataset.favsAnim = "1";
-
       const wrap = document.createElement("span");
       wrap.className = "favs-crossfade";
-
       const frame = document.createElement("span");
       frame.className = "favs-cf-frame";
-
       const lA = document.createElement("span");
       lA.className = "favs-label-a";
       lA.innerHTML = `<i class="fa-solid fa-house" style="font-size:13px"></i>`;
-
       const lB = document.createElement("span");
       lB.className = "favs-label-b";
       lB.innerHTML = `<span>Voltar</span>`;
-
-      frame.appendChild(lA);
-      frame.appendChild(lB);
-      wrap.appendChild(frame);
-      btn.appendChild(wrap);
+      frame.appendChild(lA); frame.appendChild(lB);
+      wrap.appendChild(frame); btn.appendChild(wrap);
 
       let showA = true;
       btn._favsInterval = setInterval(()=>{
@@ -2145,15 +2187,28 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <span class="truncate text-oly-text">${escapeHtml(v.cor)}</span>
             </div>` : ""}
             ${v.cor && v.tam ? `<div class="w-px bg-oly-border self-stretch"></div>` : ""}
-            ${v.tam ? `<button class="btnOpenGrade flex items-center gap-1.5 px-3 py-2 shrink-0 hover:bg-oly-blue/10 transition-colors" title="Montar grade de tamanhos">
-              <i class="fa-solid fa-ruler-horizontal text-oly-blue shrink-0" style="font-size:11px"></i>
-              <span class="text-oly-blue font-extrabold">${escapeHtml(v.tam)}</span>
-              <i class="fa-solid fa-chevron-right text-oly-blue/50" style="font-size:9px"></i>
+            ${v.tam ? `<button class="btnOpenGrade btn-open-grade" title="Montar grade de tamanhos">
+              <span class="grade-label visible" data-label="a">
+                <i class="fa-solid fa-ruler-horizontal" style="font-size:10px"></i>
+                <span>${escapeHtml(v.tam)}</span>
+              </span>
+              <span class="grade-label hidden-out" data-label="b" style="opacity:0">
+                <i class="fa-solid fa-plus" style="font-size:10px"></i>
+                <span>grade</span>
+              </span>
             </button>` : ""}
           </div>` : ""}
 
           <!-- Controles: manual + atalho +6/+12 + adicionar -->
           <div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg p-3">
+            ${tamNeedsGrade(v.categoria, v.tam) ? `
+            <button class="btnAdd btn-add-status is-idle focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
+              <i class="fa-solid fa-bag-shopping"></i>
+              <span>Adicionar</span>
+            </button>
+            <div class="mt-2 text-center text-xs text-oly-muted">
+              <i class="fa-solid fa-ruler-horizontal mr-1"></i>Use a régua para montar a grade
+            </div>` : `
             <div class="flex items-center gap-2">
               <button class="btnMinus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Diminuir">
                 <i class="fa-solid fa-minus text-oly-blue"></i>
@@ -2162,15 +2217,13 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <button class="btnPlus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Aumentar">
                 <i class="fa-solid fa-plus text-oly-blue"></i>
               </button>
-
               <button class="btnPack6 focus-ring flex-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-extrabold hover:bg-white/90">+6</button>
               <button class="btnPack12 focus-ring flex-1 rounded-2xl bg-oly-blue px-3 py-2 text-xs font-extrabold text-white hover:opacity-95">+12</button>
             </div>
-
             <button class="btnAdd btn-add-status is-idle focus-ring mt-2 w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
               <i class="fa-solid fa-bag-shopping"></i>
               <span>Adicionar</span>
-            </button>
+            </button>`}
           </div>
         </div>
       `;
@@ -2199,6 +2252,25 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
           e.stopPropagation();
           openGradeModal(v);
         });
+
+        // Crossfade entre régua/tam e "+ grade" a cada 2.5s
+        const labelA = btnOpenGrade.querySelector('[data-label="a"]');
+        const labelB = btnOpenGrade.querySelector('[data-label="b"]');
+        if(labelA && labelB){
+          let showingA = true;
+          setInterval(()=>{
+            if(showingA){
+              labelA.classList.remove("visible"); labelA.classList.add("hidden-out");
+              labelB.style.opacity = "";
+              labelB.classList.remove("hidden-out"); labelB.classList.add("visible");
+            } else {
+              labelB.classList.remove("visible"); labelB.classList.add("hidden-out");
+              labelA.style.opacity = "";
+              labelA.classList.remove("hidden-out"); labelA.classList.add("visible");
+            }
+            showingA = !showingA;
+          }, 2500);
+        }
       }
 
 
@@ -2224,22 +2296,22 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         btnFav.title = nowFav ? "Remover dos favoritos" : "Adicionar aos favoritos";
       });
 
-      btnMinus.addEventListener("click", ()=>{
+      if(btnMinus) btnMinus.addEventListener("click", ()=>{
         const cur = getCardQty(key);
         const next = Math.max(1, cur - 1);
         setCardQty(key, next);
-        qtyDisplay.textContent = String(next);
+        if(qtyDisplay) qtyDisplay.textContent = String(next);
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
         updateCardAddButton(btnAdd, getCardAddStatus(key));
         updateAddButtonUI(btnAdd, key);
       });
-      btnPlus.addEventListener("click", ()=>{
+      if(btnPlus) btnPlus.addEventListener("click", ()=>{
         const cur = getCardQty(key);
         const next = Math.min(999, cur + 1);
         setCardQty(key, next);
-        qtyDisplay.textContent = String(next);
+        if(qtyDisplay) qtyDisplay.textContent = String(next);
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
@@ -2247,26 +2319,18 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
         updateAddButtonUI(btnAdd, key);
       });
 
-      btnPack6.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
+      if(btnPack6) btnPack6.addEventListener("click", ()=>{
         applyPackCard(key, 6);
-        qtyDisplay.textContent = String(getCardQty(key));
+        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
         updateCardAddButton(btnAdd, getCardAddStatus(key));
         updateAddButtonUI(btnAdd, key);
       });
-      btnPack12.addEventListener("click", ()=>{
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          openGradeModal(v, { skipLater: false });
-          return;
-        }
+      if(btnPack12) btnPack12.addEventListener("click", ()=>{
         applyPackCard(key, 12);
-        qtyDisplay.textContent = String(getCardQty(key));
+        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
         setCardPending(key);
         updateAddButtonUI(btnAdd, key);
         setCardPending(key);
@@ -2280,10 +2344,9 @@ btnAdd.addEventListener("click", ()=>{
         const status = getCardAddStatus(key);
         if(status === "loading") return;
 
-        // Para itens que precisam de grade: adiciona direto com grade pendente
+        // Itens com grade: adiciona direto com grade pendente
         if(tamNeedsGrade(v.categoria, v.tam)){
-          const existingCart = state.cart.get(key);
-          if(!existingCart){
+          if(!state.cart.has(key)){
             const precoNum = toNumberBR(v.precoRaw ?? 0);
             state.cart.set(key, {
               key,
@@ -2736,8 +2799,8 @@ $("btnClearCart").addEventListener("click", ()=>{
 });
 
 function cartTotals(){
-  let items = 0;       // total de pares (para resumo)
-  let cartSize = 0;    // total de itens na sacola (inclui grade pendente)
+  let items = 0;
+  let cartSize = 0;
   const by = { masc:0, fem:0, inf:0, uni:0, acess:0, vest:0 };
   const norm = (s)=> String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
   for(const it of state.cart.values()){
@@ -2749,7 +2812,6 @@ function cartTotals(){
     const seg = norm(it.segmento);
     const cat = norm(it.categoria);
 
-    // conta no resumo por gênero (usa 1 como mínimo para grade pendente)
     const countQ = q || 1;
     if(g.includes("masc") || g.includes("homem")) by.masc += countQ;
     else if(g.includes("fem") || g.includes("mulher")) by.fem += countQ;
@@ -2785,7 +2847,6 @@ function renderCartUI(){
   setRow("cartRowVest","cartQtyVest",by.vest);
 
   const badge = $("cartCountBadge");
-  // Badge usa cartSize (conta itens, incluindo grade pendente)
   badge.textContent = String(cartSize);
   badge.classList.toggle("hidden", cartSize === 0);
 
@@ -2857,8 +2918,8 @@ function renderCartUI(){
             <div class="flex flex-wrap gap-1.5">
               ${Object.entries(it.grade).map(([tam, qty]) => `
                 <div class="flex flex-col items-center rounded-xl border border-oly-border bg-white min-w-[40px] px-2 py-1.5">
-                  <span class="text-sm font-extrabold text-oly-blue leading-none">${qty}</span>
-                  <span class="text-[10px] font-bold text-oly-muted mt-1 leading-none">${escapeHtml(tam)}</span>
+                  <span class="text-[10px] font-bold text-oly-muted leading-none">${escapeHtml(tam)}</span>
+                  <span class="text-sm font-extrabold text-oly-blue leading-none mt-1">${qty}</span>
                 </div>`).join("")}
             </div>
             <div class="mt-1.5 text-xs font-bold text-oly-muted">${it.qty} pares no total</div>
@@ -2943,7 +3004,7 @@ function renderCartUI(){
 
     list.appendChild(row);
 
-    // Inicia crossfade na régua se for grade pendente
+    // Crossfade na régua se grade pendente
     if(isPending){
       const rulerBtn = row.querySelector("[data-edit-grade='true']");
       const lA = rulerBtn?.querySelector(".ruler-label-a");
@@ -3087,99 +3148,383 @@ async function exportOrderPdf(){
   const logo = logoSrc ? await loadImgForPdf(logoSrc) : null;
 
   const items = Array.from(state.cart.values());
-
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 40;
+  const contentW = pageW - margin * 2;
 
-  const headerH = 95;
-  const gridTop = margin + headerH;
-  const gap = 12;
+  // ── Cores e helpers ──────────────────────────────────────────
+  const C = {
+    blue: [40, 54, 212],
+    text: [17, 24, 39],
+    muted: [107, 114, 128],
+    border: [229, 231, 235],
+    bg: [246, 247, 251],
+    white: [255, 255, 255],
+    orange: [217, 119, 6],
+  };
+  const setColor = (rgb, type="text") => {
+    if(type==="fill") doc.setFillColor(...rgb);
+    else if(type==="draw") doc.setDrawColor(...rgb);
+    else doc.setTextColor(...rgb);
+  };
 
-  // Mais itens por página: 2 colunas x 3 linhas = 6
-  const cols = 2;
-  const cardW = (pageW - margin*2 - gap) / cols;
-  const cardH = 170; // menor
-  const rowsPerPage = 3;
-  const perPage = cols * rowsPerPage;
+  // ── Cabeçalho da página ──────────────────────────────────────
+  function drawPageHeader(){
+    // Fundo topo
+    setColor(C.blue,"fill"); doc.setFillColor(40,54,212);
+    doc.rect(0, 0, pageW, 56, "F");
 
-  function header(){
-    if(logo?.dataUrl) doc.addImage(logo.dataUrl, "PNG", margin, margin-8, 80, 38);
-    doc.setFont("helvetica","bold"); doc.setFontSize(15);
-    doc.text("Pedido — Catálogo Olympikus", margin + 95, margin + 16);
-    doc.setFont("helvetica","normal"); doc.setFontSize(10);
-    doc.setTextColor(107,114,128);
-    doc.text(`Data: ${dateStr}`, margin + 95, margin + 34);
-    doc.setTextColor(17,24,39);
-
-    let y = margin + 58;
-    doc.setFontSize(11);
-    if(name) { doc.text(`Cliente: ${name}`, margin, y); y += 16; }
-    if(city) { doc.text(`Cidade/UF: ${city}`, margin, y); }
+    if(logo?.dataUrl){
+      doc.addImage(logo.dataUrl, "PNG", margin, 10, 70, 34);
+    }
+    doc.setFont("helvetica","bold"); doc.setFontSize(14);
+    doc.setTextColor(255,255,255);
+    doc.text("Pedido — Catálogo Olympikus", margin + (logo ? 82 : 0), 28);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.setTextColor(200,210,255);
+    doc.text(`${dateStr}${name ? "  ·  "+name : ""}${city ? "  ·  "+city : ""}`, margin + (logo ? 82 : 0), 44);
+    setColor(C.text);
   }
 
-  for(let i=0;i<items.length;i++){
-    const pageIndex = Math.floor(i / perPage);
-    const idx = i % perPage;
-    if(idx === 0){
-      if(pageIndex>0) doc.addPage();
-      header();
-    }
+  // ── Linha separadora ─────────────────────────────────────────
+  function drawHRule(y, color=C.border){
+    setColor(color,"draw");
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+  }
 
-    const r = Math.floor(idx / cols);
-    const c = idx % cols;
-    const x = margin + c*(cardW + gap);
-    const y = gridTop + r*(cardH + gap);
+  // ── Desenha um item na posição Y, retorna próximo Y ──────────
+  const imgBoxW = 90, imgBoxH = 90;
+  const rowPad = 14;
+  const minRowH = imgBoxH + rowPad * 2;
 
-    doc.setDrawColor(229,231,235);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(x, y, cardW, cardH, 14, 14, "FD");
+  async function drawItem(it, yStart){
+    let y = yStart + rowPad;
 
-    // image box
-    const imgBoxH = 78;
-    doc.setFillColor(246,247,251);
-    doc.roundedRect(x+10, y+10, cardW-20, imgBoxH, 12, 12, "F");
+    // Card background
+    setColor(C.border,"draw"); doc.setLineWidth(0.5);
+    setColor(C.white,"fill");
+    // será desenhado depois que soubermos a altura total
 
-    const it = items[i];
+    // Imagem
+    const imgX = margin + 8, imgY = y;
+    setColor(C.bg,"fill"); setColor(C.border,"draw");
+    doc.roundedRect(imgX, imgY, imgBoxW, imgBoxH, 8, 8, "FD");
+
     const img = it.imgSrc ? await loadImgForPdf(it.imgSrc) : null;
     if(img?.dataUrl){
-      const innerW = cardW - 28;
-      const innerH = imgBoxH - 10;
-      const fit = fitRect(img.w, img.h, innerW, innerH);
-      doc.addImage(img.dataUrl, "PNG", x+14+fit.x, y+14+fit.y, fit.w, fit.h, undefined, "FAST");
+      const fit = fitRect(img.w, img.h, imgBoxW - 8, imgBoxH - 8);
+      doc.addImage(img.dataUrl, "PNG", imgX+4+fit.x, imgY+4+fit.y, fit.w, fit.h, undefined, "FAST");
     }
 
-    // text
-    let ty = y + 10 + imgBoxH + 22;
-    doc.setFont("helvetica","bold"); doc.setFontSize(11);
-    doc.text(String(it.produto || "Produto").slice(0, 26), x+12, ty);
+    // Dados textuais (à direita da imagem)
+    const txtX = margin + imgBoxW + 20;
+    const txtMaxW = contentW - imgBoxW - 24;
+    let ty = y + 13;
 
+    // Categoria badge
+    setColor(C.blue,"fill");
+    doc.roundedRect(txtX, ty - 9, 52, 14, 3, 3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+    doc.setTextColor(255,255,255);
+    doc.text(categoryLabel(it.categoria).toUpperCase(), txtX + 4, ty);
+    setColor(C.text);
+
+    // Nome do produto
     ty += 14;
-    doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
-    doc.setTextColor(40,54,212);
-    doc.text(categoryLabel(it.categoria), x+12, ty);
-    doc.setTextColor(107,114,128);
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    const prodName = String(it.produto || "Produto");
+    const prodLines = doc.splitTextToSize(prodName, txtMaxW - 10);
+    doc.text(prodLines.slice(0,2), txtX, ty);
+    ty += prodLines.slice(0,2).length * 13;
 
-    ty += 14; doc.text("Código:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(String(it.codigo||"-"), x+54, ty);
+    // Código · Cor
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+    setColor(C.muted);
+    doc.text(`Código: `, txtX, ty);
+    setColor(C.text);
+    doc.text(String(it.codigo||"-"), txtX + 36, ty);
 
-    ty += 12; doc.setTextColor(107,114,128); doc.text("Cor:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(`${it.cor||"-"}${it.corCodigo?" ("+it.corCodigo+")":""}`.slice(0, 22), x+40, ty);
+    ty += 12;
+    setColor(C.muted); doc.text("Cor: ", txtX, ty);
+    setColor(C.text);
+    const corTxt = `${it.cor||"-"}${it.corCodigo?" ("+it.corCodigo+")":""}`;
+    doc.text(corTxt.slice(0,32), txtX + 22, ty);
 
-    ty += 12; doc.setTextColor(107,114,128); doc.text("Qtd:", x+12, ty); doc.setTextColor(17,24,39);
-    doc.text(String(it.qty||0), x+40, ty);
+    ty += 12;
 
-    // Observações (se houver)
-    if(it.obs){
+    // ── Grade ou Qtd simples ─────────────────────────────────
+    if(it.grade && Object.keys(it.grade).length > 0){
+      const gradeEntries = Object.entries(it.grade);
+
+      // Linha "Grade:" label
+      setColor(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(8);
+      doc.text("Grade:", txtX, ty);
+      ty += 11;
+
+      // Células de tamanho: [TAM / QTD] lado a lado
+      const cellW = 32, cellH = 22, cellGap = 4;
+      let cx = txtX;
+      const cellsPerRow = Math.floor((txtMaxW) / (cellW + cellGap));
+      let col = 0;
+
+      for(const [tam, qty] of gradeEntries){
+        if(col >= cellsPerRow){ col = 0; cx = txtX; ty += cellH + cellGap; }
+
+        // Célula
+        setColor(C.border,"draw"); setColor(C.bg,"fill");
+        doc.roundedRect(cx, ty, cellW, cellH, 3, 3, "FD");
+
+        // Tamanho (em cima)
+        doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        setColor(C.muted);
+        const tamStr = String(tam);
+        const tamW = doc.getTextWidth(tamStr);
+        doc.text(tamStr, cx + (cellW - tamW)/2, ty + 8);
+
+        // Qtd (embaixo, azul)
+        doc.setFont("helvetica","bold"); doc.setFontSize(9);
+        setColor(C.blue);
+        const qtyStr = String(qty);
+        const qtyW = doc.getTextWidth(qtyStr);
+        doc.text(qtyStr, cx + (cellW - qtyW)/2, ty + 18);
+
+        cx += cellW + cellGap;
+        col++;
+      }
+
+      ty += cellH + 8;
+
+      // Total de pares
+      doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+      setColor(C.muted);
+      doc.text(`Total: `, txtX, ty);
+      setColor(C.text);
+      doc.text(`${it.qty} pares`, txtX + 28, ty);
       ty += 12;
-      doc.setTextColor(107,114,128);
-      doc.text("Obs:", x+12, ty);
-      doc.setTextColor(17,24,39);
-      const obsTxt = String(it.obs).replace(/\s+/g," ").trim();
-      doc.text(obsTxt.slice(0, 38), x+40, ty);
+
+    } else {
+      // Sem grade: quantidade simples
+      setColor(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      doc.text("Qtd: ", txtX, ty);
+      setColor(C.text);
+      doc.text(String(it.qty||0), txtX + 22, ty);
+      ty += 12;
     }
 
-    doc.setTextColor(17,24,39);
+    // Obs
+    if(it.obs){
+      setColor(C.muted); doc.setFontSize(8);
+      doc.text("Obs: ", txtX, ty);
+      setColor(C.text);
+      doc.text(String(it.obs).slice(0,50), txtX + 22, ty);
+      ty += 12;
+    }
+
+    const rowH = Math.max(minRowH, ty - yStart + rowPad);
+
+    // Desenha borda do card (retroativamente)
+    setColor(C.border,"draw"); setColor([250,250,252],"fill");
+    doc.roundedRect(margin, yStart, contentW, rowH, 8, 8, "FD");
+
+    // Redesenha imagem sobre o fundo (pois o rect cobriu)
+    setColor(C.bg,"fill"); setColor(C.border,"draw");
+    doc.roundedRect(imgX, imgY, imgBoxW, imgBoxH, 8, 8, "FD");
+    if(img?.dataUrl){
+      const fit = fitRect(img.w, img.h, imgBoxW - 8, imgBoxH - 8);
+      doc.addImage(img.dataUrl, "PNG", imgX+4+fit.x, imgY+4+fit.y, fit.w, fit.h, undefined, "FAST");
+    }
+
+    // Redesenha texto sobre o fundo
+    let ty2 = yStart + rowPad + 13;
+
+    setColor(C.blue,"fill");
+    doc.roundedRect(txtX, ty2 - 9, 52, 14, 3, 3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+    doc.setTextColor(255,255,255);
+    doc.text(categoryLabel(it.categoria).toUpperCase(), txtX + 4, ty2);
+    setColor(C.text);
+
+    ty2 += 14;
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.text(prodLines.slice(0,2), txtX, ty2);
+    ty2 += prodLines.slice(0,2).length * 13;
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+    setColor(C.muted); doc.text("Código: ", txtX, ty2);
+    setColor(C.text); doc.text(String(it.codigo||"-"), txtX + 36, ty2);
+    ty2 += 12;
+    setColor(C.muted); doc.text("Cor: ", txtX, ty2);
+    setColor(C.text); doc.text(corTxt.slice(0,32), txtX + 22, ty2);
+    ty2 += 12;
+
+    if(it.grade && Object.keys(it.grade).length > 0){
+      const gradeEntries = Object.entries(it.grade);
+      setColor(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(8);
+      doc.text("Grade:", txtX, ty2);
+      ty2 += 11;
+
+      const cellW = 32, cellH = 22, cellGap = 4;
+      let cx = txtX, col = 0;
+      const cellsPerRow = Math.floor(txtMaxW / (cellW + cellGap));
+
+      for(const [tam, qty] of gradeEntries){
+        if(col >= cellsPerRow){ col = 0; cx = txtX; ty2 += cellH + cellGap; }
+        setColor(C.border,"draw"); setColor(C.bg,"fill");
+        doc.roundedRect(cx, ty2, cellW, cellH, 3, 3, "FD");
+        doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        setColor(C.muted);
+        const tamStr = String(tam);
+        doc.text(tamStr, cx + (cellW - doc.getTextWidth(tamStr))/2, ty2 + 8);
+        doc.setFontSize(9); setColor(C.blue);
+        const qtyStr = String(qty);
+        doc.text(qtyStr, cx + (cellW - doc.getTextWidth(qtyStr))/2, ty2 + 18);
+        cx += cellW + cellGap; col++;
+      }
+      ty2 += cellH + 8;
+      doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+      setColor(C.muted); doc.text("Total: ", txtX, ty2);
+      setColor(C.text); doc.text(`${it.qty} pares`, txtX + 28, ty2);
+    } else {
+      setColor(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      doc.text("Qtd: ", txtX, ty2);
+      setColor(C.text); doc.text(String(it.qty||0), txtX + 22, ty2);
+    }
+
+    if(it.obs){
+      // já desenhado acima
+    }
+
+    return yStart + rowH + 10;
   }
+
+  // ── Página de resumo ─────────────────────────────────────────
+  async function drawSummaryPage(){
+    doc.addPage();
+    drawPageHeader();
+
+    let y = 75;
+    doc.setFont("helvetica","bold"); doc.setFontSize(14);
+    setColor(C.text);
+    doc.text("Resumo do Pedido", margin, y);
+    y += 22;
+
+    // Totais por categoria
+    const byCategory = {};
+    let grandTotal = 0;
+    for(const it of items){
+      const cat = categoryLabel(it.categoria) || it.categoria || "Outros";
+      if(!byCategory[cat]) byCategory[cat] = 0;
+      byCategory[cat] += Number(it.qty) || 0;
+      grandTotal += Number(it.qty) || 0;
+    }
+
+    // Tabela de resumo
+    const colW = [contentW * 0.55, contentW * 0.25, contentW * 0.2];
+    const rowH = 28;
+
+    // Header da tabela
+    setColor(C.blue,"fill");
+    doc.rect(margin, y, contentW, rowH, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(9);
+    doc.setTextColor(255,255,255);
+    doc.text("Categoria", margin + 12, y + 18);
+    doc.text("Qtd. de Pares", margin + colW[0] + 8, y + 18);
+    doc.text("% do Pedido", margin + colW[0] + colW[1] + 8, y + 18);
+    y += rowH;
+
+    let rowIdx = 0;
+    for(const [cat, qty] of Object.entries(byCategory).sort((a,b)=>b[1]-a[1])){
+      const pct = grandTotal > 0 ? ((qty / grandTotal) * 100).toFixed(1) : "0.0";
+      // Zebra
+      if(rowIdx % 2 === 0){
+        setColor([245,247,255],"fill");
+        doc.rect(margin, y, contentW, rowH, "F");
+      }
+      setColor(C.border,"draw"); doc.setLineWidth(0.3);
+      doc.line(margin, y + rowH, margin + contentW, y + rowH);
+
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+      setColor(C.text);
+      doc.text(cat, margin + 12, y + 18);
+      doc.setFont("helvetica","bold");
+      setColor(C.blue);
+      doc.text(String(qty), margin + colW[0] + 8, y + 18);
+      doc.setFont("helvetica","normal"); setColor(C.muted);
+      doc.text(`${pct}%`, margin + colW[0] + colW[1] + 8, y + 18);
+      y += rowH; rowIdx++;
+    }
+
+    // Total geral
+    y += 4;
+    setColor(C.text,"fill");
+    doc.rect(margin, y, contentW, rowH + 4, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text("TOTAL GERAL", margin + 12, y + 20);
+    doc.text(String(grandTotal) + " pares", margin + colW[0] + 8, y + 20);
+    y += rowH + 20;
+
+    // Lista de itens com grade (resumo compacto)
+    doc.setFont("helvetica","bold"); doc.setFontSize(12);
+    setColor(C.text);
+    doc.text("Itens do Pedido", margin, y);
+    y += 16;
+    drawHRule(y); y += 12;
+
+    for(const it of items){
+      if(y > pageH - 60){ doc.addPage(); drawPageHeader(); y = 75; }
+
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      setColor(C.text);
+      doc.text(`${it.produto || "Produto"}`, margin, y);
+
+      doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+      setColor(C.muted);
+      const meta = `${it.codigo}  ·  ${it.cor}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`;
+      doc.text(meta, margin, y + 12);
+
+      if(it.gradeResume){
+        setColor(C.blue);
+        doc.setFont("helvetica","bold"); doc.setFontSize(8);
+        doc.text(it.gradeResume, margin, y + 22);
+        setColor(C.muted); doc.setFont("helvetica","normal");
+        doc.text(`${it.qty} pares`, margin, y + 32);
+        y += 42;
+      } else {
+        setColor(C.text); doc.setFont("helvetica","bold");
+        doc.text(`${it.qty} ${it.qty === 1 ? "par" : "pares"}`, pageW - margin - 40, y, { align:"right" });
+        y += 22;
+      }
+
+      drawHRule(y, C.border); y += 10;
+    }
+  }
+
+  // ── Renderização principal ───────────────────────────────────
+  let curY = 0;
+  drawPageHeader();
+  curY = 75;
+
+  for(let i = 0; i < items.length; i++){
+    const it = items[i];
+
+    // Estimar altura mínima do item para decidir quebra de página
+    const gradeLines = it.grade ? Math.ceil(Object.keys(it.grade).length / 8) : 0;
+    const estH = minRowH + gradeLines * 28 + 30;
+
+    if(curY + estH > pageH - margin){
+      doc.addPage();
+      drawPageHeader();
+      curY = 75;
+    }
+
+    curY = await drawItem(it, curY);
+  }
+
+  // Página de resumo sempre ao final
+  await drawSummaryPage();
 
   doc.save(`pedido_olympikus_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.pdf`);
   toast("PDF gerado ✅");
@@ -3391,53 +3736,6 @@ function handleTrapKeydown(e){
 }
 
 /** ✅ Sistema de Grade de Tamanhos */
-
-// Categorias que usam grade (FTW = calçados, V&A = vestuário, CHI = infantil)
-function tamNeedsGrade(categoria, tam){
-  if(!tam || tam === "Único") return false;
-  const cat = String(categoria || "").toUpperCase().trim();
-  if(cat === "ACC" || cat === "MEIA") return false;
-  return true;
-}
-
-// Expande TAM em array de tamanhos individuais
-// "34/44"         → ["34","35","36",...,"44"]
-// "P-M-G-GG"      → ["P","M","G","GG"]
-// "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]  (chinelos)
-function expandTam(tam){
-  if(!tam) return [];
-  const s = String(tam).trim();
-
-  // Grade conjugada: "33/34 a 43/44" ou "33/34 a 45/46"
-  if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
-    const parts = s.split(/\s+a\s+/);
-    const [aLow, aHigh] = parts[0].split("/").map(Number);
-    const [bLow]        = parts[1].split("/").map(Number);
-    const result = [];
-    let lo = aLow, hi = aHigh;
-    while(lo <= bLow){
-      result.push(`${lo}/${hi}`);
-      lo += 2; hi += 2;
-    }
-    return result;
-  }
-
-  // Range numérico simples: "34/44"
-  if(/^\d+\/\d+$/.test(s)){
-    const [a, b] = s.split("/").map(Number);
-    const result = [];
-    for(let i = Math.min(a,b); i <= Math.max(a,b); i++) result.push(String(i));
-    return result;
-  }
-
-  // Lista textual: "P-M-G-GG" ou "PP-P-M-G-GG-G1"
-  if(s.includes("-")){
-    return s.split("-").map(x => x.trim()).filter(Boolean);
-  }
-
-  // Valor único
-  return [s];
-}
 
 // gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
 const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null };
