@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -1069,7 +1068,6 @@ function moneyBR(value){
   const n2 = Number(cleaned);
   return Number.isFinite(n2) ? n2.toLocaleString("pt-BR", { style:"currency", currency:"BRL" }) : "R$ 0,00";
 }
-function updateSliderLabel(){const sl=document.getElementById('sliderPrice'),lbl=document.getElementById('lblPriceMax');if(!sl||!lbl)return;const mx=parseInt(sl.max),vl=parseInt(sl.value);lbl.textContent=vl>=mx?'Todos':'até '+moneyBR(vl);}
 // Custo = preço/2 arredondado para cima ao próximo múltiplo de R$10
 // ex: 279,99 → 139,995 → ceil a múltiplo de 10 → 140,00
 function costFromPrice(precoNum){
@@ -1304,6 +1302,8 @@ async function loadCatalog({ cacheBust=false } = {}){
          state.productsRaw = cachedRows;
          setHeaderStatus("Catálogo pronto (cache)");
          buildFilterOptions();
+      // ✅ Calibra slider de preço
+      (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
          refreshView(true);
          $("loadingState").classList.add("hidden");
          $("grid").classList.remove("hidden");
@@ -1349,6 +1349,8 @@ async function loadCatalog({ cacheBust=false } = {}){
     setHeaderStatus("Catálogo pronto");
 
     buildFilterOptions();
+      // ✅ Calibra slider de preço
+      (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
     refreshView(true);
 
     $("loadingState").classList.add("hidden");
@@ -1362,6 +1364,8 @@ async function loadCatalog({ cacheBust=false } = {}){
        state.productsRaw = cachedRows;
        setHeaderStatus("Catálogo pronto (cache)");
        buildFilterOptions();
+      // ✅ Calibra slider de preço
+      (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
        refreshView(true);
        $("loadingState").classList.add("hidden");
        $("grid").classList.remove("hidden");
@@ -4225,18 +4229,7 @@ function updateSliderLabel(){
 })();
 
 // ── Patch buildFilterOptions to calibrate slider max ──
-const _origBuildFilterOptions = buildFilterOptions;
-function buildFilterOptions(){
-  _origBuildFilterOptions();
-  // calibrate slider max to highest cost in catalog
-  const sl = document.getElementById("sliderPrice");
-  if(!sl || !state.productsRaw.length) return;
-  const maxCost = Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))));
-  const rounded = Math.ceil(maxCost/100)*100;
-  sl.max = String(rounded);
-  sl.value = String(rounded);
-  updateSliderLabel();
-}
+// slider max calibrated in updateSliderAfterLoad() below
 
 </script>
 </body>
