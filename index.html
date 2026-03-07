@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -138,47 +139,72 @@
 .pm-thumb .pm-thumb-fallback{ font-size:11px; font-weight:800; color: var(--muted); padding:6px; text-align:center; }
   
     /* Favoritos: botão voltar com crossfade */
-    @keyframes favs-fade-in  { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes favs-fade-out { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-3px)} }
+    @keyframes favs-fade-in  { from{opacity:0} to{opacity:1} }
+    @keyframes favs-fade-out { from{opacity:1} to{opacity:0} }
     .btn-favs-return {
-      background: #2836D4 !important;
+      background: #f97316 !important;
       color: #ffffff !important;
-      border-color: rgba(40,54,212,.35) !important;
-      box-shadow: 0 0 0 0 rgba(40,54,212,0.35);
+      border-color: rgba(249,115,22,.4) !important;
       animation: softPulse 1.8s ease-in-out infinite !important;
       position: relative;
-      overflow: hidden;
+      min-width: 96px;
     }
     .btn-favs-return i { color:#ffffff !important; }
-    .favs-label {
-      display:inline-flex; align-items:center; gap:5px;
-      position:absolute; left:50%; transform:translateX(-50%);
-      white-space:nowrap;
+    /* Esconde os elementos originais do botão quando em modo voltar */
+    .btn-favs-return #btnFavsIcon,
+    .btn-favs-return #btnFavsText { display:none !important; }
+
+    .favs-crossfade {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
     }
-    .favs-label.visible   { animation: favs-fade-in  0.4s ease forwards; }
-    .favs-label.hidden-out{ animation: favs-fade-out 0.4s ease forwards; }
+    .favs-cf-frame {
+      display: grid;
+      align-items: center;
+      justify-items: center;
+    }
+    .favs-cf-frame > * { grid-area: 1/1; }
+    .favs-label-a, .favs-label-b {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; font-weight: 800; color: #fff;
+      transition: opacity 0.4s ease;
+      white-space: nowrap;
+    }
+    .favs-label-b { opacity: 0; }
 
     /* Régua na sacola pulsante para grade pendente */
     @keyframes ruler-pulse {
-      0%,100%{ box-shadow:0 0 0 0 rgba(40,54,212,.4); }
-      50%     { box-shadow:0 0 0 5px rgba(40,54,212,0); }
+      0%,100%{ box-shadow:0 0 0 0 rgba(249,115,22,.45); }
+      50%     { box-shadow:0 0 0 6px rgba(249,115,22,0); }
     }
     .btn-ruler-pending {
       animation: ruler-pulse 1.8s ease-in-out infinite;
-      border-color: rgba(40,54,212,.4) !important;
-      background: rgba(40,54,212,.08) !important;
-      position: relative;
-      overflow: hidden;
-      min-width: 68px;
+      border-color: rgba(249,115,22,.5) !important;
+      background: rgba(249,115,22,.08) !important;
+      min-width: 64px;
       width: auto !important;
+      padding: 0 10px;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
     }
-    .ruler-label {
-      display:inline-flex; align-items:center; gap:4px;
-      position:absolute; left:50%; transform:translateX(-50%);
-      white-space:nowrap; font-size:10px; font-weight:800;
+    .ruler-cf-frame {
+      display: grid;
+      align-items: center;
+      justify-items: center;
     }
-    .ruler-label.visible   { animation: favs-fade-in  0.4s ease forwards; }
-    .ruler-label.hidden-out{ animation: favs-fade-out 0.4s ease forwards; }
+    .ruler-cf-frame > * { grid-area: 1/1; }
+    .ruler-label-a, .ruler-label-b {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 800;
+      color: #f97316;
+      transition: opacity 0.4s ease;
+      white-space: nowrap;
+    }
+    .ruler-label-b { opacity: 0; }
 
     /* Modal: bloco compacto sem sobrepor imagem */
     .pm-meta-row{
@@ -1025,56 +1051,47 @@ function updateFavHeaderUI(){
   const icon = $("btnFavsIcon");
   const txt = $("btnFavsText");
 
-  // reset styles
-  btn.classList.remove("pulse-soft","btn-favs-return");
-  btn.classList.remove("text-white");
-  icon.classList.remove("text-white");
-  icon.classList.add("text-oly-blue");
+  // reset
+  btn.classList.remove("btn-favs-return");
+  if(btn._favsInterval){ clearInterval(btn._favsInterval); btn._favsInterval = null; }
+  btn.querySelectorAll(".favs-crossfade").forEach(el => el.remove());
+  delete btn.dataset.favsAnim;
+  icon.style.display = "";
+  txt.style.display = "";
 
   if(state.viewMode === "favs"){
     btn.classList.add("btn-favs-return");
     btn.title = "Voltar para a lista";
 
-    // Monta crossfade se ainda não montado
     if(!btn.dataset.favsAnim){
       btn.dataset.favsAnim = "1";
-      icon.style.display = "none";
-      txt.style.display = "none";
 
-      const labelA = document.createElement("span");
-      labelA.className = "favs-label visible";
-      labelA.dataset.favsLabel = "a";
-      labelA.innerHTML = `<i class="fa-solid fa-house" style="font-size:13px"></i>`;
-      btn.appendChild(labelA);
+      const wrap = document.createElement("span");
+      wrap.className = "favs-crossfade";
 
-      const labelB = document.createElement("span");
-      labelB.className = "favs-label hidden-out";
-      labelB.dataset.favsLabel = "b";
-      labelB.style.opacity = "0";
-      labelB.innerHTML = `<span style="font-size:12px;font-weight:800">Voltar</span>`;
-      btn.appendChild(labelB);
+      const frame = document.createElement("span");
+      frame.className = "favs-cf-frame";
 
-      let showingA = true;
+      const lA = document.createElement("span");
+      lA.className = "favs-label-a";
+      lA.innerHTML = `<i class="fa-solid fa-house" style="font-size:13px"></i>`;
+
+      const lB = document.createElement("span");
+      lB.className = "favs-label-b";
+      lB.innerHTML = `<span>Voltar</span>`;
+
+      frame.appendChild(lA);
+      frame.appendChild(lB);
+      wrap.appendChild(frame);
+      btn.appendChild(wrap);
+
+      let showA = true;
       btn._favsInterval = setInterval(()=>{
-        if(showingA){
-          labelA.classList.remove("visible"); labelA.classList.add("hidden-out");
-          labelB.style.opacity = "";
-          labelB.classList.remove("hidden-out"); labelB.classList.add("visible");
-        } else {
-          labelB.classList.remove("visible"); labelB.classList.add("hidden-out");
-          labelA.style.opacity = "";
-          labelA.classList.remove("hidden-out"); labelA.classList.add("visible");
-        }
-        showingA = !showingA;
+        showA ? (lA.style.opacity="0", lB.style.opacity="1") : (lA.style.opacity="1", lB.style.opacity="0");
+        showA = !showA;
       }, 2200);
     }
   } else {
-    // Limpa animação ao sair dos favoritos
-    if(btn._favsInterval){ clearInterval(btn._favsInterval); btn._favsInterval = null; }
-    delete btn.dataset.favsAnim;
-    btn.querySelectorAll("[data-favs-label]").forEach(el => el.remove());
-    icon.style.display = "";
-    txt.style.display = "";
     icon.className = (n > 0 ? "fa-solid fa-heart text-oly-blue" : "fa-regular fa-heart text-oly-blue");
     txt.textContent = "Favoritos";
     btn.title = "Favoritos";
@@ -2817,10 +2834,12 @@ function renderCartUI(){
               </div>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button class="focus-ring h-9 rounded-full border ${isPending ? "btn-ruler-pending text-oly-blue" : "w-9 border-oly-border hover:bg-oly-bg"}" data-edit-grade="true" aria-label="Editar grade" title="${needsGrade ? "Editar grade de tamanhos" : "Tamanhos"}">
+              <button class="focus-ring h-9 rounded-full border ${isPending ? "btn-ruler-pending" : "w-9 border-oly-border hover:bg-oly-bg"}" data-edit-grade="true" aria-label="Editar grade" title="${needsGrade ? "Editar grade de tamanhos" : "Tamanhos"}">
                 ${isPending ? `
-                  <span class="ruler-label visible" data-rl="a"><i class="fa-solid fa-ruler-horizontal" style="font-size:11px"></i></span>
-                  <span class="ruler-label hidden-out" data-rl="b" style="opacity:0"><i class="fa-solid fa-plus" style="font-size:10px"></i><span>grade</span></span>
+                  <span class="ruler-cf-frame">
+                    <span class="ruler-label-a"><i class="fa-solid fa-ruler-horizontal"></i></span>
+                    <span class="ruler-label-b"><i class="fa-solid fa-plus" style="font-size:9px"></i><span>grade</span></span>
+                  </span>
                 ` : `<i class="fa-solid fa-ruler-horizontal text-oly-blue" style="font-size:12px"></i>`}
               </button>
               <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-edit="true" aria-label="Editar observação">
@@ -2927,20 +2946,12 @@ function renderCartUI(){
     // Inicia crossfade na régua se for grade pendente
     if(isPending){
       const rulerBtn = row.querySelector("[data-edit-grade='true']");
-      const rlA = rulerBtn?.querySelector("[data-rl='a']");
-      const rlB = rulerBtn?.querySelector("[data-rl='b']");
-      if(rlA && rlB){
+      const lA = rulerBtn?.querySelector(".ruler-label-a");
+      const lB = rulerBtn?.querySelector(".ruler-label-b");
+      if(lA && lB){
         let showA = true;
         setInterval(()=>{
-          if(showA){
-            rlA.classList.remove("visible"); rlA.classList.add("hidden-out");
-            rlB.style.opacity = "";
-            rlB.classList.remove("hidden-out"); rlB.classList.add("visible");
-          } else {
-            rlB.classList.remove("visible"); rlB.classList.add("hidden-out");
-            rlA.style.opacity = "";
-            rlA.classList.remove("hidden-out"); rlA.classList.add("visible");
-          }
+          showA ? (lA.style.opacity="0", lB.style.opacity="1") : (lA.style.opacity="1", lB.style.opacity="0");
           showA = !showA;
         }, 2000);
       }
