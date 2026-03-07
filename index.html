@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -54,7 +55,54 @@
       --ring: rgba(40,54,212,.35);
       --success: #16a34a;
       --ready: rgba(40,54,212,.12);
+      --card-bg:#ffffff;
+      --input-bg:#ffffff;
     }
+    /* ── Dark Mode ── */
+    .dark-mode{
+      --bg:#12141A;
+      --text:#E4E7F0;
+      --muted:#8891A8;
+      --border:#252836;
+      --primary:#5068FF;
+      --ring:rgba(80,104,255,.35);
+      --success:#22c55e;
+      --ready:rgba(80,104,255,.15);
+      --card-bg:#1A1D28;
+      --input-bg:#1A1D28;
+    }
+    .dark-mode body                            { background:var(--bg); color:var(--text); }
+    .dark-mode header                          { background:rgba(18,20,26,.96)!important; border-color:var(--border)!important; }
+    .dark-mode .bg-white                       { background-color:var(--card-bg)!important; }
+    .dark-mode .bg-oly-bg                      { background-color:#0F1117!important; }
+    .dark-mode .border-oly-border              { border-color:var(--border)!important; }
+    .dark-mode .text-oly-muted                 { color:var(--muted)!important; }
+    .dark-mode .text-oly-blue                  { color:var(--primary)!important; }
+    .dark-mode .bg-oly-blue\/10               { background-color:rgba(80,104,255,.18)!important; }
+    .dark-mode input,.dark-mode textarea,.dark-mode select { background:var(--input-bg)!important; color:var(--text)!important; border-color:var(--border)!important; }
+    .dark-mode .sheet,.dark-mode aside,.dark-mode #filtersDrawer { background:var(--card-bg)!important; }
+    .dark-mode .backdrop                       { background:rgba(0,0,0,.7)!important; }
+    .dark-mode img                             { filter:brightness(.9); }
+    .dark-mode .shadow-card                    { box-shadow:0 2px 16px rgba(0,0,0,.4)!important; }
+    .dark-mode .shadow-lift                    { box-shadow:0 4px 28px rgba(0,0,0,.5)!important; }
+    .dark-mode #miniCartFab                    { background:var(--primary)!important; }
+    .dark-mode .btn-add-status.is-idle         { background:var(--primary)!important; }
+    .dark-mode .bg-green-500                   { background-color:#16a34a!important; }
+    .dark-mode .bg-gray-50,.dark-mode .bg-gray-100 { background-color:#1E2130!important; }
+
+    /* ── Category chips ── */
+    .cat-chip { transition:all .16s; }
+    .cat-chip.active { background:rgba(40,54,212,.1)!important; border-color:var(--primary)!important; }
+    .cat-chip.active i,.cat-chip.active span   { color:var(--primary)!important; }
+    .dark-mode .cat-chip                       { background:var(--card-bg)!important; }
+    .dark-mode .cat-chip.active                { background:rgba(80,104,255,.2)!important; }
+
+    /* ── "Novo" badge ── */
+    .badge-novo{display:inline-flex;align-items:center;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+
+    /* ── Spinner ── */
+    @keyframes spin360{ to{ transform:rotate(360deg); } }
+    .spinning{ animation:spin360 .65s linear infinite; }
     html, body { height: 100%; width:100%; overflow-x:hidden; }
     body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text);  overflow-x: hidden; }
 
@@ -349,9 +397,9 @@
         <div class="flex items-center justify-between gap-3">
           <!-- Left: logo only -->
           <div class="flex items-center gap-3 min-w-0">
-            <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden shrink-0">
+            <button id="btnGoHome" title="Voltar ao início" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden shrink-0">
               <img id="brandLogo" src="./logo-olympikus.png" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
-            </div>
+            </button>
             <!-- status invisível mas mantido para compatibilidade com JS -->
             <div id="headerStatus" class="hidden"></div>
             <div id="headerStatusMobile" class="hidden"></div>
@@ -377,8 +425,8 @@
             </button>
 
             <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Atualizar">
-              <i class="fa-solid fa-arrows-rotate text-oly-blue"></i>
-              <span class="hidden sm:inline">Atualizar</span>
+              <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
+              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
             </button>
 
             <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar">
@@ -411,6 +459,9 @@
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
+            <button id="btnDark" title="Modo escuro" class="focus-ring h-9 w-9 flex items-center justify-center rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0">
+              <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
+            </button>
           </div><!-- /actionBar -->
           </div><!-- /actionbar-wrap -->
         </div>
@@ -434,12 +485,29 @@
         <div class="mt-4 space-y-3">
           <div>
             <label class="text-xs font-bold text-oly-muted">Categoria</label>
-            <div class="mt-1 inline-flex w-full items-center gap-2 rounded-2xl bg-white border border-oly-border px-4 py-3">
-              <i class="fa-solid fa-tags text-oly-blue"></i>
-              <select id="filterCategory" class="focus-ring bg-transparent text-sm font-semibold w-full">
-                <option value="">Categoria: Todas</option>
-              </select>
+            <div id="catChipsWrap" class="mt-1 flex flex-wrap gap-2">
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg active" data-cat="">
+                <i class="fa-solid fa-border-all text-oly-blue" style="font-size:15px"></i><span>Todas</span>
+              </button>
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="FTW">
+                <i class="fa-solid fa-shoe-prints text-oly-blue" style="font-size:15px"></i><span>Tênis</span>
+              </button>
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="CHI">
+                <i class="fa-solid fa-person-walking text-oly-blue" style="font-size:15px"></i><span>Chinelos</span>
+              </button>
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="V&A">
+                <i class="fa-solid fa-shirt text-oly-blue" style="font-size:15px"></i><span>Vest.</span>
+              </button>
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="ACC">
+                <i class="fa-solid fa-glasses text-oly-blue" style="font-size:15px"></i><span>Acess.</span>
+              </button>
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="MEIA">
+                <i class="fa-solid fa-socks text-oly-blue" style="font-size:15px"></i><span>Meias</span>
+              </button>
             </div>
+            <select id="filterCategory" class="hidden">
+              <option value="">Categoria: Todas</option>
+            </select>
           </div>
 
           <div>
@@ -473,6 +541,18 @@
                 <option value="az">A–Z</option>
                 <option value="za">Z–A</option>
               </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-oly-muted">Faixa de preço (custo)</label>
+            <div class="mt-1 rounded-2xl border border-oly-border bg-white px-4 py-3 space-y-2">
+              <div class="flex justify-between text-xs font-bold">
+                <span class="text-oly-muted">Mín: R$ 0</span>
+                <span id="lblPriceMax" class="text-oly-blue font-extrabold">Todos</span>
+              </div>
+              <input id="sliderPrice" type="range" min="0" max="2000" value="2000" step="10"
+                     class="w-full cursor-pointer" style="accent-color:var(--primary)">
             </div>
           </div>
 
@@ -555,6 +635,7 @@
       </section>
 
       <section id="grid" class="hidden mt-4">
+        <p id="productCounter" class="text-xs text-oly-muted font-bold mb-2 px-0.5"></p>
         <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
 
         <div id="loadMoreWrap" class="mt-6 flex justify-center">
@@ -740,9 +821,15 @@
                 <div class="rounded-3xl border border-oly-border bg-oly-bg p-4">
                    <div class="font-extrabold">Resumo</div>
                    <div class="mt-3 rounded-2xl border border-oly-border bg-white p-4">
-                     <div>
-                       <div class="text-xs font-bold text-oly-muted">Total de pares</div>
-                       <div id="cartTotalQty" class="mt-1 text-2xl font-extrabold">0</div>
+                     <div class="flex items-start justify-between gap-3">
+                       <div>
+                         <div class="text-xs font-bold text-oly-muted">Total de pares</div>
+                         <div id="cartTotalQty" class="mt-1 text-2xl font-extrabold">0</div>
+                       </div>
+                       <div class="text-right">
+                         <div class="text-xs font-bold text-oly-muted">Valor (custo)</div>
+                         <div id="cartTotalValue" class="mt-1 text-lg font-extrabold text-oly-blue">R$ 0,00</div>
+                       </div>
                      </div>
                      <div class="mt-4 space-y-2 text-sm">
                        <div id="cartRowMasc" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Masculino</span><span id="cartQtyMasc" class="font-extrabold">0</span></div>
@@ -911,7 +998,7 @@ const state = {
   productsView: [],
   groupColors: false,
   viewMode: "all", // all | favs
-  filters: { category:"", segment:"", gender:"", q:"", sort:"default" },
+  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
   productModal: { open:false, item:null, group:null, qty:1, fromCart:false, editKey:null, editing:false },
@@ -982,6 +1069,14 @@ function moneyBR(value){
   const n2 = Number(cleaned);
   return Number.isFinite(n2) ? n2.toLocaleString("pt-BR", { style:"currency", currency:"BRL" }) : "R$ 0,00";
 }
+function updateSliderLabel(){const sl=document.getElementById('sliderPrice'),lbl=document.getElementById('lblPriceMax');if(!sl||!lbl)return;const mx=parseInt(sl.max),vl=parseInt(sl.value);lbl.textContent=vl>=mx?'Todos':'até '+moneyBR(vl);}
+// Custo = preço/2 arredondado para cima ao próximo múltiplo de R$10
+// ex: 279,99 → 139,995 → ceil a múltiplo de 10 → 140,00
+function costFromPrice(precoNum){
+  if(!precoNum) return 0;
+  const half = precoNum / 2;
+  return Math.ceil(half / 10) * 10;
+}
 function toNumberBR(value){
   const num = Number(value);
   if(Number.isFinite(num)) return num;
@@ -1015,13 +1110,17 @@ function setHeaderStatus(msg){
 }
 
 /** LocalStorage */
+/* Fallback p/ Safari private mode: localStorage pode lançar exceção */
+function lsSet(k,v){ try{localStorage.setItem(k,v);return;}catch(e){} try{sessionStorage.setItem(k,v);}catch(e){} }
+function lsGet(k){ try{const v=localStorage.getItem(k);if(v!==null)return v;}catch(e){} try{return sessionStorage.getItem(k);}catch(e){} return null; }
+
 function saveCartToStorage(){
   const arr = Array.from(state.cart.values()).map(it => ({...it}));
-  localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(arr));
+  lsSet(STORAGE_KEYS.cart, JSON.stringify(arr));
 }
 function loadCartFromStorage(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEYS.cart);
+    const raw = lsGet(STORAGE_KEYS.cart);
     if(!raw) return;
     const arr = JSON.parse(raw);
     if(!Array.isArray(arr)) return;
@@ -1033,11 +1132,11 @@ function loadCartFromStorage(){
 }
 function saveCustomerToStorage(){
   const payload = { name: $("ckName")?.value?.trim() || "", city: $("ckCity")?.value?.trim() || "" };
-  localStorage.setItem(STORAGE_KEYS.customer, JSON.stringify(payload));
+  lsSet(STORAGE_KEYS.customer, JSON.stringify(payload));
 }
 function loadCustomerFromStorage(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEYS.customer);
+    const raw = lsGet(STORAGE_KEYS.customer);
     if(!raw) return;
     const obj = JSON.parse(raw);
     if(obj && typeof obj === "object"){
@@ -1054,13 +1153,13 @@ function saveProductsCache(rows){
   if(!PRODUCTS_CACHE_CONFIG.enabled) return;
   try{
     const payload = { ts: Date.now(), rows };
-    localStorage.setItem(STORAGE_KEYS.productsCache, JSON.stringify(payload));
+    lsSet(STORAGE_KEYS.productsCache, JSON.stringify(payload));
   }catch(e){}
 }
 function loadProductsCache(){
   if(!PRODUCTS_CACHE_CONFIG.enabled) return null;
   try{
-    const raw = localStorage.getItem(STORAGE_KEYS.productsCache);
+    const raw = lsGet(STORAGE_KEYS.productsCache);
     if(!raw) return null;
     const obj = JSON.parse(raw);
     if(!obj || !Array.isArray(obj.rows) || !obj.ts) return null;
@@ -1076,11 +1175,11 @@ function loadProductsCache(){
 
 /** ✅ Favoritos */
 function saveFavsToStorage(){
-  localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(Array.from(state.favorites)));
+  lsSet(STORAGE_KEYS.favorites, JSON.stringify(Array.from(state.favorites)));
 }
 function loadFavsFromStorage(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEYS.favorites);
+    const raw = lsGet(STORAGE_KEYS.favorites);
     if(!raw) return;
     const arr = JSON.parse(raw);
     if(!Array.isArray(arr)) return;
@@ -1242,6 +1341,7 @@ async function loadCatalog({ cacheBust=false } = {}){
       cor: String(r["Cor"] ?? r["COR"] ?? "").trim(),
       genero: String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
       precoRaw: r["Preço"] ?? r["Preco"] ?? r["PREÇO"] ?? r["PRECO"] ?? 0,
+      isNew: !!(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? ""),
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
@@ -1273,7 +1373,7 @@ async function loadCatalog({ cacheBust=false } = {}){
     `;
   }
 }
-$("btnRefresh").addEventListener("click", ()=> loadCatalog({ cacheBust: DATA_CONFIG.cacheBustOnRefresh }));
+// btnRefresh handler moved to initDarkMode block below
 
 /** Drawer */
 function openFiltersDrawer(){
@@ -1324,6 +1424,10 @@ function clearAllFilters(){
   state.filters.gender = "";
   state.filters.sort = "default";
   state.filters.q = "";
+  state.filters.priceMax = Infinity;
+  const _sl = $("sliderPrice"); if(_sl){ _sl.value=_sl.max; if(typeof updateSliderLabel==="function") updateSliderLabel(); }
+  // reset cat chips
+  document.querySelectorAll(".cat-chip").forEach(b=>b.classList.toggle("active", b.dataset.cat===""));
   state.groupColors = false;
 
   // close search and reset query silently
@@ -1349,6 +1453,7 @@ $("btnApplyFilters").addEventListener("click", ()=>{
   state.filters.segment = $("filterSegment").value;
   state.filters.gender = $("filterGender").value;
   state.filters.sort = $("sortBy").value;
+  const _sv=$("sliderPrice"); state.filters.priceMax=_sv&&parseInt(_sv.value)<parseInt(_sv.max)?parseInt(_sv.value):Infinity;
   refreshView(true);
   closeFiltersDrawer();
 });
@@ -1435,6 +1540,9 @@ function refreshView(resetPaging){
   if(state.filters.category) list = list.filter(p => p.categoria === state.filters.category);
   if(state.filters.segment) list = list.filter(p => p.segmento === state.filters.segment);
   if(state.filters.gender) list = list.filter(p => p.genero === state.filters.gender);
+  if(state.filters.priceMax !== Infinity){
+    list = list.filter(p => costFromPrice(toNumberBR(p.precoRaw)) <= state.filters.priceMax);
+  }
 
   if(q){
     list = list.filter(p=>{
@@ -1476,6 +1584,8 @@ function refreshView(resetPaging){
   if(resetPaging) state.pagination.shown = Math.min(state.pagination.pageSize, state.productsView.length);
 
   $("noResults").classList.toggle("hidden", state.productsView.length !== 0);
+  const _ctr = $("productCounter");
+  if(_ctr){ const n=state.productsView.length; _ctr.textContent = n>0?`${n} produto${n!==1?"s":""} encontrado${n!==1?"s":""}`:""; }
 
   renderCards();
   $("btnLoadMore").classList.toggle("hidden", !(state.pagination.shown < state.productsView.length) || state.productsView.length===0);
@@ -2129,6 +2239,7 @@ function renderCards(){
                 <span class="inline-flex items-center rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
                   ${escapeHtml(categoryLabel(v.categoria))}
                 </span>
+                ${(v._type==="group"?v.items?.some(i=>i.isNew):v.isNew)?'<span class="badge-novo">NOVO</span>':""}
                 <div class="text-sm font-extrabold">${escapeHtml(v.minPriceFmt || "—")}</div>
               </div>
             </div>
@@ -2194,7 +2305,7 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <!-- Nome truncado 1 linha + coração -->
               <div class="text-base font-extrabold leading-snug truncate">${escapeHtml(v.produto || "Produto")}</div>
               <!-- Preço em linha própria, destaque -->
-              <div class="mt-1 text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</div>
+              <div class="mt-1 flex items-center gap-2"><span class="text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</span>${v.isNew?'<span class="badge-novo">NOVO</span>':""}</div>
             </div>
             <!-- Coração -->
             <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
@@ -2824,12 +2935,14 @@ $("btnClearCart").addEventListener("click", ()=>{
 function cartTotals(){
   let items = 0;
   let cartSize = 0;
+  let totalCost = 0;
   const by = { masc:0, fem:0, inf:0, uni:0, acess:0, vest:0 };
   const norm = (s)=> String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
   for(const it of state.cart.values()){
     cartSize++;
     const q = (Number(it.qty)||0);
     items += q;
+    totalCost += costFromPrice(it.precoNum||0)*(q||1);
 
     const g = norm(it.genero);
     const seg = norm(it.segmento);
@@ -2845,16 +2958,17 @@ function cartTotals(){
       else if(seg.includes("vest") || cat.includes("vest") || seg.includes("roup") || cat.includes("roup") || cat === "v&a") by.vest += countQ;
     }
   }
-  return { items, cartSize, by };
+  return { items, cartSize, by, totalCost };
 }
 function renderCartUI(){
   syncCardAddStatusFromCart();
   syncCardAddStatusFromCart();
   syncCardAddStatusFromCart();
-  const { items, cartSize, by } = cartTotals();
+  const { items, cartSize, by, totalCost } = cartTotals();
 
   // ✅ Atualiza resumo (se existir)
   if($("cartTotalQty")) $("cartTotalQty").textContent = String(items);
+  if($("cartTotalValue")) $("cartTotalValue").textContent = moneyBR(totalCost);
 
   const setRow = (rowId, valId, val)=>{
     const row = $(rowId); const el = $(valId);
@@ -3049,39 +3163,47 @@ function renderCartUI(){
 function buildWhatsMessage(){
   const name = $("ckName").value.trim();
   const city = $("ckCity").value.trim();
-
   const lines = [];
   lines.push("*🛍️ Pedido — Catálogo Olympikus*");
   if(name) lines.push(`*Cliente:* ${name}`);
   if(city) lines.push(`*Cidade/UF:* ${city}`);
   lines.push("");
   lines.push("*Itens:*");
-
-  let i = 1;
+  let i=1, grandPairs=0, grandCost=0;
   for(const it of state.cart.values()){
     lines.push(`${i}. *${it.produto}*`);
     lines.push(`   Código: ${it.codigo}`);
-    lines.push(`   Cor: ${it.cor}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`);
+    lines.push(`   Cor: ${it.cor}${it.corCodigo?" ("+it.corCodigo+")":""}`);
     if(it.gradeResume){
       lines.push(`   Grade: ${it.gradeResume}`);
       lines.push(`   Total: ${it.qty} pares`);
+    } else if(!it.qty){
+      lines.push(`   ⚠️ Grade pendente — a preencher`);
     } else {
       lines.push(`   Qtd: ${it.qty}`);
     }
     if(it.obs) lines.push(`   Obs: ${it.obs}`);
     lines.push("");
     i++;
+    const q=Number(it.qty)||0;
+    grandPairs+=q;
+    grandCost+=costFromPrice(it.precoNum||0)*(q||1);
   }
+  lines.push("─────────────────────");
+  lines.push(`*Total de pares:* ${grandPairs}`);
+  lines.push(`*Valor total (custo):* ${moneyBR(grandCost)}`);
   return lines.join("\n");
 }
 function openWhatsApp(){
-  if(state.cart.size === 0){
-    toast("Adicione itens ✅");
-    return;
+  if(state.cart.size===0){ toast("Adicione itens ✅"); return; }
+  const pending=[...state.cart.values()].filter(it=>(!it.qty||it.qty===0)&&tamNeedsGrade(it.categoria,it.tam));
+  if(pending.length>0){
+    const ok=confirm(`${pending.length} item(ns) com grade ainda não preenchida.\nDeseja enviar assim mesmo? A grade pode ser completada depois.`);
+    if(!ok) return;
   }
   saveCustomerToStorage();
-  const msg = buildWhatsMessage();
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+  const msg=buildWhatsMessage();
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,"_blank","noopener,noreferrer");
 }
 $("btnWhatsCheckout").addEventListener("click", openWhatsApp);
 
@@ -3218,8 +3340,8 @@ async function exportOrderPdf(){
   }
 
   // ── Desenha um item na posição Y, retorna próximo Y ──────────
-  const imgBoxW = 90, imgBoxH = 90;
-  const rowPad = 14;
+  const imgBoxW = 90, imgBoxH = 95;
+  const rowPad = 18;
   const minRowH = imgBoxH + rowPad * 2;
 
   async function drawItem(it, yStart){
@@ -3485,8 +3607,10 @@ async function exportOrderPdf(){
     doc.rect(margin, y, contentW, rowH + 4, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(11);
     doc.setTextColor(255,255,255);
+    const _grandCost=items.reduce((s,it)=>{ const q=Number(it.qty)||0; return s+costFromPrice(it.precoNum||0)*(q||1); },0);
     doc.text("TOTAL GERAL", margin + 12, y + 20);
     doc.text(String(grandTotal) + " pares", margin + colW[0] + 8, y + 20);
+    doc.setFontSize(9); doc.text("Custo: "+moneyBR(_grandCost), margin + colW[0] + colW[1] + 8, y + 20);
     y += rowH + 20;
 
     // Lista de itens com grade (resumo compacto)
@@ -4011,6 +4135,109 @@ loadCatalog({ cacheBust:false });
 document.addEventListener("input", (e)=>{
   if(e.target && (e.target.id === "ckName" || e.target.id === "ckCity")) saveCustomerToStorage();
 });
+
+// ══════════════════════════════════════════════════
+// ✅ NOVAS FUNCIONALIDADES
+// ══════════════════════════════════════════════════
+
+// ── Dark mode toggle ──────────────────────────────
+(function initDarkMode(){
+  const btn = document.getElementById("btnDark");
+  const ico = document.getElementById("icoDark");
+  let dark = false;
+  try{ dark = lsGet("oly_dark")==="1"; }catch(e){}
+  function apply(d){
+    document.documentElement.classList.toggle("dark-mode", d);
+    document.body.classList.toggle("dark-mode", d);
+    if(ico){ ico.className = d ? "fa-solid fa-sun text-oly-blue" : "fa-solid fa-moon text-oly-blue"; }
+    try{ lsSet("oly_dark", d?"1":"0"); }catch(e){}
+  }
+  apply(dark);
+  if(btn) btn.addEventListener("click",()=>{ dark=!dark; apply(dark); });
+})();
+
+// ── Logo → home (limpa filtros e scroll topo) ─────
+(function initLogoHome(){
+  const btn = document.getElementById("btnGoHome");
+  if(!btn) return;
+  btn.addEventListener("click",()=>{
+    clearAllFilters();
+    window.scrollTo({top:0, behavior:"smooth"});
+    if(state.viewMode==="favs"){
+      state.viewMode="all";
+      updateFavHeaderUI();
+    }
+    refreshView(true);
+  });
+})();
+
+// ── Refresh button spinner ────────────────────────
+(function patchRefresh(){
+  const btn = document.getElementById("btnRefresh");
+  if(!btn) return;
+  btn.removeEventListener("click", btn._origHandler);
+  btn.addEventListener("click",()=>{
+    const ico = document.getElementById("icoRefresh");
+    const lbl = document.getElementById("lblRefresh");
+    if(ico) ico.classList.add("spinning");
+    if(lbl) lbl.textContent = "Atualizando…";
+    btn.disabled = true;
+    loadCatalog({ cacheBust: DATA_CONFIG.cacheBustOnRefresh }).finally(()=>{
+      if(ico) ico.classList.remove("spinning");
+      if(lbl) lbl.textContent = "Atualizar";
+      btn.disabled = false;
+    });
+  });
+})();
+
+// ── Category chips ────────────────────────────────
+document.querySelectorAll(".cat-chip").forEach(chip=>{
+  chip.addEventListener("click",()=>{
+    document.querySelectorAll(".cat-chip").forEach(b=>b.classList.remove("active"));
+    chip.classList.add("active");
+    const hiddenSel = document.getElementById("filterCategory");
+    if(hiddenSel) hiddenSel.value = chip.dataset.cat;
+    state.filters.category = chip.dataset.cat;
+    refreshView(true);
+  });
+});
+
+// ── Price range slider ────────────────────────────
+function updateSliderLabel(){
+  const sl = document.getElementById("sliderPrice");
+  const lbl = document.getElementById("lblPriceMax");
+  if(!sl||!lbl) return;
+  const max = parseInt(sl.max);
+  const val = parseInt(sl.value);
+  lbl.textContent = val>=max ? "Todos" : "até "+moneyBR(val);
+}
+(function initPriceSlider(){
+  const sl = document.getElementById("sliderPrice");
+  if(!sl) return;
+  sl.addEventListener("input",()=>{
+    updateSliderLabel();
+    const max=parseInt(sl.max), val=parseInt(sl.value);
+    state.filters.priceMax = val>=max ? Infinity : val;
+    refreshView(true);
+  });
+  // Set slider max dynamically after catalog loads
+  const origBuild = window._origBuildFilter || null;
+})();
+
+// ── Patch buildFilterOptions to calibrate slider max ──
+const _origBuildFilterOptions = buildFilterOptions;
+function buildFilterOptions(){
+  _origBuildFilterOptions();
+  // calibrate slider max to highest cost in catalog
+  const sl = document.getElementById("sliderPrice");
+  if(!sl || !state.productsRaw.length) return;
+  const maxCost = Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))));
+  const rounded = Math.ceil(maxCost/100)*100;
+  sl.max = String(rounded);
+  sl.value = String(rounded);
+  updateSliderLabel();
+}
+
 </script>
 </body>
 </html>
