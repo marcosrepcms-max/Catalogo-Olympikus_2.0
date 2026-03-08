@@ -196,6 +196,46 @@
       opacity: 0.8;
     }
 
+    /* ── Cart gender filter ── */
+    #cartGenderFilter {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+    .cgf-chip {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 7px 12px 6px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border, #E5E7EB);
+      background: var(--card-bg, #fff);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted, #6B7280);
+      transition: background .15s, border-color .15s, color .15s;
+      user-select: none;
+    }
+    .cgf-chip svg { display:block; width:22px; height:22px; }
+    .cgf-chip:hover { border-color:var(--primary); color:var(--primary); }
+    .cgf-chip.on-all  { background:rgba(101,120,255,.11); border-color:var(--primary); color:var(--primary); }
+    .cgf-chip.on-masc { background:rgba(101,120,255,.11); border-color:var(--primary); color:var(--primary); }
+    .cgf-chip.on-fem  { background:rgba(236,72,153,.10);  border-color:rgba(236,72,153,.55); color:#ec4899; }
+    .cgf-chip.on-inf  { background:rgba(234,179,8,.10);   border-color:rgba(234,179,8,.5);  color:#b45309; }
+    .cgf-chip.on-uni  { background:rgba(34,197,94,.10);   border-color:rgba(34,197,94,.5);  color:#15803d; }
+    .dark-mode .cgf-chip { background:var(--card-chip)!important; }
+    .dark-mode .cgf-chip.on-all,
+    .dark-mode .cgf-chip.on-masc { color:var(--primary)!important; }
+    .dark-mode .cgf-chip.on-fem  { color:#f472b6!important; }
+    .dark-mode .cgf-chip.on-inf  { color:#fcd34d!important; }
+    .dark-mode .cgf-chip.on-uni  { color:#4ade80!important; }
+
     /* ── Category chips ── */
     .cat-chip { transition:all .16s; }
     .cat-chip.active { background:rgba(40,54,212,.1)!important; border-color:var(--primary)!important; }
@@ -835,7 +875,7 @@
 
                   <div class="mt-3 pm-meta-row">
                     <!-- Gender icon -->
-                    <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-oly-border flex items-center justify-center" title="Gênero">
+                    <div id="pmGenderBadge" class="h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-oly-border flex items-center justify-center transition-colors" title="Gênero" style="background:#fff">
                       <i id="pmGenderIcon" class="fa-solid fa-user text-oly-blue"></i>
                     </div>
 
@@ -933,6 +973,8 @@
                   </button>
                 </div>
 
+                <!-- ✅ Filtro gênero sacola -->
+                <div id="cartGenderFilter"></div>
                 <div id="cartItems" class="mt-3 space-y-3"></div>
               </div>
 
@@ -1131,6 +1173,7 @@ const state = {
   cardAdded: new Set(), // key -> already added (green) for cart only
   favorites: new Set(),
   favsSelectMode: false,
+  cartGenderFilter: "",  // "" = todos | "masc"|"fem"|"inf"|"uni"
   favsSelected: new Set(), // variant keys
 };
 
@@ -2416,7 +2459,9 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
           </div>
 
           <!-- Gender icon -->
-          <div class="absolute left-3 top-3 h-9 w-9 rounded-full bg-white/95 border border-oly-border flex items-center justify-center pointer-events-none" title="${escapeHtml(g.label)}">
+          <div class="absolute left-3 top-3 h-9 w-9 rounded-full flex items-center justify-center pointer-events-none"
+               style="background:${g.isFemale ? 'rgba(236,72,153,.14)' : 'rgba(255,255,255,.95)'}; border:1.5px solid ${g.isFemale ? 'rgba(236,72,153,.35)' : 'rgba(229,231,235,.9)'}"
+               title="${escapeHtml(g.label)}">
             <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
           </div>
           <button class="btnCardZoom focus-ring absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
@@ -2743,7 +2788,13 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
   // Ícone de gênero (feminino em rosa)
   if($("pmGenderIcon")){
     const ginfo = genderIcon(item.genero || "");
-    $("pmGenderIcon").className = `fa-solid ${ginfo.icon} ` + (normalizeName(item.genero).includes("fem") ? "text-pink-500" : "text-oly-blue");
+    const _isFem = normalizeName(item.genero).includes("fem");
+    $("pmGenderIcon").className = `fa-solid ${ginfo.icon} ` + (_isFem ? "text-pink-500" : "text-oly-blue");
+    const _pmBadge = $("pmGenderBadge");
+    if(_pmBadge){
+      _pmBadge.style.background   = _isFem ? "rgba(236,72,153,.14)" : "";
+      _pmBadge.style.borderColor  = _isFem ? "rgba(236,72,153,.4)"  : "";
+    }
   }
   if($("pmPreco")) $("pmPreco").textContent = moneyBR(toNumberBR(item.precoRaw ?? 0));
   if($("pmPrecoMain")) $("pmPrecoMain").textContent = moneyBR(toNumberBR(item.precoRaw ?? 0));
@@ -3126,11 +3177,77 @@ function renderCartUI(){
   const list = $("cartItems");
   list.innerHTML = "";
   if(cartSize === 0){
+    state.cartGenderFilter = "";
+    const bar = document.getElementById("cartGenderFilter");
+    if(bar){ bar.innerHTML=""; bar.style.display="none"; }
     refreshVisibleCardAddButtons();
     return;
   }
 
+  // ── Gender filter bar ────────────────────────────
+  (()=>{
+    const bar = document.getElementById("cartGenderFilter");
+    if(!bar) return;
+    bar.innerHTML = "";
+
+    // Count distinct genders
+    const keys = new Set();
+    for(const it of state.cart.values()){
+      const k = (()=>{
+        const g = normalizeName(it.genero||"");
+        if(g.includes("masc") || g.includes("homem")) return "masc";
+        if(g.includes("fem")  || g.includes("mulher")) return "fem";
+        if(g.includes("uni")) return "uni";
+        if(g.includes("inf") || g.includes("kids") || g.includes("cri")) return "inf";
+        return "";
+      })();
+      if(k) keys.add(k);
+    }
+
+    // Only show if 2+ distinct genders
+    if(keys.size < 2){ bar.style.display="none"; return; }
+    bar.style.display = "";
+
+    const SVGS = {
+      all:  `<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="5" r="2.2"/><circle cx="15" cy="5" r="2.2"/><path d="M4.5 9.5h5l-.6 4H7.5l-.3 4h-2L4.5 9.5zm8 0h5L17 18h-1.7l-.3-5H13.7l-.6-3.5z"/></svg>`,
+      masc: `<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="5" r="2.4"/><path d="M7.5 9.5h7l-.8 5H12l-.3 4h-1.4L10 14.5H8.3L7.5 9.5z"/></svg>`,
+      fem:  `<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="5" r="2.4"/><path d="M8 9.5c0 0 .5 2 .5 3.5H13.5c0-1.5.5-3.5.5-3.5L12 9l-1 1.5L10 9 8 9.5z"/><path d="M8.5 13H13.5l1 5h-7l1-5z"/></svg>`,
+      inf:  `<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="5.5" r="2"/><path d="M8.5 9h5l-.7 4H11l-.4 4h-1.2l-.4-4H7.8L8.5 9z"/></svg>`,
+      uni:  `<svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="5.2" r="2"/><path d="M5.5 9h5l-.6 3.8H8.5l-.3 4H6.8l-.3-4H5.2L5.5 9z"/><circle cx="14.5" cy="5.2" r="2"/><path d="M12 9c0 0 .4 2 .4 3.2H16c0-1.2.4-3.2.4-3.2l-1.3-.3-.8 1.3-.7-1.3L12 9z"/><path d="M12.4 12.2H16l.8 4.8h-5l.6-4.8z"/></svg>`,
+    };
+    const LABELS = { all:"Todos", masc:"Masculino", fem:"Feminino", inf:"Infantil", uni:"Unissex" };
+
+    // "Todos" chip first
+    for(const key of ["all", "masc", "fem", "inf", "uni"]){
+      if(key !== "all" && !keys.has(key)) continue;
+      const isActive = (key === "all")
+        ? state.cartGenderFilter === ""
+        : state.cartGenderFilter === key;
+      const btn = document.createElement("button");
+      btn.className = "cgf-chip focus-ring" + (isActive ? " on-" + key : "");
+      btn.innerHTML = SVGS[key] + `<span>${LABELS[key]}</span>`;
+      btn.addEventListener("click", ()=>{
+        state.cartGenderFilter = (key === "all" || state.cartGenderFilter === key) ? "" : key;
+        renderCartUI();
+      });
+      bar.appendChild(btn);
+    }
+  })();
+
+  // ── Filter items by selected gender ──────────────
+  const _genFilter = state.cartGenderFilter;
+  function _genMatch(it){
+    if(!_genFilter) return true;
+    const g = normalizeName(it.genero||"");
+    if(_genFilter==="masc") return g.includes("masc") || g.includes("homem");
+    if(_genFilter==="fem")  return g.includes("fem")  || g.includes("mulher");
+    if(_genFilter==="uni")  return g.includes("uni");
+    if(_genFilter==="inf")  return g.includes("inf")  || g.includes("kids") || g.includes("cri");
+    return true;
+  }
+
   for(const it of state.cart.values()){
+    if(!_genMatch(it)) continue;
     const needsGrade = tamNeedsGrade(it.categoria, it.tam);
     const hasGrade = it.grade && Object.keys(it.grade).length > 0;
     const isPending = needsGrade && !hasGrade;
