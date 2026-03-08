@@ -191,8 +191,8 @@
     #btnBulkGrade {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 8px 16px;
+      gap: 8px;
+      padding: 9px 16px;
       border-radius: 14px;
       border: 1.5px solid var(--primary);
       background: rgba(101,120,255,.10);
@@ -202,6 +202,14 @@
       cursor: pointer;
       transition: background .15s, transform .1s;
       margin-top: 10px;
+      line-height: 1.2;
+    }
+    #btnBulkGrade .bulk-sub {
+      font-size: 10px;
+      font-weight: 600;
+      opacity: .75;
+      display: block;
+      line-height: 1;
     }
     #btnBulkGrade:hover { background: rgba(101,120,255,.18); }
     #btnBulkGrade:active { transform: scale(.97); }
@@ -1006,8 +1014,11 @@
                 <div id="cartGenderFilter"></div>
                 <!-- ✅ Botão grade em lote -->
                 <button id="btnBulkGrade" class="hidden focus-ring">
-                  <i class="fa-solid fa-table-cells-large"></i>
-                  <span id="btnBulkGradeLabel">Aplicar grade em todos</span>
+                  <i class="fa-solid fa-layer-group" style="font-size:14px"></i>
+                  <span>
+                    Aplicar grade em lote
+                    <span class="bulk-sub" id="btnBulkGradeSub"></span>
+                  </span>
                 </button>
                 <div id="cartItems" class="mt-3 space-y-3"></div>
               </div>
@@ -3296,10 +3307,14 @@ function renderCartUI(){
       btn.classList.add("hidden"); return;
     }
     btn.classList.remove("hidden");
-    const scope = activeFilter
-      ? ({masc:"masculinos", fem:"femininos", inf:"infantis", uni:"unissex"}[activeFilter] || "filtrados")
-      : "todos";
-    if(label) label.textContent = `Aplicar grade nos ${needsGradeCount} ${scope}`;
+    // Update subtitle with context
+    const sub = document.getElementById("btnBulkGradeSub");
+    if(sub){
+      const genLabel = activeFilter
+        ? ({masc:"masculino", fem:"feminino", inf:"infantil", uni:"unissex"}[activeFilter])
+        : "todos os gêneros";
+      sub.textContent = needsGradeCount + " produto" + (needsGradeCount!==1?"s":"") + " · " + genLabel;
+    }
   })();
 
   // ── Filter items by selected gender ──────────────
@@ -4361,37 +4376,40 @@ function gradeToCartEntry(){
 }
 
 $("btnConfirmGrade").addEventListener("click", ()=>{
-  const entry = gradeToCartEntry();
-  if(entry.qty === 0){
-    toast("Adicione ao menos 1 par ✅");
-    return;
-  }
-
+  // ── Modo lote ─────────────────────────────────────
   if(gradeState.bulkMode){
-    // ── Modo lote: aplica a mesma grade a todos os itens filtrados ──
-    const gradeMap    = { ...entry.grade };
-    const gradeResume = entry.gradeResume;
-    const totalQty    = entry.qty;
+    // Build the grade from the modal inputs
+    const gradeMap = {};
+    let totalQty = 0;
+    for(const s of gradeState.sizes){
+      if(s.qty > 0){ gradeMap[s.tam] = s.qty; totalQty += s.qty; }
+    }
+    if(totalQty === 0){ toast("Adicione ao menos 1 par ✅"); return; }
+
+    const gradeResume = Object.entries(gradeMap).map(([t,q])=>t+"x"+q).join(" | ");
+    const bFilter = gradeState.bulkFilter;
     let updated = 0;
 
+    // Apply to all eligible cart items (those that need a grade)
     for(const [key, it] of state.cart.entries()){
       if(!tamNeedsGrade(it.categoria, it.tam)) continue;
-      // Verifica se item passa no filtro de gênero ativo
-      if(gradeState.bulkFilter){
+      // Apply gender filter if active
+      if(bFilter){
         const g = normalizeName(it.genero||"");
         let match = false;
-        if(gradeState.bulkFilter==="masc" && (g.includes("masc")||g.includes("homem"))) match=true;
-        else if(gradeState.bulkFilter==="fem"  && (g.includes("fem")||g.includes("mulher")))  match=true;
-        else if(gradeState.bulkFilter==="uni"  && g.includes("uni"))  match=true;
-        else if(gradeState.bulkFilter==="inf"  && (g.includes("inf")||g.includes("kids")||g.includes("cri"))) match=true;
+        if(bFilter==="masc") match = g.includes("masc")||g.includes("homem");
+        else if(bFilter==="fem")  match = g.includes("fem")||g.includes("mulher");
+        else if(bFilter==="uni")  match = g.includes("uni");
+        else if(bFilter==="inf")  match = g.includes("inf")||g.includes("kids")||g.includes("cri");
         if(!match) continue;
       }
-      // Aplica grade clonada
-      const updated_entry = { ...it, grade: { ...gradeMap }, gradeResume, qty: totalQty };
-      state.cart.set(key, updated_entry);
+      // Update the EXISTING item — keep all its data, only overwrite grade fields
+      state.cart.set(key, { ...it, grade: { ...gradeMap }, gradeResume, qty: totalQty });
       updated++;
     }
 
+    gradeState.bulkMode   = false;
+    gradeState.bulkFilter = "";
     saveCartToStorage();
     renderCartUI();
     refreshVisibleCardAddButtons();
@@ -4401,7 +4419,9 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
     return;
   }
 
-  // ── Modo normal ──
+  // ── Modo normal ──────────────────────────────────
+  const entry = gradeToCartEntry();
+  if(entry.qty === 0){ toast("Adicione ao menos 1 par ✅"); return; }
   const fromCart = gradeState.fromCart;
   state.cart.set(entry.key, entry);
   saveCartToStorage();
@@ -4453,11 +4473,13 @@ $("btnGradeLater").addEventListener("click", ()=>{
 
 // ✅ Fecha grade sem adicionar nada — NÃO marca o botão como verde
 function closeGradeWithoutAdding(){
-  const fromCart = gradeState.fromCart;
+  const fromCart  = gradeState.fromCart;
+  const wasBulk   = gradeState.bulkMode;
   gradeState.bulkMode   = false;
   gradeState.bulkFilter = "";
   closeGradeModal();
-  if(fromCart) setTimeout(()=> openCartModal(), 320);
+  // Reopen cart if came from cart OR from bulk mode
+  if(fromCart || wasBulk) setTimeout(()=> openCartModal(), 320);
 }
 
 $("btnCloseGrade").addEventListener("click", closeGradeWithoutAdding);
@@ -4653,58 +4675,52 @@ function initSwipeModal(sheetId, modalId, closeFn){
   btn.addEventListener("click", ()=>{
     const activeFilter = state.cartGenderFilter;
 
-    // Find the first item that needs a grade to use as template for sizes
-    let templateItem = null;
-    for(const it of state.cart.values()){
-      if(!tamNeedsGrade(it.categoria, it.tam)) continue;
-      if(activeFilter){
-        const g = normalizeName(it.genero||"");
-        let match = false;
-        if(activeFilter==="masc" && (g.includes("masc")||g.includes("homem"))) match=true;
-        else if(activeFilter==="fem"  && (g.includes("fem")||g.includes("mulher")))  match=true;
-        else if(activeFilter==="uni"  && g.includes("uni"))  match=true;
-        else if(activeFilter==="inf"  && (g.includes("inf")||g.includes("kids")||g.includes("cri"))) match=true;
-        if(!match) continue;
-      }
-      templateItem = it;
-      break;
+    // Collect all eligible items (need grade, match current filter)
+    function matchesFilter(it){
+      if(!tamNeedsGrade(it.categoria, it.tam)) return false;
+      if(!activeFilter) return true;
+      const g = normalizeName(it.genero||"");
+      if(activeFilter==="masc") return g.includes("masc")||g.includes("homem");
+      if(activeFilter==="fem")  return g.includes("fem")||g.includes("mulher");
+      if(activeFilter==="uni")  return g.includes("uni");
+      if(activeFilter==="inf")  return g.includes("inf")||g.includes("kids")||g.includes("cri");
+      return false;
     }
 
-    if(!templateItem){ toast("Nenhum item precisa de grade"); return; }
+    const targets = [...state.cart.values()].filter(matchesFilter);
+    if(!targets.length){ toast("Nenhum item precisa de grade"); return; }
 
-    // Open grade modal in bulk mode
+    // Use first item's TAM range to build the size list
+    const templateItem = targets[0];
+
+    // Store bulk context BEFORE opening modal
     gradeState.bulkMode   = true;
     gradeState.bulkFilter = activeFilter;
-    gradeState.fromCart   = true;
+    gradeState.fromCart   = false; // we handle return ourselves
 
-    // Use template item for sizes but show a generic title
-    const fakeItem = { ...templateItem, produto: "Grade em lote", cor: activeFilter
-      ? ({masc:"Masculino", fem:"Feminino", inf:"Infantil", uni:"Unissex"}[activeFilter] || "Filtrado")
-      : "Todos os produtos" };
-
-    // Close cart first, then open grade modal
+    // Open grade modal using the template item's sizes
+    // Pass keepBulk so openGradeModal doesn't reset bulkMode
     const cartModal = document.getElementById("cartModal");
     if(cartModal) cartModal.classList.add("hidden");
 
-    openGradeModal(fakeItem, { fromCart: true });
+    openGradeModal(templateItem, { fromCart: false, keepBulk: true });
 
-    // Override the header labels to indicate bulk mode
+    // Override modal header to show bulk context
+    const scope = activeFilter
+      ? ({masc:"Masculino", fem:"Feminino", inf:"Infantil", uni:"Unissex"}[activeFilter] || "Filtrado")
+      : "Todos";
+    const count = targets.length;
     const prodEl = document.getElementById("gradeProduto");
     const corEl  = document.getElementById("gradeCor");
-    const hdrEl  = prodEl?.closest?.(".min-w-0");
-    if(prodEl) prodEl.textContent = "Grade em lote";
-    if(corEl){
-      const scope = activeFilter
-        ? ({masc:"Masculinos", fem:"Femininos", inf:"Infantis", uni:"Unissex"}[activeFilter])
-        : "Todos os produtos";
-      corEl.textContent = `Será aplicada em todos os ${scope}`;
-    }
+    const typeEl = document.querySelector("#gradeModal .text-xs.font-bold.text-oly-muted");
+    if(typeEl) typeEl.textContent = "Grade em lote";
+    if(prodEl) prodEl.textContent = count + " produto" + (count!==1?"s":"");
+    if(corEl)  corEl.textContent  = "Gênero: " + scope + " · Será aplicada em todos";
 
-    // Override confirm button label
+    // Change confirm button label
     const confirmBtn = document.getElementById("btnConfirmGrade");
-    if(confirmBtn){
-      confirmBtn.querySelector?.("span") && (confirmBtn.querySelector("span").textContent = "Aplicar em todos");
-    }
+    const confirmSpan = confirmBtn && confirmBtn.querySelector("span");
+    if(confirmSpan) confirmSpan.textContent = "Aplicar em todos os " + count;
   });
 })();
 
