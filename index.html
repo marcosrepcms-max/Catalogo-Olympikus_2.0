@@ -154,6 +154,27 @@
     /* ── Toggle (agrupar cores) ── */
     .dark-mode .toggle-track                   { background:var(--card-chip)!important; border-color:var(--border)!important; }
 
+    /* ── Cart item pending border (amber) ── */
+    .dark-mode .border-amber-300 { border-color: rgba(251,191,36,.4)!important; }
+
+    /* ── Cart item obs box ── */
+    .dark-mode .rounded-xl.border-oly-border.bg-oly-bg { background:var(--card-chip)!important; }
+
+    /* ── Grade modal sheet ── */
+    .dark-mode #gradeSheet { background:var(--card-bg)!important; }
+    .dark-mode #gradeSheet .border-b { border-color:var(--border)!important; }
+    .dark-mode #gradeSheet .border-t { border-color:var(--border)!important; }
+    .dark-mode #gradeSheet .text-oly-muted { color:var(--muted)!important; }
+
+    /* ── Cart item qty buttons (- +) ── */
+    .dark-mode [data-minus="true"],
+    .dark-mode [data-plus="true"]  { background:var(--card-chip)!important; border-color:var(--border)!important; }
+    .dark-mode [data-minus="true"] i,
+    .dark-mode [data-plus="true"] i { color:var(--primary)!important; }
+
+    /* ── Cart item qty value text ── */
+    .dark-mode .min-w-\[44px\].font-extrabold { color:var(--text)!important; }
+
     /* ── Image viewer ── */
     .dark-mode #imageViewer .bg-black\/40,
     .dark-mode #imageViewer .bg-black\/90     { background:rgba(0,0,0,.85)!important; }
@@ -405,7 +426,7 @@
       grid-template-columns: 52px 1fr 36px 44px 36px;
       align-items: center;
       gap: 8px;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
     .grade-size-row:last-child { border-bottom: none; }
@@ -414,8 +435,8 @@
       font-size: 13px;
       color: var(--text);
       text-align: center;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: var(--card-chip, #F3F4F6);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
       padding: 6px 4px;
     }
@@ -427,7 +448,8 @@
       border: 2px solid var(--border);
       border-radius: 10px;
       padding: 6px 4px;
-      background: #fff;
+      background: var(--input-bg, #fff);
+      color: var(--text, #111827);
       outline: none;
       -moz-appearance: textfield;
     }
@@ -437,8 +459,8 @@
     .grade-btn-sm {
       width: 36px; height: 36px;
       border-radius: 50%;
-      border: 1px solid var(--border);
-      background: #fff;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg, #fff);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       font-size: 14px;
@@ -448,9 +470,14 @@
     .grade-btn-sm:hover { background: var(--bg); }
     .grade-pending-badge {
       display: inline-flex; align-items: center; gap: 4px;
-      background: #fff3cd; border: 1px solid #ffc107;
-      color: #856404; border-radius: 999px;
+      background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.5);
+      color: #B45309; border-radius: 999px;
       padding: 2px 10px; font-size: 11px; font-weight: 800;
+    }
+    .dark-mode .grade-pending-badge {
+      background: rgba(251,191,36,.12)!important;
+      border-color: rgba(251,191,36,.35)!important;
+      color: #FCD34D!important;
     }
     .actionbar-wrap {
       position: relative;
@@ -1012,9 +1039,13 @@
     <!-- Modal de Grade -->
     <div id="gradeModal" class="hidden fixed inset-0 z-[75]">
       <div class="absolute inset-0 bg-black/40" id="gradeBackdrop"></div>
-      <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" style="max-width:520px;margin:0 auto;">
+      <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" id="gradeSheet" style="max-width:520px;margin:0 auto;">
+        <!-- Drag handle mobile -->
+        <div class="flex justify-center pt-2 pb-0 shrink-0" aria-hidden="true">
+          <div class="w-10 h-1 rounded-full bg-oly-border opacity-50"></div>
+        </div>
         <!-- Header -->
-        <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-oly-border shrink-0">
+        <div class="flex items-center justify-between px-5 pt-4 pb-4 border-b border-oly-border shrink-0">
           <div class="min-w-0">
             <div class="text-xs font-bold text-oly-muted">Grade de tamanhos</div>
             <div id="gradeProduto" class="font-extrabold truncate">—</div>
@@ -1026,10 +1057,10 @@
         </div>
 
         <!-- Lista de tamanhos -->
-        <div class="overflow-y-auto px-4 sm:px-5 py-2 flex-1 no-scrollbar" id="gradeSizeList"></div>
+        <div class="overflow-y-auto px-4 sm:px-5 py-2 flex-1 no-scrollbar" id="gradeSizeList" style="background:var(--card-bg,#fff)"></div>
 
         <!-- Totais + botão -->
-        <div class="px-5 pb-5 pt-3 border-t border-oly-border shrink-0 space-y-3">
+        <div class="px-5 pb-5 pt-3 border-t border-oly-border shrink-0 space-y-3" style="background:var(--card-bg,#fff)">
           <div class="flex items-center justify-between text-sm">
             <span class="font-bold text-oly-muted">Total de pares</span>
             <span id="gradeTotalPares" class="font-extrabold text-lg text-oly-blue">0</span>
@@ -4320,6 +4351,66 @@ function initSwipeModal(sheetId, modalId, closeFn){
   initSwipeModal("cartModalSheet",    "cartModal",    closeCartModal);
 })();
 
+
+
+// ── Swipe-down para fechar grade modal ───────────
+(function initGradeSwipe(){
+  const sheet  = document.getElementById("gradeSheet");
+  const modal  = document.getElementById("gradeModal");
+  if(!sheet || !modal) return;
+
+  let startY=0, currentY=0, dragging=false, startTime=0;
+
+  function onStart(e){
+    if(window.innerWidth >= 640) return;
+    const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+    const sheetTop = sheet.getBoundingClientRect().top;
+    const sc = sheet.querySelector(".overflow-y-auto, .overflow-auto");
+    if(sc && sc.scrollTop > 4) return;
+    if((touchY - sheetTop) > 80) return;
+    startY = touchY; startTime = Date.now(); dragging = true;
+    sheet.style.transition = "none";
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+    currentY = Math.max(0, touchY - startY);
+    sheet.style.transform = `translateY(${currentY}px)`;
+    const bd = document.getElementById("gradeBackdrop");
+    if(bd) bd.style.opacity = String(1 - Math.min(currentY/280,1)*0.65);
+    if(currentY > 5) e.preventDefault();
+  }
+
+  function onEnd(){
+    if(!dragging) return;
+    dragging = false;
+    const elapsed = Math.max(1, Date.now() - startTime);
+    const velocity = currentY / elapsed;
+    if(currentY > 90 || velocity > 0.45){
+      sheet.style.transition = "transform .22s cubic-bezier(.32,.72,0,1)";
+      sheet.style.transform  = "translateY(110%)";
+      setTimeout(()=>{
+        closeGradeWithoutAdding();
+        sheet.style.transform  = ""; sheet.style.transition = "";
+        const bd = document.getElementById("gradeBackdrop");
+        if(bd) bd.style.opacity = "";
+      }, 220);
+    } else {
+      sheet.style.transition = "transform .2s cubic-bezier(.32,.72,0,1)";
+      sheet.style.transform = "";
+      setTimeout(()=>{ sheet.style.transition = ""; }, 200);
+      const bd = document.getElementById("gradeBackdrop");
+      if(bd) bd.style.opacity = "";
+    }
+    currentY = 0;
+  }
+
+  sheet.addEventListener("touchstart", onStart, { passive:true  });
+  sheet.addEventListener("touchmove",  onMove,  { passive:false });
+  sheet.addEventListener("touchend",   onEnd,   { passive:true  });
+  sheet.addEventListener("touchcancel",onEnd,   { passive:true  });
+})();
 
 // ── Dark mode toggle ──────────────────────────────
 (function initDarkMode(){
