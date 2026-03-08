@@ -4396,7 +4396,7 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
     renderCartUI();
     refreshVisibleCardAddButtons();
     closeGradeModal();
-    toast(\`Grade aplicada em \${updated} produto\${updated!==1?"s":""} ✅\`);
+    toast("Grade aplicada em " + updated + " produto" + (updated!==1?"s":"") + " ✅");
     setTimeout(()=> openCartModal(), 320);
     return;
   }
