@@ -59,35 +59,121 @@
     }
     /* ── Dark Mode ── */
     .dark-mode{
-      --bg:#12141A;
-      --text:#E4E7F0;
-      --muted:#8891A8;
-      --border:#252836;
-      --primary:#5068FF;
-      --ring:rgba(80,104,255,.35);
+      --bg:#0E1016;
+      --text:#F0F2F8;
+      --muted:#9BA3BC;
+      --border:#2E3245;
+      --primary:#6578FF;
+      --ring:rgba(101,120,255,.4);
       --success:#22c55e;
-      --ready:rgba(80,104,255,.15);
-      --card-bg:#1A1D28;
-      --input-bg:#1A1D28;
+      --ready:rgba(101,120,255,.18);
+      --card-bg:#181B27;
+      --card-chip:#1F2333;
+      --input-bg:#1F2333;
+      --thumb-bg:#252A3A;
     }
-    .dark-mode body                            { background:var(--bg); color:var(--text); }
-    .dark-mode header                          { background:rgba(18,20,26,.96)!important; border-color:var(--border)!important; }
+
+    /* ── Base ── */
+    .dark-mode body                            { background:var(--bg)!important; color:var(--text)!important; }
+
+    /* ── Header ── */
+    .dark-mode header                          { background:rgba(14,16,22,.97)!important; border-color:var(--border)!important; }
+    .dark-mode header button:not(.btn-add-status) { background:var(--card-bg)!important; border-color:var(--border)!important; }
+    .dark-mode #searchWrap                     { background:var(--card-bg)!important; border-color:var(--border)!important; }
+    .dark-mode #searchInput                    { color:var(--text)!important; }
+
+    /* ── All white backgrounds → card-bg ── */
     .dark-mode .bg-white                       { background-color:var(--card-bg)!important; }
-    .dark-mode .bg-oly-bg                      { background-color:#0F1117!important; }
+    .dark-mode .bg-oly-bg                      { background-color:#12151E!important; }
+    .dark-mode .bg-gray-50,
+    .dark-mode .bg-gray-100                    { background-color:var(--card-chip)!important; }
+
+    /* ── Borders ── */
     .dark-mode .border-oly-border              { border-color:var(--border)!important; }
+    .dark-mode .border-b                       { border-color:var(--border)!important; }
+    .dark-mode .border-t                       { border-color:var(--border)!important; }
+    .dark-mode .border-r                       { border-color:var(--border)!important; }
+
+    /* ── Typography ── */
     .dark-mode .text-oly-muted                 { color:var(--muted)!important; }
     .dark-mode .text-oly-blue                  { color:var(--primary)!important; }
-    .dark-mode .bg-oly-blue\/10               { background-color:rgba(80,104,255,.18)!important; }
-    .dark-mode input,.dark-mode textarea,.dark-mode select { background:var(--input-bg)!important; color:var(--text)!important; border-color:var(--border)!important; }
-    .dark-mode .sheet,.dark-mode aside,.dark-mode #filtersDrawer { background:var(--card-bg)!important; }
-    .dark-mode .backdrop                       { background:rgba(0,0,0,.7)!important; }
-    .dark-mode img                             { filter:brightness(.9); }
-    .dark-mode .shadow-card                    { box-shadow:0 2px 16px rgba(0,0,0,.4)!important; }
-    .dark-mode .shadow-lift                    { box-shadow:0 4px 28px rgba(0,0,0,.5)!important; }
+    .dark-mode .text-oly-text                  { color:var(--text)!important; }
+    /* Nomes de produtos, títulos, labels em extrabold/bold sem classe de cor explícita */
+    .dark-mode .font-extrabold:not([class*="text-oly-"]):not([class*="text-white"]):not(.btn-add-status):not(.badge-novo) { color:var(--text)!important; }
+    .dark-mode .font-bold:not([class*="text-oly-"]):not([class*="text-white"])     { color:var(--text)!important; }
+    .dark-mode .font-semibold:not([class*="text-oly-"]):not([class*="text-white"]) { color:var(--text)!important; }
+    /* Textos normais que não têm classe de cor */
+    .dark-mode p:not([class*="text-"]),
+    .dark-mode span:not([class*="text-"]),
+    .dark-mode div:not([class*="text-"]) > * { color:inherit; }
+
+    /* ── Cards ── */
+    .dark-mode .shadow-card                    { box-shadow:0 2px 16px rgba(0,0,0,.5)!important; }
+    .dark-mode .shadow-lift                    { box-shadow:0 4px 28px rgba(0,0,0,.6)!important; }
+    /* Chip Cor/TAM dentro do card */
+    .dark-mode [class*="bg-oly-bg"][class*="border-oly-border"] { background-color:var(--card-chip)!important; border-color:var(--border)!important; }
+    /* Thumbnails de ângulo */
+    .dark-mode .pm-thumb                       { background:var(--thumb-bg)!important; border-color:var(--border)!important; }
+    /* Dots do carrossel */
+    .dark-mode .carousel-dot                   { background:var(--border)!important; }
+    .dark-mode .carousel-dot.active            { background:var(--primary)!important; }
+    /* Imagens: leve ajuste de brilho */
+    .dark-mode img:not([src*="logo"])          { filter:brightness(.88) contrast(1.05); }
+
+    /* ── Modais (Product, Cart, Grade) ── */
+    .dark-mode .sheet                          { background:var(--card-bg)!important; }
+    .dark-mode aside,
+    .dark-mode #filtersDrawer                  { background:var(--card-bg)!important; }
+    /* Seção de fundo dentro do modal */
+    .dark-mode .rounded-3xl.bg-oly-bg,
+    .dark-mode .rounded-2xl.bg-oly-bg          { background:var(--card-chip)!important; }
+
+    /* ── Inputs / Selects / Textareas ── */
+    .dark-mode input,
+    .dark-mode textarea,
+    .dark-mode select                          { background:var(--input-bg)!important; color:var(--text)!important; border-color:var(--border)!important; }
+    .dark-mode input::placeholder,
+    .dark-mode textarea::placeholder           { color:var(--muted)!important; }
+
+    /* ── Backdrop ── */
+    .dark-mode .backdrop                       { background:rgba(0,0,0,.72)!important; }
+
+    /* ── FAB / Mini cart ── */
     .dark-mode #miniCartFab                    { background:var(--primary)!important; }
+
+    /* ── Botões de ação ── */
     .dark-mode .btn-add-status.is-idle         { background:var(--primary)!important; }
     .dark-mode .bg-green-500                   { background-color:#16a34a!important; }
-    .dark-mode .bg-gray-50,.dark-mode .bg-gray-100 { background-color:#1E2130!important; }
+    .dark-mode .bg-oly-blue\/10               { background-color:rgba(101,120,255,.2)!important; }
+
+    /* ── Grade modal: células de tamanho ── */
+    .dark-mode .grade-size-cell                { background:var(--card-chip)!important; border-color:var(--border)!important; color:var(--text)!important; }
+    .dark-mode .grade-size-cell.selected       { background:var(--primary)!important; border-color:var(--primary)!important; color:#fff!important; }
+    .dark-mode .grade-size-cell input          { background:transparent!important; color:var(--text)!important; }
+
+    /* ── Toggle (agrupar cores) ── */
+    .dark-mode .toggle-track                   { background:var(--card-chip)!important; border-color:var(--border)!important; }
+
+    /* ── Image viewer ── */
+    .dark-mode #imageViewer .bg-black\/40,
+    .dark-mode #imageViewer .bg-black\/90     { background:rgba(0,0,0,.85)!important; }
+
+    /* ── Product modal swipe-to-close ── */
+    #productModalSheet {
+      touch-action: pan-x pan-y;
+      transition: transform 0.25s cubic-bezier(.32,.72,0,1);
+      will-change: transform;
+    }
+    #productModalSheet.is-dragging {
+      transition: none;
+    }
+    #pmDragHandle {
+      touch-action: none;
+    }
+    .dark-mode #pmDragHandle div {
+      background: var(--border)!important;
+      opacity: 0.8;
+    }
 
     /* ── Category chips ── */
     .cat-chip { transition:all .16s; }
@@ -664,7 +750,11 @@
     <div id="productModal" class="hidden fixed inset-0 z-50">
       <div class="backdrop absolute inset-0" data-close="true"></div>
       <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-0 sm:p-6">
-        <div class="sheet w-full sm:max-w-3xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col">
+        <div class="sheet w-full sm:max-w-3xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col" id="productModalSheet">
+          <!-- Drag handle – mobile only -->
+          <div id="pmDragHandle" class="sm:hidden flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing shrink-0" aria-hidden="true">
+            <div class="w-10 h-1 rounded-full bg-oly-border opacity-60"></div>
+          </div>
           <div class="p-3 sm:p-6 border-b border-oly-border flex items-center justify-between">
             <div class="min-w-0">
               <div class="text-xs text-oly-muted">Detalhes do produto</div>
@@ -784,7 +874,10 @@
     <div id="cartModal" class="hidden fixed inset-0 z-50">
       <div class="backdrop absolute inset-0" data-close-cart="true"></div>
       <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-0 sm:p-6">
-        <div class="sheet w-full sm:max-w-4xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col">
+        <div class="sheet w-full sm:max-w-4xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col" id="cartModalSheet">
+          <div id="cartDragHandle" class="sm:hidden flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing shrink-0" aria-hidden="true">
+            <div class="w-10 h-1 rounded-full bg-oly-border opacity-60"></div>
+          </div>
           <div class="p-4 sm:p-6 border-b border-oly-border flex items-center justify-between">
             <div>
               <div class="text-xs text-oly-muted">Checkout</div>
@@ -4143,6 +4236,90 @@ document.addEventListener("input", (e)=>{
 // ══════════════════════════════════════════════════
 // ✅ NOVAS FUNCIONALIDADES
 // ══════════════════════════════════════════════════
+
+
+
+// ── Fábrica de swipe-to-close para modais em bottom-sheet (mobile) ─────
+function initSwipeModal(sheetId, modalId, closeFn){
+  const sheet  = document.getElementById(sheetId);
+  const modal  = document.getElementById(modalId);
+  if(!sheet || !modal) return;
+
+  let startY=0, currentY=0, dragging=false, startTime=0;
+  const DIST_THRESHOLD = 90;
+  const VEL_THRESHOLD  = 0.45;
+
+  function isMobile(){ return window.innerWidth < 640; }
+
+  function getScrollable(){
+    return sheet.querySelector(".overflow-y-auto, .overflow-auto");
+  }
+
+  function onStart(e){
+    if(!isMobile()) return;
+    const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+    const sheetTop = sheet.getBoundingClientRect().top;
+    const sc = getScrollable();
+    if(sc && sc.scrollTop > 4) return;
+    // Accept drag only from top 80px of sheet
+    if((touchY - sheetTop) > 80) return;
+    startY    = touchY;
+    startTime = Date.now();
+    dragging  = true;
+    sheet.classList.add("is-dragging");
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+    currentY = Math.max(0, touchY - startY);
+    sheet.style.transform = `translateY(${currentY}px)`;
+    const backdrop = modal.querySelector(".backdrop");
+    if(backdrop) backdrop.style.opacity = String(1 - Math.min(currentY/280,1)*0.65);
+    if(currentY > 5) e.preventDefault();
+  }
+
+  function onEnd(){
+    if(!dragging) return;
+    dragging = false;
+    sheet.classList.remove("is-dragging");
+    const elapsed  = Math.max(1, Date.now() - startTime);
+    const velocity = currentY / elapsed;
+
+    if(currentY > DIST_THRESHOLD || velocity > VEL_THRESHOLD){
+      sheet.style.cssText += ";transition:transform .22s cubic-bezier(.32,.72,0,1)";
+      sheet.style.transform = "translateY(110%)";
+      setTimeout(()=>{
+        closeFn();
+        sheet.style.transform  = "";
+        sheet.style.transition = "";
+        const bd = modal.querySelector(".backdrop");
+        if(bd) bd.style.opacity = "";
+      }, 220);
+    } else {
+      sheet.style.cssText += ";transition:transform .2s cubic-bezier(.32,.72,0,1)";
+      sheet.style.transform = "";
+      setTimeout(()=>{ sheet.style.transition = ""; }, 200);
+      const bd = modal.querySelector(".backdrop");
+      if(bd) bd.style.opacity = "";
+    }
+    currentY = 0;
+  }
+
+  sheet.addEventListener("touchstart", onStart, { passive:true  });
+  sheet.addEventListener("touchmove",  onMove,  { passive:false });
+  sheet.addEventListener("touchend",   onEnd,   { passive:true  });
+  sheet.addEventListener("touchcancel",onEnd,   { passive:true  });
+}
+
+// Inicializa swipe nos modais que existem no DOM
+(function(){
+  // Produto
+  initSwipeModal("productModalSheet", "productModal", closeProductModal);
+  // Sacola
+  initSwipeModal("cartModalSheet",    "cartModal",    closeCartModal);
+})();
+
 
 // ── Dark mode toggle ──────────────────────────────
 (function initDarkMode(){
