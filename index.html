@@ -2695,6 +2695,7 @@ function renderCards(){
         ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
         : base, {abs:true});
 
+      const gInfo = genderIcon(base?.genero || "");
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm";
       card.tabIndex = 0;
       card.innerHTML = `
@@ -2703,13 +2704,18 @@ function renderCards(){
                loading="lazy" decoding="async"
                src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
                onerror="this.style.display='none'">
-          <div class="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:13px"></i>
+          <div class="absolute top-2 right-2 flex gap-1">
+            <div class="h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+              <i class="fa-solid ${gInfo.icon} text-oly-blue" style="font-size:11px" title="${escapeHtml(gInfo.label)}"></i>
+            </div>
+            <div class="h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+              <i class="fa-solid ${segIco} text-oly-blue" style="font-size:11px"></i>
+            </div>
           </div>
-          <div class="grid-dots absolute bottom-2 left-0 right-0 flex justify-center gap-1 pointer-events-none"></div>
           ${badgesHtml}
         </div>
-        <div class="px-3 py-2.5 cursor-pointer" data-gridopen="1">
+        <div class="grid-thumbs flex gap-1 px-2 pt-1.5 pb-0.5 overflow-x-auto" style="min-height:36px;scrollbar-width:none"></div>
+        <div class="px-3 py-2 cursor-pointer" data-gridopen="1">
           <div class="font-extrabold text-sm leading-snug">${escapeHtml(v.produto||base?.produto||"—")}</div>
           <div class="text-xs text-oly-muted mt-0.5">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base?.cor||"—")}</div>
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
@@ -2720,17 +2726,16 @@ function renderCards(){
       card.querySelector("[data-gridopen]").addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
 
-      // Swipe de ângulos na foto grande — vertical livre, horizontal troca ângulo, tap abre modal
+      // Swipe de ângulos — arrasta esq/dir para trocar, tap NO CENTRO (30% central) abre modal
       (function setupGridSwipe(cardEl, groups){
-        const imgEl = cardEl.querySelector(".grid-img");
-        const wrapEl = cardEl.querySelector(".grid-img-wrap");
-        const dots  = cardEl.querySelector(".grid-dots");
+        const imgEl   = cardEl.querySelector(".grid-img");
+        const wrapEl  = cardEl.querySelector(".grid-img-wrap");
+        const thumbsEl= cardEl.querySelector(".grid-thumbs");
         if(!imgEl || !wrapEl) return;
 
         while(groups.length < 4) groups.push([]);
         groups = groups.slice(0,4).map(g => [...new Set((g||[]).filter(Boolean))]);
         const avail = [0,1,2,3].filter(i => groups[i].length > 0);
-        if(avail.length <= 1){ if(dots) dots.innerHTML=""; return; }
 
         let idx = 0;
 
@@ -2738,12 +2743,24 @@ function renderCards(){
           if(!urls||!urls.length){ imgEl.removeAttribute("src"); return; }
           let u=0; const t=()=>{ imgEl.src=urls[u]; imgEl.onerror=()=>{ u++; if(u<urls.length) t(); }; }; t();
         }
-        function renderDots(){
-          if(!dots) return;
-          dots.innerHTML = avail.map((_,j) =>
-            `<span style="width:${j===idx?'14px':'6px'};height:6px;border-radius:999px;display:inline-block;background:${j===idx?'#1B3FA6':'rgba(255,255,255,.7)'};border:1px solid rgba(0,0,0,.15);transition:width .2s"></span>`
-          ).join("");
+
+        function renderThumbs(){
+          if(!thumbsEl) return;
+          if(avail.length <= 1){ thumbsEl.style.display="none"; return; }
+          thumbsEl.innerHTML = avail.map((aIdx, j) => {
+            const url = (groups[aIdx]&&groups[aIdx][0]) ? groups[aIdx][0] : "";
+            const active = j === idx;
+            return `<img data-tidx="${j}" src="${url}" alt="ângulo ${j+1}"
+              style="height:28px;width:28px;object-fit:contain;border-radius:6px;flex-shrink:0;cursor:pointer;
+                     border:2px solid ${active?'#1B3FA6':'#e2e8f0'};background:#f8f9fb;
+                     opacity:${active?'1':'0.6'};transition:border-color .15s,opacity .15s"
+              onerror="this.style.display='none'">`;
+          }).join("");
+          thumbsEl.querySelectorAll("img[data-tidx]").forEach(th=>{
+            th.addEventListener("click", e=>{ e.stopPropagation(); goTo(parseInt(th.dataset.tidx)); });
+          });
         }
+
         function goTo(pos){
           const next = Math.max(0, Math.min(avail.length-1, pos));
           if(next === idx) return;
@@ -2753,7 +2770,7 @@ function renderCards(){
           setTimeout(()=>{
             idx = next;
             tryLoad(groups[avail[idx]]);
-            renderDots();
+            renderThumbs();
             imgEl.style.transition = "none";
             imgEl.style.transform  = `translateX(${dir * 110}%)`;
             requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -2763,23 +2780,33 @@ function renderCards(){
           }, 150);
         }
 
+        // Swipe + tap centro
         let sx=0, sy=0, drag=false, moved=false, isHoriz=null;
         wrapEl.addEventListener("pointerdown", e=>{ if(!e.isPrimary) return; sx=e.clientX; sy=e.clientY; drag=true; moved=false; isHoriz=null; imgEl.style.transition="none"; }, {passive:true});
         wrapEl.addEventListener("pointermove", e=>{
           if(!drag||!e.isPrimary) return;
           const dx=e.clientX-sx, dy=e.clientY-sy;
           if(isHoriz===null && (Math.abs(dx)>7||Math.abs(dy)>7)) isHoriz = Math.abs(dx) > Math.abs(dy);
-          if(isHoriz){ moved=true; imgEl.style.transform=`translateX(${Math.max(-60,Math.min(60,dx))}px)`; }
+          if(isHoriz){ moved=true; imgEl.style.transform=`translateX(${Math.max(-80,Math.min(80,dx))}px)`; }
         }, {passive:true});
         const end = e=>{
           if(!drag||!e.isPrimary) return; drag=false;
           const dx=e.clientX-sx;
           if(isHoriz && moved && Math.abs(dx)>=25){
+            // arrastar esquerda → próximo, direita → anterior
             goTo(dx < 0 ? idx+1 : idx-1);
           } else {
             imgEl.style.transition="transform .15s ease";
             imgEl.style.transform="translateX(0)";
-            if(!moved) openProductModal({ item:base, group: isGrp?v:null });
+            if(!moved){
+              // só abre modal se clicar no terço central horizontal da imagem
+              const rect = wrapEl.getBoundingClientRect();
+              const relX = (e.clientX - rect.left) / rect.width;
+              const relY = (e.clientY - rect.top) / rect.height;
+              if(relX >= 0.25 && relX <= 0.75 && relY >= 0.2 && relY <= 0.8){
+                openProductModal({ item:base, group: isGrp?v:null });
+              }
+            }
           }
           moved=false; isHoriz=null;
         };
@@ -2787,7 +2814,7 @@ function renderCards(){
         wrapEl.addEventListener("pointercancel",end, {passive:true});
 
         tryLoad(groups[avail[0]]);
-        renderDots();
+        renderThumbs();
       })(card, angleSrcs);
 
       wrap.appendChild(card);
