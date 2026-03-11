@@ -280,8 +280,10 @@
     .dark-mode .cat-chip                       { background:var(--card-bg)!important; }
     .dark-mode .cat-chip.active                { background:rgba(80,104,255,.2)!important; }
 
-    /* ── "Novo" badge ── */
-    .badge-novo{display:inline-flex;align-items:center;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    /* ── Badges de status ── */
+    .badge-novo     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    .badge-novacor  {display:inline-flex;align-items:center;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    .badge-lanc     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#059669,#0891b2);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
 
     /* ── Spinner ── */
     @keyframes spin360{ to{ transform:rotate(360deg); } }
@@ -935,6 +937,7 @@
                     </div>
                   </div>
                 </div>
+                <div id="pmStatusBadges" class="mt-2 flex flex-wrap gap-1.5"></div>
                 </div>
 
                 <div class="mt-4 rounded-3xl border border-oly-border bg-white p-4">
@@ -1270,6 +1273,31 @@ function normalizeName(s){
   if(!s) return "";
   return String(s).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 }
+// Trata "sim", "yes", "1", "true", "x" como verdadeiro (para colunas booleanas do Excel)
+function isTruthy(v){
+  if(!v && v !== 0) return false;
+  const s = normalizeName(String(v));
+  return s === "sim" || s === "yes" || s === "1" || s === "true" || s === "x" || s === "s";
+}
+// Gera HTML dos badges de status de um produto/variante
+function renderBadges(item, { cls="", abs=false } = {}){
+  if(!item) return "";
+  const wrap = abs ? "absolute bottom-2 left-2 flex gap-1 flex-wrap pointer-events-none" : `flex gap-1 flex-wrap ${cls}`;
+  let html = "";
+  if(item.isLanc || item.isNew) html += `<span class="badge-lanc">LANÇAMENTO</span>`;
+  if(item.isNewColor)           html += `<span class="badge-novacor">NOVA COR</span>`;
+  return html ? `<div class="${wrap}">${html}</div>` : "";
+}
+// Versão para grupo: verifica se alguma variante tem o badge
+function renderBadgesGroup(group, { cls="", abs=false } = {}){
+  const items = group?.items || [];
+  const fake = {
+    isNew:      items.some(i=>i.isNew),
+    isLanc:     items.some(i=>i.isLanc),
+    isNewColor: items.some(i=>i.isNewColor),
+  };
+  return renderBadges(fake, { cls, abs });
+}
 function escapeHtml(s){
   return String(s ?? "")
     .replaceAll("&","&amp;")
@@ -1561,7 +1589,9 @@ async function loadCatalog({ cacheBust=false } = {}){
       cor: String(r["Cor"] ?? r["COR"] ?? "").trim(),
       genero: String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
       precoRaw: r["Preço"] ?? r["Preco"] ?? r["PREÇO"] ?? r["PRECO"] ?? 0,
-      isNew: !!(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? ""),
+      isNew:      isTruthy(r["Lançamento"]  ?? r["Lancamento"]  ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? ""),
+      isNewColor: isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
+      isLanc:     isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"]?? r["lancamento"]?? r["LANCAMENTO"]?? ""),
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
@@ -2598,7 +2628,7 @@ function renderCards(){
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          ${isNew ? `<span class="badge-novo" style="font-size:10px;padding:2px 8px">NOVO</span>` : ""}
+          ${renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:""})}
           <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center">
             <i class="fa-solid ${segIco} text-oly-blue" style="font-size:14px"></i>
           </div>
@@ -2626,7 +2656,7 @@ function renderCards(){
           <div class="absolute top-2 right-2 h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
             <i class="fa-solid ${segIco} text-oly-blue" style="font-size:15px"></i>
           </div>
-          ${isNew ? `<span class="badge-novo absolute bottom-2 left-2" style="font-size:9px;padding:2px 7px">NOVO</span>` : ""}
+          ${isNew ? renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {abs:true}) : ""}
         </div>
         <div class="px-2 py-2 flex flex-col gap-0.5">
           <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
@@ -2659,7 +2689,7 @@ function renderCards(){
         <div class="px-1.5 py-1.5 flex flex-col gap-0.5">
           <div class="font-bold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
           <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${isNew ? `<span class="badge-novo text-[9px] px-1.5 py-0.5 self-start">NOVO</span>` : ""}
+          ${renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:"mt-0.5"})}
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
@@ -2704,7 +2734,7 @@ function renderCards(){
                 <span class="inline-flex items-center rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
                   ${escapeHtml(categoryLabel(v.categoria))}
                 </span>
-                ${(v._type==="group"?v.items?.some(i=>i.isNew):v.isNew)?'<span class="badge-novo">NOVO</span>':""}
+                ${(v._type==="group"?v.items?.some(i=>i.isNew||i.isLanc):v.isNew||v.isLanc) ? renderBadgesGroup(v._type==="group"?v:null) || renderBadges(v) : ""}
                 <div class="text-sm font-extrabold">${escapeHtml(v.minPriceFmt || "—")}</div>
               </div>
             </div>
@@ -2778,7 +2808,7 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
               <!-- Nome truncado 1 linha + coração -->
               <div class="text-base font-extrabold leading-snug truncate">${escapeHtml(v.produto || "Produto")}</div>
               <!-- Preço em linha própria, destaque -->
-              <div class="mt-1 flex items-center gap-2"><span class="text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</span>${v.isNew?'<span class="badge-novo">NOVO</span>':""}</div>
+              <div class="mt-1 flex items-center gap-2 flex-wrap"><span class="text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</span>${renderBadges(v)}</div>
             </div>
             <!-- Coração -->
             <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
@@ -3096,6 +3126,10 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
   if($("pmPreco")) $("pmPreco").textContent = moneyBR(toNumberBR(item.precoRaw ?? 0));
   if($("pmPrecoMain")) $("pmPrecoMain").textContent = moneyBR(toNumberBR(item.precoRaw ?? 0));
 
+  // Badges de status no modal
+  const _pmBadgesEl = $("pmStatusBadges");
+  if(_pmBadgesEl) _pmBadgesEl.innerHTML = renderBadges(item, {cls:""});
+
   if($("pmCorBadge")) $("pmCorBadge").textContent = cor;
   if($("pmCorMain")) $("pmCorMain").textContent = cor;
 
@@ -3243,6 +3277,7 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
         if($("pmCorCodigoBadge")) $("pmCorCodigoBadge").textContent = nextItem.corCodigo || "";
         if($("pmCodeSeg")) $("pmCodeSeg").textContent = `${nextItem.codigo||"—"} · ${nextItem.segmento||"—"}`;
         if($("pmPrecoMain")) $("pmPrecoMain").textContent = moneyBR(toNumberBR(nextItem.precoRaw ?? 0));
+        const _pb = $("pmStatusBadges"); if(_pb) _pb.innerHTML = renderBadges(nextItem);
         updateModalFavUI();
         // marca active na miniatura de cor
         thumbs.querySelectorAll(".pm-thumb").forEach(b => b.classList.remove("active"));
