@@ -1218,7 +1218,7 @@ const state = {
   productsView: [],
   groupColors: false,
   viewMode: "all", // all | favs
-  cardLayout: "cards", // cards | list | grid
+  cardLayout: "duo", // duo | list | grid
   filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
@@ -1739,6 +1739,7 @@ function clearAllFilters(){
 }
 $("btnClear").addEventListener("click", ()=>{
   clearAllFilters();
+  state.cardLayout = "duo"; updateLayoutBtn();
   refreshView(true);
 });
 
@@ -1811,10 +1812,9 @@ function segmentIcon(seg){
 }
 
 const LAYOUTS = [
-  { id:"cards", icon:"fa-border-all",  label:"Cards" },
-  { id:"duo",   icon:"fa-table-cells", label:"2 Col"  },
-  { id:"list",  icon:"fa-list",        label:"Lista"  },
-  { id:"grid",  icon:"fa-grip",        label:"Grid"   },
+  { id:"duo",  icon:"fa-table-cells-large", label:"2 Col" },
+  { id:"list", icon:"fa-list",               label:"Lista" },
+  { id:"grid", icon:"fa-grip",               label:"Grid"  },
 ];
 function updateLayoutBtn(){
   const cur = LAYOUTS.findIndex(l => l.id === state.cardLayout);
@@ -2496,10 +2496,14 @@ function renderCards(){
     wrap.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
     wrap.removeAttribute("data-favs");
   } else if(state.cardLayout === "grid"){
-    wrap.className = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2";
+    wrap.className = "gap-2";
+    wrap.style.display = "grid";
+    wrap.style.gridTemplateColumns = "repeat(3, minmax(0,1fr))";
     wrap.removeAttribute("data-favs");
   } else {
-    wrap.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
+    wrap.className = "gap-3";
+    wrap.style.display = "grid";
+    wrap.style.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
     wrap.removeAttribute("data-favs");
   }
   const slice = state.productsView.slice(0, state.pagination.shown);
@@ -2610,62 +2614,169 @@ function renderCards(){
       continue;
     }
 
-    // ===== LIST layout =====
+    // ===== LIST layout com swipe de ângulos na miniatura =====
     if(state.cardLayout === "list" && state.viewMode !== "favs"){
-      const isGrp = v._type === "group";
-      const base = isGrp ? v.items[0] : v;
-      const imgSrc = resolveImageSrc(base?.imagem);
-      const segIco = segmentIcon(base?.segmento || v.segmento);
-      const isNew = v.isNew || (isGrp && v.items?.some(i=>i.isNew));
-      card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2.5 shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
+      const isGrp     = v._type === "group";
+      const base      = isGrp ? v.items[0] : v;
+      const segIco    = segmentIcon(base?.segmento || v.segmento);
+      const angleSrcs = buildAngleSrcs(base?.imagem);
+      const imgSrc    = (angleSrcs[0]&&angleSrcs[0][0]) ? angleSrcs[0][0] : "";
+      const badgesHtml = renderBadges(isGrp
+        ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
+        : base, {cls:""});
+
+      card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2.5 shadow-sm";
       card.tabIndex = 0;
+
       card.innerHTML = `
-        <div class="h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center">
-          ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
+        <div class="list-img-wrap shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center relative select-none"
+             style="width:64px;height:64px;touch-action:pan-y">
+          <img class="list-img h-full w-full object-contain bg-white pointer-events-none"
+               loading="lazy" decoding="async"
+               src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
+               onerror="this.style.display='none'">
+          <div class="list-dots absolute bottom-0.5 left-0 right-0 flex justify-center gap-0.5 pointer-events-none"></div>
         </div>
-        <div class="min-w-0 flex-1">
-          <div class="font-extrabold text-sm leading-snug truncate">${escapeHtml(v.produto||base.produto||"—")}</div>
-          <div class="text-xs text-oly-muted truncate">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base.cor||"—")}</div>
+        <div class="min-w-0 flex-1 cursor-pointer" data-listopen="1">
+          <div class="font-extrabold text-sm leading-snug truncate">${escapeHtml(v.produto||base?.produto||"—")}</div>
+          <div class="text-xs text-oly-muted truncate">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base?.cor||"—")}</div>
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          ${badgesHtml}
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          ${renderBadges(isGrp ? {isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:""})}
-          <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center">
+        <div class="flex items-center gap-2 shrink-0 cursor-pointer" data-listopen="1">
+          <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center pointer-events-none">
             <i class="fa-solid ${segIco} text-oly-blue" style="font-size:14px"></i>
           </div>
-          <i class="fa-solid fa-chevron-right text-oly-muted text-xs"></i>
+          <i class="fa-solid fa-chevron-right text-oly-muted text-xs pointer-events-none"></i>
         </div>
       `;
-      card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
+
+      // Abrir modal só ao clicar no texto/chevron (não na imagem)
+      card.querySelectorAll("[data-listopen]").forEach(el =>
+        el.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }))
+      );
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+
+      // Swipe de ângulos na miniatura 64x64
+      (function setupListSwipe(cardEl, groups){
+        const imgEl  = cardEl.querySelector(".list-img");
+        const wrap   = cardEl.querySelector(".list-img-wrap");
+        const dots   = cardEl.querySelector(".list-dots");
+        if(!imgEl || !wrap) return;
+
+        while(groups.length < 4) groups.push([]);
+        groups = groups.slice(0,4).map(g => [...new Set((g||[]).filter(Boolean))]);
+        const avail = groups.map((g,i)=>i).filter(i=>groups[i].length>0);
+        if(avail.length <= 1){ if(dots) dots.innerHTML=""; return; }
+
+        let idx = 0; // index in avail[]
+
+        function tryLoad(urls){
+          if(!urls||!urls.length){ imgEl.removeAttribute("src"); return; }
+          let u=0; const t=()=>{ imgEl.src=urls[u]; imgEl.onerror=()=>{ u++; if(u<urls.length) t(); else imgEl.style.display="none"; }; }; t();
+        }
+
+        function renderDots(){
+          if(!dots) return;
+          dots.innerHTML = avail.map((_,j) =>
+            `<span style="width:${j===idx?'10px':'4px'};height:4px;border-radius:999px;display:inline-block;background:${j===idx?'#1B3FA6':'rgba(0,0,0,.25)'};transition:width .15s"></span>`
+          ).join("");
+        }
+
+        function goTo(pos){
+          const next = Math.max(0, Math.min(avail.length-1, pos));
+          if(next === idx) return;
+          idx = next;
+          tryLoad(groups[avail[idx]]);
+          renderDots();
+        }
+
+        // Touch/pointer — só swipe horizontal; deixa scroll vertical livre
+        let sx=0, sy=0, dragging=false, moved=false, isHoriz=null;
+        wrap.addEventListener("pointerdown", e=>{
+          if(!e.isPrimary) return;
+          sx=e.clientX; sy=e.clientY; dragging=true; moved=false; isHoriz=null;
+          imgEl.style.transition="none";
+        }, {passive:true});
+
+        wrap.addEventListener("pointermove", e=>{
+          if(!dragging||!e.isPrimary) return;
+          const dx=e.clientX-sx, dy=e.clientY-sy;
+          if(isHoriz===null && (Math.abs(dx)>6||Math.abs(dy)>6)){
+            isHoriz = Math.abs(dx) > Math.abs(dy);
+          }
+          if(isHoriz){
+            moved=true;
+            imgEl.style.transform=`translateX(${Math.max(-40,Math.min(40,dx))}px)`;
+          }
+        }, {passive:true});
+
+        const endSwipe = e=>{
+          if(!dragging||!e.isPrimary) return;
+          dragging=false;
+          const dx=e.clientX-sx;
+          if(isHoriz && moved && Math.abs(dx)>=20){
+            // Animate out
+            imgEl.style.transition="transform .15s ease-in";
+            imgEl.style.transform=`translateX(${dx<0?-80:80}px)`;
+            setTimeout(()=>{
+              goTo(dx<0 ? idx+1 : idx-1);
+              imgEl.style.transition="none";
+              imgEl.style.transform=`translateX(${dx<0?80:-80}px)`;
+              requestAnimationFrame(()=>requestAnimationFrame(()=>{
+                imgEl.style.transition="transform .18s ease-out";
+                imgEl.style.transform="translateX(0)";
+              }));
+            },150);
+          } else {
+            imgEl.style.transition="transform .15s ease";
+            imgEl.style.transform="translateX(0)";
+            // Tap na imagem → abre modal
+            if(!moved) openProductModal({ item:base, group: isGrp?v:null });
+          }
+          moved=false; isHoriz=null;
+        };
+        wrap.addEventListener("pointerup",   endSwipe, {passive:true});
+        wrap.addEventListener("pointercancel",endSwipe,{passive:true});
+
+        tryLoad(groups[avail[0]]);
+        renderDots();
+      })(card, angleSrcs);
+
       wrap.appendChild(card);
       continue;
     }
 
-    // ===== DUO layout (2 colunas, card médio) =====
+    // ===== DUO layout (2 colunas, principal) =====
     if(state.cardLayout === "duo" && state.viewMode !== "favs"){
-      const isGrp = v._type === "group";
-      const base = isGrp ? v.items[0] : v;
+      const isGrp  = v._type === "group";
+      const base   = isGrp ? v.items[0] : v;
       const imgSrc = resolveImageSrc(base?.imagem);
-      const segIco = segmentIcon(base?.segmento || v.segmento);
-      const isNew = v.isNew || (isGrp && v.items?.some(i=>i.isNew));
+      const g      = genderIcon(base?.genero || "");
+      const badgesHtml = renderBadges(isGrp
+        ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
+        : base, {abs:true});
+
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[.98] transition-transform";
       card.tabIndex = 0;
       card.innerHTML = `
-        <div class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center">
-          ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-3xl"></i>`}
-          <div class="absolute top-2 right-2 h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:15px"></i>
+        <div class="relative bg-oly-bg overflow-hidden flex items-center justify-center" style="aspect-ratio:4/3">
+          ${imgSrc
+            ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">`
+            : `<i class="fa-solid fa-image text-oly-blue text-3xl"></i>`}
+          <div class="absolute top-2 left-2 h-8 w-8 rounded-full flex items-center justify-center pointer-events-none"
+               style="background:${g.isFemale?'rgba(236,72,153,.14)':'rgba(255,255,255,.9)'};border:1.5px solid ${g.isFemale?'rgba(236,72,153,.35)':'rgba(209,213,219,.9)'}">
+            <i class="fa-solid ${g.icon} ${g.isFemale?'text-pink-500':'text-oly-blue'}" style="font-size:13px"></i>
           </div>
-          ${(isGrp ? (v.items?.some(i=>i.isLanc||i.isNewColor)) : (base.isLanc||base.isNewColor)) ? renderBadges(isGrp ? {isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {abs:true}) : ""}
+          ${badgesHtml}
         </div>
-        <div class="px-2 py-2 flex flex-col gap-0.5">
-          <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
+        <div class="px-2.5 py-2 flex flex-col gap-0.5">
+          <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
           <div class="text-xs font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
           ${isGrp ? `<div class="text-[10px] text-oly-muted">${v.colorCount||0} cores</div>` : ""}
         </div>
       `;
-      card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
+      card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
       wrap.appendChild(card);
       continue;
@@ -2698,353 +2809,8 @@ function renderCards(){
       wrap.appendChild(card);
       continue;
     }
-
-    card.className = "rounded-3xl border border-oly-border bg-white shadow-card overflow-hidden";
-    card.tabIndex = 0;
-
-    if(v._type === "group"){
-      const first = v.items[0];
-      const imgSrc = resolveImageSrc(first?.imagem);
-      const segIcoG = segmentIcon(first?.segmento || v.segmento);
-
-      card.innerHTML = `
-        <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
-            <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
-    <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
-  </button>
-          <div class="absolute left-3 top-3 h-10 w-10 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIcoG} text-oly-blue" style="font-size:16px"></i>
-          </div>
-  <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
-            onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
-          <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
-            <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
-            <div class="text-xs font-bold">sem imagem</div>
-          </div>
-          <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2"></div>
-        </div>
-
-        <div data-cardthumbs="1" class="px-4 pt-3 flex items-center justify-center gap-2"></div>
-
-
-        <div class="p-3 sm:p-4">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <div class="text-sm sm:text-base font-extrabold leading-snug line-clamp-2">${escapeHtml(v.produto || "Produto")}</div>
-              <div class="mt-2 flex items-center justify-between gap-2">
-                <span class="inline-flex items-center rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
-                  ${escapeHtml(categoryLabel(v.categoria))}
-                </span>
-                ${renderBadgesGroup(v._type==="group" ? v : null) || renderBadges(v)}
-                <div class="text-sm font-extrabold">${escapeHtml(v.minPriceFmt || "—")}</div>
-              </div>
-            </div>
-
-            <!-- Em grupo, o coração abre os detalhes para escolher a cor -->
-            <button class="btnDetails focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="Escolher cor / favoritar">
-              <i class="fa-regular fa-heart text-oly-blue"></i>
-            </button>
-          </div>
-
-          <div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg p-3 text-xs text-oly-muted">
-            <b>${v.colorCount || 0}</b> cores disponíveis. Abra detalhes para escolher.
-          </div>
-        </div>
-      `;
-      const btnCardZoom = card.querySelector(".btnCardZoom");
-      if(btnCardZoom){
-        btnCardZoom.addEventListener("click", (e)=>{
-          e.stopPropagation();
-          // ✅ Zoom mostra os ÂNGULOS do primeiro item do grupo
-          const angleSrcs = buildAngleSrcs(first.imagem);
-          const validAngles = angleSrcs.filter(g => g.length > 0);
-          openImageViewerAngles(validAngles, 0, first);
-        });
-      }
-      card.querySelector(".btnDetails").addEventListener("click", ()=> openProductModal({ item:first, group:v }));
-      
-card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ item:first, group:v }));
-      card.addEventListener("keydown", (ev)=>{ if(ev.key==="Enter") openProductModal({ item:first, group:v }); });
-    } else {
-      const imgSrc = resolveImageSrc(v.imagem);
-      const key = cartKeyFor(v);
-      card.setAttribute("data-card-key", key);
-      const qty = getCardQty(key);
-      const g = genderIcon(v.genero);
-      const fav = isFavoriteKey(key);
-      const segIcoV = segmentIcon(v.segmento);
-
-      card.innerHTML = `
-        <div data-cardimgwrap="1" class="aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden relative">
-          <div class="imgHit absolute inset-0 cursor-pointer"></div>
-          <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white pointer-events-none"
-            onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
-          <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted pointer-events-none" style="display:none">
-            <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
-            <div class="text-xs font-bold">sem imagem</div>
-          </div>
-
-          <!-- Gender + Segment icons top-left -->
-          <div class="absolute left-3 top-3 flex items-center gap-1.5 pointer-events-none">
-            <div class="h-9 w-9 rounded-full flex items-center justify-center"
-                 style="background:${g.isFemale ? 'rgba(236,72,153,.14)' : 'rgba(255,255,255,.95)'}; border:1.5px solid ${g.isFemale ? 'rgba(236,72,153,.35)' : 'rgba(229,231,235,.9)'}"
-                 title="${escapeHtml(g.label)}">
-              <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
-            </div>
-            <div class="h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center">
-              <i class="fa-solid ${segIcoV} text-oly-blue" style="font-size:14px"></i>
-            </div>
-          </div>
-          <button class="btnCardZoom focus-ring absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
-            <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
-          </button>
-          <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2 pointer-events-none"></div>
-        </div>
-
-        <div data-cardthumbs="1" class="px-4 pt-3 flex items-center justify-center gap-2"></div>
-
-        <div class="p-4">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <!-- Nome truncado 1 linha + coração -->
-              <div class="text-base font-extrabold leading-snug truncate">${escapeHtml(v.produto || "Produto")}</div>
-              <!-- Preço em linha própria, destaque -->
-              <div class="mt-1 flex items-center gap-2 flex-wrap"><span class="text-base font-extrabold text-oly-blue">${escapeHtml(v.priceFmt)}</span>${renderBadges(v)}</div>
-            </div>
-            <!-- Coração -->
-            <button class="btnFav focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg shrink-0" title="${fav ? "Remover dos favoritos" : "Adicionar aos favoritos"}">
-              <i class="${fav ? "fa-solid" : "fa-regular"} fa-heart text-oly-blue"></i>
-            </button>
-          </div>
-
-          <!-- Bloco Cor + TAM (TAM clicável abre grade se for calçado/vestuário) -->
-          ${(v.cor || v.tam) ? `
-          <div class="mt-3 flex items-stretch rounded-2xl border border-oly-border bg-gray-50 overflow-hidden text-xs font-bold">
-            ${v.cor ? `<div class="flex items-center gap-1.5 px-3 py-2 flex-1 min-w-0">
-              <i class="fa-solid fa-palette text-oly-blue shrink-0" style="font-size:11px"></i>
-              <span class="truncate text-oly-text">${escapeHtml(v.cor)}</span>
-            </div>` : ""}
-            ${v.cor && v.tam ? `<div class="w-px bg-oly-border self-stretch"></div>` : ""}
-            ${v.tam ? `<button class="btnOpenGrade btn-open-grade" title="Montar grade de tamanhos">
-              <span class="grade-label visible" data-label="a">
-                <i class="fa-solid fa-ruler-horizontal" style="font-size:10px"></i>
-                <span>${escapeHtml(v.tam)}</span>
-              </span>
-              <span class="grade-label hidden-out" data-label="b" style="opacity:0">
-                <i class="fa-solid fa-plus" style="font-size:10px"></i>
-                <span>grade</span>
-              </span>
-            </button>` : ""}
-          </div>` : ""}
-
-          <!-- Controles: manual + atalho +6/+12 + adicionar -->
-          <div class="mt-3 rounded-2xl border border-oly-border bg-oly-bg p-3">
-            ${tamNeedsGrade(v.categoria, v.tam) ? `
-            <button class="btnAdd btn-add-status is-idle focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <span>Adicionar</span>
-            </button>
-            <div class="mt-2 text-center text-xs text-oly-muted">
-              <i class="fa-solid fa-ruler-horizontal mr-1"></i><span class="text-xs sm:text-sm">Use a régua para montar a grade</span>
-            </div>` : `
-            <div class="flex items-center gap-2">
-              <button class="btnMinus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Diminuir">
-                <i class="fa-solid fa-minus text-oly-blue"></i>
-              </button>
-              <div class="qtyDisplay min-w-[44px] text-center text-sm font-extrabold">${qty}</div>
-              <button class="btnPlus focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-white/90" aria-label="Aumentar">
-                <i class="fa-solid fa-plus text-oly-blue"></i>
-              </button>
-              <button class="btnPack6 focus-ring flex-1 rounded-2xl border border-oly-border bg-white px-2 py-2 text-xs font-extrabold hover:bg-white/90">+6</button>
-              <button class="btnPack12 focus-ring flex-1 rounded-2xl bg-oly-blue px-2 py-2 text-xs font-extrabold text-white hover:opacity-95">+12</button>
-            </div>
-            <button class="btnAdd btn-add-status is-idle focus-ring mt-2 w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <span>Adicionar</span>
-            </button>`}
-          </div>
-        </div>
-      `;
-
-    // ✅ Multi-ângulo no card (base na coluna "Imagem")
-    card.dataset.angleSrcs = JSON.stringify(buildAngleSrcs(v.imagem));
-
-      const btnFav = card.querySelector(".btnFav");
-      const imgHit = card.querySelector(".imgHit");
-      const qtyDisplay = card.querySelector(".qtyDisplay");
-      const btnMinus = card.querySelector(".btnMinus");
-      const btnPlus = card.querySelector(".btnPlus");
-      const btnAdd = card.querySelector(".btnAdd");
-      const btnPack6 = card.querySelector(".btnPack6");
-      const btnPack12 = card.querySelector(".btnPack12");
-      // Init add button state
-      updateCardAddButton(btnAdd, getCardAddStatus(key));
-
-      // ✅ imagem abre detalhes
-      imgHit.addEventListener("click", ()=> openProductModal({ item:v, group:null }));
-
-      // ✅ Botão de grade (TAM)
-      const btnOpenGrade = card.querySelector(".btnOpenGrade");
-      if(btnOpenGrade){
-        btnOpenGrade.addEventListener("click", (e)=>{
-          e.stopPropagation();
-          openGradeModal(v);
-        });
-
-        // Crossfade entre régua/tam e "+ grade" a cada 2.5s
-        const labelA = btnOpenGrade.querySelector('[data-label="a"]');
-        const labelB = btnOpenGrade.querySelector('[data-label="b"]');
-        if(labelA && labelB){
-          let showingA = true;
-          setInterval(()=>{
-            if(showingA){
-              labelA.classList.remove("visible"); labelA.classList.add("hidden-out");
-              labelB.style.opacity = "";
-              labelB.classList.remove("hidden-out"); labelB.classList.add("visible");
-            } else {
-              labelB.classList.remove("visible"); labelB.classList.add("hidden-out");
-              labelA.style.opacity = "";
-              labelA.classList.remove("hidden-out"); labelA.classList.add("visible");
-            }
-            showingA = !showingA;
-          }, 2500);
-        }
-      }
-
-
-      const btnCardZoom = card.querySelector(".btnCardZoom");
-      if(btnCardZoom){
-        btnCardZoom.addEventListener("click", (e)=>{
-          e.stopPropagation();
-          // ✅ Zoom mostra os ÂNGULOS do item atual (não cores)
-          const angleSrcs = buildAngleSrcs(v.imagem);
-          const validAngles = angleSrcs.filter(g => g.length > 0);
-          openImageViewerAngles(validAngles, 0, v);
-        });
-      }
-
-
-      // ✅ favoritar (não mexe em estado de sacola)
-      btnFav.addEventListener("click", (e)=>{
-        e.stopPropagation();
-        toggleFavoriteByItem(v);
-        // atualiza ícone imediatamente
-        const nowFav = isFavoriteKey(key);
-        btnFav.innerHTML = `<i class="${nowFav ? "fa-solid" : "fa-regular"} fa-heart text-oly-blue"></i>`;
-        btnFav.title = nowFav ? "Remover dos favoritos" : "Adicionar aos favoritos";
-      });
-
-      if(btnMinus) btnMinus.addEventListener("click", ()=>{
-        const cur = getCardQty(key);
-        const next = Math.max(1, cur - 1);
-        setCardQty(key, next);
-        if(qtyDisplay) qtyDisplay.textContent = String(next);
-        setCardPending(key);
-        updateAddButtonUI(btnAdd, key);
-        setCardPending(key);
-        updateCardAddButton(btnAdd, getCardAddStatus(key));
-        updateAddButtonUI(btnAdd, key);
-      });
-      if(btnPlus) btnPlus.addEventListener("click", ()=>{
-        const cur = getCardQty(key);
-        const next = Math.min(999, cur + 1);
-        setCardQty(key, next);
-        if(qtyDisplay) qtyDisplay.textContent = String(next);
-        setCardPending(key);
-        updateAddButtonUI(btnAdd, key);
-        setCardPending(key);
-        updateCardAddButton(btnAdd, getCardAddStatus(key));
-        updateAddButtonUI(btnAdd, key);
-      });
-
-      if(btnPack6) btnPack6.addEventListener("click", ()=>{
-        applyPackCard(key, 6);
-        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
-        setCardPending(key);
-        updateAddButtonUI(btnAdd, key);
-        setCardPending(key);
-        updateCardAddButton(btnAdd, getCardAddStatus(key));
-        updateAddButtonUI(btnAdd, key);
-      });
-      if(btnPack12) btnPack12.addEventListener("click", ()=>{
-        applyPackCard(key, 12);
-        if(qtyDisplay) qtyDisplay.textContent = String(getCardQty(key));
-        setCardPending(key);
-        updateAddButtonUI(btnAdd, key);
-        setCardPending(key);
-        updateCardAddButton(btnAdd, getCardAddStatus(key));
-        updateAddButtonUI(btnAdd, key);
-      });
-
-      // ✅ adiciona ao clicar em Adicionar (e fica verde); depois zera qtd
-      
-btnAdd.addEventListener("click", ()=>{
-        const status = getCardAddStatus(key);
-        if(status === "loading") return;
-
-        // Itens com grade: adiciona direto com grade pendente
-        if(tamNeedsGrade(v.categoria, v.tam)){
-          if(!state.cart.has(key)){
-            const precoNum = toNumberBR(v.precoRaw ?? 0);
-            state.cart.set(key, {
-              key,
-              codigo: v.codigo || "",
-              produto: v.produto || "",
-              cor: v.cor || "",
-              corCodigo: v.corCodigo || "",
-              genero: v.genero || "",
-              segmento: v.segmento || "",
-              categoria: v.categoria || "",
-              tam: v.tam || "",
-              precoNum,
-              precoFmt: moneyBR(precoNum),
-              qty: 0,
-              grade: {},
-              gradeResume: "",
-              obs: "",
-              imgSrc: resolveImageSrc(v.imagem),
-            });
-            saveCartToStorage();
-            renderCartUI();
-          }
-          setCardAddStatus(key, "added");
-          updateAddButtonUI(btnAdd, key);
-          toast("Adicionado — preencha a grade ✅");
-          return;
-        }
-
-        const shouldUseFlow = (status === "pending");
-
-        if(shouldUseFlow){
-          setCardAddStatus(key, "loading");
-          updateAddButtonUI(btnAdd, key);
-
-          setTimeout(()=>{
-            addToCart(v, getCardQty(key));
-            setCardAddStatus(key, "added");
-            updateAddButtonUI(btnAdd, key);
-            resetCardQty(key);
-            if(qtyDisplay) qtyDisplay.textContent = "1";
-            toast("Adicionado ✅");
-          }, 350);
-          return;
-        }
-
-        addToCart(v, getCardQty(key));
-        setCardAddStatus(key, "added");
-        updateAddButtonUI(btnAdd, key);
-        resetCardQty(key);
-        if(qtyDisplay) qtyDisplay.textContent = "1";
-        toast("Adicionado ✅");
-      });
-
-
-      // inicializa estado do botão
-      updateAddButtonUI(btnAdd, key);
-    }
-
-    wrap.appendChild(card);
-    setupCardCarousel(card);
+    // layout não reconhecido — pula
+    continue;
   }
 }
 
