@@ -648,6 +648,10 @@
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
+            <button id="btnLayout" title="Alterar Visualização" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
+              <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
+              <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
+            </button>
             <button id="btnDark" title="Modo escuro" class="focus-ring h-9 w-9 flex items-center justify-center rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0">
               <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
             </button>
@@ -1208,6 +1212,7 @@ const state = {
   productsView: [],
   groupColors: false,
   viewMode: "all", // all | favs
+  cardLayout: "cards", // cards | list | grid
   filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
@@ -1659,6 +1664,26 @@ function clearAllFilters(){
 $("btnClear").addEventListener("click", ()=>{
   clearAllFilters();
   refreshView(true);
+});
+
+// ===== Layout toggle (cards → list → grid) =====
+const LAYOUTS = [
+  { id:"cards", icon:"fa-border-all",  label:"Cards" },
+  { id:"list",  icon:"fa-list",        label:"Lista"  },
+  { id:"grid",  icon:"fa-grip",        label:"Grid"   },
+];
+function updateLayoutBtn(){
+  const cur = LAYOUTS.findIndex(l => l.id === state.cardLayout);
+  const next = LAYOUTS[(cur + 1) % LAYOUTS.length];
+  const ico = $("icoLayout"), lbl = $("lblLayout");
+  if(ico) ico.className = `fa-solid ${next.icon} text-oly-blue`;
+  if(lbl) lbl.textContent = next.label;
+}
+$("btnLayout")?.addEventListener("click", ()=>{
+  const cur = LAYOUTS.findIndex(l => l.id === state.cardLayout);
+  state.cardLayout = LAYOUTS[(cur + 1) % LAYOUTS.length].id;
+  updateLayoutBtn();
+  renderCards();
 });
 $("btnClearFilters").addEventListener("click", ()=>{
   clearAllFilters();
@@ -2310,6 +2335,12 @@ function renderCards(){
   if(state.viewMode === "favs"){
     wrap.className = "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4";
     wrap.setAttribute("data-favs","1");
+  } else if(state.cardLayout === "list"){
+    wrap.className = "flex flex-col gap-2";
+    wrap.removeAttribute("data-favs");
+  } else if(state.cardLayout === "grid"){
+    wrap.className = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2";
+    wrap.removeAttribute("data-favs");
   } else {
     wrap.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
     wrap.removeAttribute("data-favs");
@@ -2419,6 +2450,58 @@ function renderCards(){
 
       wrap.appendChild(card);
     setupCardCarousel(card);
+      continue;
+    }
+
+    // ===== LIST layout =====
+    if(state.cardLayout === "list" && state.viewMode !== "favs"){
+      const isGrp = v._type === "group";
+      const base = isGrp ? v.items[0] : v;
+      const imgSrc = resolveImageSrc(base?.imagem);
+      const key = isGrp ? null : cartKeyFor(v);
+      const fav = key ? isFavoriteKey(key) : false;
+      card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2 shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center">
+          ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="font-extrabold text-sm leading-snug truncate">${escapeHtml(v.produto||base.produto||"—")}</div>
+          <div class="text-xs text-oly-muted truncate">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base.cor||"—")}</div>
+          <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          ${v.isNew||( isGrp&&v.items?.some(i=>i.isNew)) ? `<span class="badge-novo text-xs px-2 py-0.5">NOVO</span>` : ""}
+          <i class="fa-solid fa-chevron-right text-oly-muted text-xs"></i>
+        </div>
+      `;
+      card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
+      card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      wrap.appendChild(card);
+      continue;
+    }
+
+    // ===== GRID (mini) layout =====
+    if(state.cardLayout === "grid" && state.viewMode !== "favs"){
+      const isGrp = v._type === "group";
+      const base = isGrp ? v.items[0] : v;
+      const imgSrc = resolveImageSrc(base?.imagem);
+      card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="aspect-square bg-oly-bg flex items-center justify-center overflow-hidden">
+          ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-2xl"></i>`}
+        </div>
+        <div class="px-1.5 py-1.5 flex flex-col gap-0.5">
+          <div class="font-bold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
+          <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          ${v.isNew||(isGrp&&v.items?.some(i=>i.isNew)) ? `<span class="badge-novo text-[9px] px-1.5 py-0.5 self-start">NOVO</span>` : ""}
+        </div>
+      `;
+      card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
+      card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      wrap.appendChild(card);
       continue;
     }
 
