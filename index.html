@@ -2568,7 +2568,9 @@ function renderCards(){
     wrap.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
     wrap.removeAttribute("data-favs");
   } else if(state.cardLayout === "grid"){
-    wrap.className = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2";
+    wrap.className = "gap-2";
+    wrap.style.display = "grid";
+    wrap.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
     wrap.removeAttribute("data-favs");
   } else {
     // duo fallback
@@ -2687,11 +2689,12 @@ function renderCards(){
 
     // ===== LIST layout com swipe de ângulos, gênero e favorito =====
     if(state.cardLayout === "list" && state.viewMode !== "favs"){
-      const isGrp    = v._type === "group";
-      const base     = isGrp ? v.items[0] : v;
-      const g        = genderIcon(base?.genero || "");
-      const segIco   = segmentIcon(base?.segmento || v.segmento);
-      const imgSrc    = resolveImageSrc(base?.imagem);
+      const isGrp     = v._type === "group";
+      const base      = isGrp ? v.items[0] : v;
+      const g         = genderIcon(base?.genero || "");
+      const segIco    = segmentIcon(base?.segmento || v.segmento);
+      const angleSrcs = buildAngleSrcs(base?.imagem);
+      const imgSrc    = (angleSrcs[0]&&angleSrcs[0][0]) ? angleSrcs[0][0] : "";
       const favKey    = isGrp ? null : cartKeyFor(base);
       const isFav     = favKey ? isFavoriteKey(favKey) : false;
       const badgesHtml = renderBadges(isGrp
@@ -2702,14 +2705,13 @@ function renderCards(){
       card.tabIndex = 0;
 
       card.innerHTML = `
-        <div data-cardimgwrap="1" class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center select-none">
+        <div data-cardimgwrap="1" class="relative bg-oly-bg overflow-hidden flex items-center justify-center select-none" style="aspect-ratio:4/3">
           <img data-cardimg="1" loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
                class="h-full w-full object-contain bg-white pointer-events-none"
                onerror="this.style.display='none'; this.parentElement.querySelector('.listFallback').style.display='flex'">
           <div class="listFallback hidden absolute inset-0 flex-col items-center justify-center" style="display:none">
             <i class="fa-solid fa-image text-3xl text-oly-blue"></i>
           </div>
-          <!-- ícones topo esquerdo -->
           <div class="absolute top-2 left-2 flex items-center gap-1 pointer-events-none">
             <div class="h-8 w-8 rounded-full flex items-center justify-center"
                  style="background:${g.isFemale?'rgba(236,72,153,.14)':'rgba(255,255,255,.9)'};border:1.5px solid ${g.isFemale?'rgba(236,72,153,.35)':'rgba(209,213,219,.9)'}">
@@ -2719,11 +2721,9 @@ function renderCards(){
               <i class="fa-solid ${segIco} text-oly-blue" style="font-size:13px"></i>
             </div>
           </div>
-          <!-- coração topo direito -->
           <button class="btnListFav absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center z-10">
             <i class="${isFav?'fa-solid':'fa-regular'} fa-heart text-oly-blue" style="font-size:14px"></i>
           </button>
-          <!-- dots ângulo -->
           <div data-carddots="1" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-1.5 pointer-events-none"></div>
           ${badgesHtml}
         </div>
@@ -2773,9 +2773,11 @@ function renderCards(){
 
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm";
       card.tabIndex = 0;
+      card.dataset.angleSrcs = JSON.stringify(angleSrcs);
+
       card.innerHTML = `
-        <div class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center cursor-pointer" data-duoopen="1">
-          <img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
+        <div data-cardimgwrap="1" class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center select-none">
+          <img data-cardimg="1" loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
                class="h-full w-full object-contain bg-white pointer-events-none"
                onerror="this.style.display='none'; this.parentElement.querySelector('.duoFallback').style.display='flex'">
           <div class="duoFallback hidden absolute inset-0 flex-col items-center justify-center" style="display:none">
@@ -2793,7 +2795,7 @@ function renderCards(){
           <button class="btnDuoFav absolute top-2 right-2 h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center z-10">
             <i class="${isFav?'fa-solid':'fa-regular'} fa-heart text-oly-blue" style="font-size:12px"></i>
           </button>
-
+          <div data-carddots="1" class="absolute bottom-1.5 left-0 right-0 flex items-center justify-center gap-1 pointer-events-none"></div>
           ${badgesHtml}
         </div>
         <div class="px-2.5 py-2 flex flex-col gap-0.5 cursor-pointer" data-duoopen="1">
@@ -2803,7 +2805,11 @@ function renderCards(){
         </div>
       `;
 
-      card.querySelectorAll("[data-duoopen]").forEach(el => el.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null })));
+      setupDuoCarousel(card, angleSrcs);
+      card._duoBase  = base;
+      card._duoGroup = isGrp ? v : null;
+
+      card.querySelector("[data-duoopen]").addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
 
       const btnDuoFav = card.querySelector(".btnDuoFav");
