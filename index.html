@@ -1284,8 +1284,8 @@ function renderBadges(item, { cls="", abs=false } = {}){
   if(!item) return "";
   const wrap = abs ? "absolute bottom-2 left-2 flex gap-1 flex-wrap pointer-events-none" : `flex gap-1 flex-wrap ${cls}`;
   let html = "";
-  if(item.isLanc || item.isNew) html += `<span class="badge-lanc">LANÇAMENTO</span>`;
-  if(item.isNewColor)           html += `<span class="badge-novacor">NOVA COR</span>`;
+  if(item.isLanc)     html += `<span class="badge-lanc">LANÇAMENTO</span>`;
+  if(item.isNewColor) html += `<span class="badge-novacor">NOVA COR</span>`;
   return html ? `<div class="${wrap}">${html}</div>` : "";
 }
 // Versão para grupo: verifica se alguma variante tem o badge
@@ -1589,9 +1589,10 @@ async function loadCatalog({ cacheBust=false } = {}){
       cor: String(r["Cor"] ?? r["COR"] ?? "").trim(),
       genero: String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
       precoRaw: r["Preço"] ?? r["Preco"] ?? r["PREÇO"] ?? r["PRECO"] ?? 0,
-      isNew:      isTruthy(r["Lançamento"]  ?? r["Lancamento"]  ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? ""),
+      isLanc:     isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? ""),
       isNewColor: isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
-      isLanc:     isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"]?? r["lancamento"]?? r["LANCAMENTO"]?? ""),
+      isNew:      isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? "") ||
+                  isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
@@ -2628,7 +2629,7 @@ function renderCards(){
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          ${renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:""})}
+          ${renderBadges(isGrp ? {isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:""})}
           <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center">
             <i class="fa-solid ${segIco} text-oly-blue" style="font-size:14px"></i>
           </div>
@@ -2656,7 +2657,7 @@ function renderCards(){
           <div class="absolute top-2 right-2 h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
             <i class="fa-solid ${segIco} text-oly-blue" style="font-size:15px"></i>
           </div>
-          ${isNew ? renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {abs:true}) : ""}
+          ${(isGrp ? (v.items?.some(i=>i.isLanc||i.isNewColor)) : (base.isLanc||base.isNewColor)) ? renderBadges(isGrp ? {isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {abs:true}) : ""}
         </div>
         <div class="px-2 py-2 flex flex-col gap-0.5">
           <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
@@ -2689,7 +2690,7 @@ function renderCards(){
         <div class="px-1.5 py-1.5 flex flex-col gap-0.5">
           <div class="font-bold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
           <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${renderBadges(isGrp ? {isNew:v.items?.some(i=>i.isNew),isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:"mt-0.5"})}
+          ${renderBadges(isGrp ? {isLanc:v.items?.some(i=>i.isLanc),isNewColor:v.items?.some(i=>i.isNewColor)} : base, {cls:"mt-0.5"})}
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
@@ -2734,7 +2735,7 @@ function renderCards(){
                 <span class="inline-flex items-center rounded-full bg-oly-blue/10 px-3 py-1 text-xs font-extrabold text-oly-blue">
                   ${escapeHtml(categoryLabel(v.categoria))}
                 </span>
-                ${(v._type==="group"?v.items?.some(i=>i.isNew||i.isLanc):v.isNew||v.isLanc) ? renderBadgesGroup(v._type==="group"?v:null) || renderBadges(v) : ""}
+                ${renderBadgesGroup(v._type==="group" ? v : null) || renderBadges(v)}
                 <div class="text-sm font-extrabold">${escapeHtml(v.minPriceFmt || "—")}</div>
               </div>
             </div>
