@@ -958,10 +958,13 @@
                     </div>
                   </div>
 
-                  <div class="mt-4">
-                    <label class="text-sm font-extrabold" for="pmObs">Observações</label>
-                    <textarea id="pmObs" rows="3" class="focus-ring mt-2 w-full rounded-2xl border border-oly-border px-4 py-3 text-sm placeholder:text-oly-muted/80"
-                      placeholder="Ex: Grade MASC ou FEM do 38 ao 43 (123321)."></textarea>
+                  <textarea id="pmObs" class="hidden" placeholder=""></textarea>
+
+                  <div id="pmGradeWrap" class="hidden mt-4">
+                    <button id="btnPmOpenGrade" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-oly-blue bg-white px-5 py-3 text-sm font-extrabold text-oly-blue hover:bg-oly-bg">
+                      <i class="fa-solid fa-ruler-horizontal"></i>
+                      <span>Montar Grade de Tamanhos</span>
+                    </button>
                   </div>
 
                   <button id="btnAddToCart" class="focus-ring mt-4 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-5 py-4 text-sm font-extrabold text-white hover:opacity-95">
@@ -1617,6 +1620,48 @@ $("filtersDrawerWrap").addEventListener("click", (e)=>{
   if(closeEl) closeFiltersDrawer();
 });
 
+// ── Swipe-left para fechar drawer de filtros ──
+(function(){
+  const drawer = $("filtersDrawer");
+  if(!drawer) return;
+  let sx=0, sy=0, dragging=false, curX=0, startTime=0;
+  drawer.addEventListener("touchstart", e=>{
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    startTime = Date.now();
+    dragging = true; curX = 0;
+  }, {passive:true});
+  drawer.addEventListener("touchmove", e=>{
+    if(!dragging) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if(Math.abs(dy) > Math.abs(dx) + 10){ dragging=false; return; }
+    if(dx >= 0) return; // só swipe para esquerda
+    curX = dx;
+    drawer.style.transform = `translateX(${dx}px)`;
+    const bd = $("filtersDrawerWrap")?.querySelector(".backdrop");
+    if(bd) bd.style.opacity = String(1 + Math.max(dx,-280)/280 * 0.65);
+    e.preventDefault();
+  }, {passive:false});
+  function onEnd(){
+    if(!dragging) return; dragging=false;
+    const elapsed = Math.max(1, Date.now()-startTime);
+    const vel = Math.abs(curX)/elapsed;
+    if(Math.abs(curX) > 80 || vel > 0.4){
+      drawer.style.cssText += ";transition:transform .22s cubic-bezier(.32,.72,0,1)";
+      drawer.style.transform = "translateX(-110%)";
+      setTimeout(()=>{ closeFiltersDrawer(); drawer.style.transform=""; drawer.style.transition=""; const bd=$("filtersDrawerWrap")?.querySelector(".backdrop"); if(bd) bd.style.opacity=""; }, 220);
+    } else {
+      drawer.style.cssText += ";transition:transform .2s cubic-bezier(.32,.72,0,1)";
+      drawer.style.transform = "";
+      setTimeout(()=>{ drawer.style.transition=""; const bd=$("filtersDrawerWrap")?.querySelector(".backdrop"); if(bd) bd.style.opacity=""; }, 200);
+    }
+    curX=0;
+  }
+  drawer.addEventListener("touchend", onEnd, {passive:true});
+  drawer.addEventListener("touchcancel", onEnd, {passive:true});
+})();
+
 /** Filters */
 function uniqSorted(arr){
   return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>String(a).localeCompare(String(b),"pt-BR",{sensitivity:"base"}));
@@ -1667,8 +1712,58 @@ $("btnClear").addEventListener("click", ()=>{
 });
 
 // ===== Layout toggle (cards → list → grid) =====
+// ===== Segment icons =====
+const SEG_ICONS = {
+  // Corrida / Running
+  "corrida":        "fa-person-running",
+  "running":        "fa-person-running",
+  "trail":          "fa-mountain",
+  // Caminhada / Walk
+  "caminhada":      "fa-person-walking",
+  "walking":        "fa-person-walking",
+  // Treino / Training
+  "treino":         "fa-dumbbell",
+  "training":       "fa-dumbbell",
+  "fitness":        "fa-dumbbell",
+  // Futsal / Futebol
+  "futsal":         "fa-futbol",
+  "futebol":        "fa-futbol",
+  "football":       "fa-futbol",
+  // Basquete
+  "basquete":       "fa-basketball",
+  "basketball":     "fa-basketball",
+  // Vôlei
+  "volei":          "fa-volleyball",
+  "voleibol":       "fa-volleyball",
+  // Tênis de quadra
+  "tenis":          "fa-table-tennis-paddle-ball",
+  "padel":          "fa-table-tennis-paddle-ball",
+  // Skate
+  "skate":          "fa-person-skating",
+  // Lifestyle / Casual
+  "lifestyle":      "fa-star",
+  "casual":         "fa-star",
+  "urbano":         "fa-star",
+  // Infantil
+  "infantil":       "fa-child",
+  "kids":           "fa-child",
+  // Feminino especial
+  "feminino":       "fa-venus",
+  // Default
+  "_default":       "fa-shoe-prints",
+};
+function segmentIcon(seg){
+  if(!seg) return SEG_ICONS["_default"];
+  const n = normalizeName(seg);
+  for(const [k, icon] of Object.entries(SEG_ICONS)){
+    if(k !== "_default" && n.includes(k)) return icon;
+  }
+  return SEG_ICONS["_default"];
+}
+
 const LAYOUTS = [
   { id:"cards", icon:"fa-border-all",  label:"Cards" },
+  { id:"duo",   icon:"fa-table-cells", label:"2 Col"  },
   { id:"list",  icon:"fa-list",        label:"Lista"  },
   { id:"grid",  icon:"fa-grip",        label:"Grid"   },
 ];
@@ -2338,6 +2433,9 @@ function renderCards(){
   } else if(state.cardLayout === "list"){
     wrap.className = "flex flex-col gap-2";
     wrap.removeAttribute("data-favs");
+  } else if(state.cardLayout === "duo"){
+    wrap.className = "grid grid-cols-2 gap-3";
+    wrap.removeAttribute("data-favs");
   } else if(state.cardLayout === "grid"){
     wrap.className = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2";
     wrap.removeAttribute("data-favs");
@@ -2482,21 +2580,55 @@ function renderCards(){
       continue;
     }
 
+    // ===== DUO layout (2 colunas, card médio) =====
+    if(state.cardLayout === "duo" && state.viewMode !== "favs"){
+      const isGrp = v._type === "group";
+      const base = isGrp ? v.items[0] : v;
+      const imgSrc = resolveImageSrc(base?.imagem);
+      const segIco = segmentIcon(base?.segmento || v.segmento);
+      const isNew = v.isNew || (isGrp && v.items?.some(i=>i.isNew));
+      card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[.98] transition-transform";
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center">
+          ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-3xl"></i>`}
+          <div class="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:11px"></i>
+          </div>
+          ${isNew ? `<span class="badge-novo absolute bottom-2 left-2" style="font-size:9px;padding:2px 7px">NOVO</span>` : ""}
+        </div>
+        <div class="px-2 py-2 flex flex-col gap-0.5">
+          <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
+          <div class="text-xs font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          ${isGrp ? `<div class="text-[10px] text-oly-muted">${v.colorCount||0} cores</div>` : ""}
+        </div>
+      `;
+      card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
+      card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      wrap.appendChild(card);
+      continue;
+    }
+
     // ===== GRID (mini) layout =====
     if(state.cardLayout === "grid" && state.viewMode !== "favs"){
       const isGrp = v._type === "group";
       const base = isGrp ? v.items[0] : v;
       const imgSrc = resolveImageSrc(base?.imagem);
+      const segIco = segmentIcon(base?.segmento || v.segmento);
+      const isNew = v.isNew || (isGrp && v.items?.some(i=>i.isNew));
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
       card.tabIndex = 0;
       card.innerHTML = `
-        <div class="aspect-square bg-oly-bg flex items-center justify-center overflow-hidden">
+        <div class="relative aspect-square bg-oly-bg flex items-center justify-center overflow-hidden">
           ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-2xl"></i>`}
+          <div class="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:8px"></i>
+          </div>
         </div>
         <div class="px-1.5 py-1.5 flex flex-col gap-0.5">
           <div class="font-bold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base.produto||"—")}</div>
           <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${v.isNew||(isGrp&&v.items?.some(i=>i.isNew)) ? `<span class="badge-novo text-[9px] px-1.5 py-0.5 self-start">NOVO</span>` : ""}
+          ${isNew ? `<span class="badge-novo text-[9px] px-1.5 py-0.5 self-start">NOVO</span>` : ""}
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item: base, group: isGrp ? v : null }));
@@ -2511,13 +2643,16 @@ function renderCards(){
     if(v._type === "group"){
       const first = v.items[0];
       const imgSrc = resolveImageSrc(first?.imagem);
+      const segIcoG = segmentIcon(first?.segmento || v.segmento);
 
       card.innerHTML = `
         <div data-cardimgwrap="1" class="imgHit aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden cursor-pointer relative">
             <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
     <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
   </button>
-
+          <div class="absolute left-3 top-3 h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIcoG} text-oly-blue" style="font-size:12px"></i>
+          </div>
   <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
           <div class="imgFallback hidden h-full w-full flex flex-col items-center justify-center gap-2 text-oly-muted" style="display:none">
@@ -2575,6 +2710,7 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
       const qty = getCardQty(key);
       const g = genderIcon(v.genero);
       const fav = isFavoriteKey(key);
+      const segIcoV = segmentIcon(v.segmento);
 
       card.innerHTML = `
         <div data-cardimgwrap="1" class="aspect-[4/3] bg-oly-bg border-b border-oly-border flex items-center justify-center overflow-hidden relative">
@@ -2586,11 +2722,16 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
             <div class="text-xs font-bold">sem imagem</div>
           </div>
 
-          <!-- Gender icon -->
-          <div class="absolute left-3 top-3 h-9 w-9 rounded-full flex items-center justify-center pointer-events-none"
-               style="background:${g.isFemale ? 'rgba(236,72,153,.14)' : 'rgba(255,255,255,.95)'}; border:1.5px solid ${g.isFemale ? 'rgba(236,72,153,.35)' : 'rgba(229,231,235,.9)'}"
-               title="${escapeHtml(g.label)}">
-            <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
+          <!-- Gender + Segment icons top-left -->
+          <div class="absolute left-3 top-3 flex items-center gap-1.5 pointer-events-none">
+            <div class="h-9 w-9 rounded-full flex items-center justify-center"
+                 style="background:${g.isFemale ? 'rgba(236,72,153,.14)' : 'rgba(255,255,255,.95)'}; border:1.5px solid ${g.isFemale ? 'rgba(236,72,153,.35)' : 'rgba(229,231,235,.9)'}"
+                 title="${escapeHtml(g.label)}">
+              <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
+            </div>
+            <div class="h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center">
+              <i class="fa-solid ${segIcoV} text-oly-blue" style="font-size:12px"></i>
+            </div>
           </div>
           <button class="btnCardZoom focus-ring absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
             <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
@@ -2893,9 +3034,6 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
   let startQty = 1;
   if(editing && editKey && state.cart.has(editKey)){
     startQty = Math.max(1, Number(state.cart.get(editKey).qty) || 1);
-    $("pmObs").value = state.cart.get(editKey).obs || "";
-  } else {
-    $("pmObs").value = "";
   }
   setQty(startQty);
 
@@ -2932,6 +3070,8 @@ function openProductModal({ item, group, fromCart=false, editing=false, editKey=
 
   const cat = String(categoria).trim().toUpperCase();
   $("packQuickWrap").classList.toggle("hidden", !(cat === "FTW" || cat === "CHI" || cat === "MEIA"));
+  // Mostra botão de grade se produto usa grade
+  if($("pmGradeWrap")) $("pmGradeWrap").classList.toggle("hidden", !tamNeedsGrade(cat, item.tam));
 
   // imagem principal
   const img = $("pmImage");
@@ -3140,6 +3280,12 @@ function closeProductModal(){
 // Modal fecha apenas no X ou ESC (sem fechar no backdrop)
 
 $("btnCloseProductModal").addEventListener("click", closeProductModal);
+$("btnPmOpenGrade")?.addEventListener("click", ()=>{
+  const item = state.productModal.item;
+  if(!item) return;
+  closeProductModal();
+  openGradeModal(item);
+});
 $("qtyMinus").addEventListener("click", ()=> setQty(state.productModal.qty - 1));
 $("qtyPlus").addEventListener("click", ()=> setQty(state.productModal.qty + 1));
 $("btnPack6").addEventListener("click", ()=> applyPack(6));
@@ -3150,7 +3296,7 @@ $("btnAddToCart").addEventListener("click", ()=>{
   if(!item) return;
 
   const qty = state.productModal.qty;
-  const obs = $("pmObs").value.trim();
+  const obs = "";
 
   // Edição vinda da sacola: salva mudanças (inclui troca de cor) e mantém a sacola aberta
   if(state.productModal.editing && state.productModal.editKey){
@@ -3192,7 +3338,6 @@ $("btnAddToCart").addEventListener("click", ()=>{
   // feedback + reseta controles para permitir novas escolhas
   toast("Adicionado ✅");
   setQty(1);
-  $("pmObs").value = "";
 
   // atualiza status do card (verde) e reseta qty do card também
   try{
