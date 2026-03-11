@@ -1717,46 +1717,64 @@ const SEG_ICONS = {
   // Corrida / Running
   "corrida":        "fa-person-running",
   "running":        "fa-person-running",
-  "trail":          "fa-mountain",
+  // Trail
+  "trail":          "fa-mountain-sun",
   // Caminhada / Walk
   "caminhada":      "fa-person-walking",
   "walking":        "fa-person-walking",
-  // Treino / Training
+  // Treino / Crossfit / Funcional
   "treino":         "fa-dumbbell",
   "training":       "fa-dumbbell",
   "fitness":        "fa-dumbbell",
+  "crossfit":       "fa-dumbbell",
+  "funcional":      "fa-dumbbell",
+  "academia":       "fa-dumbbell",
   // Futsal / Futebol
   "futsal":         "fa-futbol",
   "futebol":        "fa-futbol",
-  "football":       "fa-futbol",
+  "soccer":         "fa-futbol",
   // Basquete
   "basquete":       "fa-basketball",
   "basketball":     "fa-basketball",
   // Vôlei
   "volei":          "fa-volleyball",
   "voleibol":       "fa-volleyball",
-  // Tênis de quadra
-  "tenis":          "fa-table-tennis-paddle-ball",
+  "volleyball":     "fa-volleyball",
+  // Tênis / Padel de quadra
   "padel":          "fa-table-tennis-paddle-ball",
-  // Skate
+  "squash":         "fa-table-tennis-paddle-ball",
+  // Skate / Urbano esportivo
   "skate":          "fa-person-skating",
-  // Lifestyle / Casual
-  "lifestyle":      "fa-star",
-  "casual":         "fa-star",
-  "urbano":         "fa-star",
-  // Infantil
-  "infantil":       "fa-child",
-  "kids":           "fa-child",
+  "street":         "fa-person-skating",
+  // Ciclismo / Bike
+  "ciclismo":       "fa-person-biking",
+  "bike":           "fa-person-biking",
+  "cycling":        "fa-person-biking",
+  // Natação / Aquático
+  "natacao":        "fa-person-swimming",
+  "aquatico":       "fa-person-swimming",
+  // Lifestyle / Casual / Urbano
+  "lifestyle":      "fa-city",
+  "casual":         "fa-city",
+  "urbano":         "fa-city",
+  "street wear":    "fa-city",
+  // Infantil / Kids
+  "infantil":       "fa-child-reaching",
+  "kids":           "fa-child-reaching",
+  "junior":         "fa-child-reaching",
   // Feminino especial
   "feminino":       "fa-venus",
-  // Default
+  // Caminhada leve / Conforto
+  "conforto":       "fa-couch",
+  "comfort":        "fa-couch",
+  // Default calçado
   "_default":       "fa-shoe-prints",
 };
 function segmentIcon(seg){
   if(!seg) return SEG_ICONS["_default"];
   const n = normalizeName(seg);
   for(const [k, icon] of Object.entries(SEG_ICONS)){
-    if(k !== "_default" && n.includes(k)) return icon;
+    if(k !== "_default" && n.includes(normalizeName(k))) return icon;
   }
   return SEG_ICONS["_default"];
 }
@@ -2346,6 +2364,9 @@ function addToCart(item, qty, { obs="" } = {}){
   if(existing){
     existing.qty = Math.min(9999, existing.qty + qty);
     if(obs) existing.obs = obs;
+    // garante que tam e categoria estejam sempre preenchidos
+    if(!existing.tam) existing.tam = item.tam || "";
+    if(!existing.categoria) existing.categoria = item.categoria || "";
     state.cart.set(key, existing);
   } else {
     state.cart.set(key, {
@@ -2357,6 +2378,7 @@ function addToCart(item, qty, { obs="" } = {}){
       genero: item.genero || "",
       segmento: item.segmento || "",
       categoria: item.categoria || "",
+      tam: item.tam || "",
       precoNum,
       precoFmt,
       qty: qty,
@@ -2426,6 +2448,10 @@ function updateAddButtonUI(btnAdd, key){
 function renderCards(){
   const wrap = $("cards");
   wrap.innerHTML = "";
+  // Reset inline styles from previous duo layout
+  wrap.style.display = "";
+  wrap.style.gridTemplateColumns = "";
+
   // Grid columns: favs mode uses vertical cards (same grid as normal)
   if(state.viewMode === "favs"){
     wrap.className = "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4";
@@ -2434,7 +2460,9 @@ function renderCards(){
     wrap.className = "flex flex-col gap-2";
     wrap.removeAttribute("data-favs");
   } else if(state.cardLayout === "duo"){
-    wrap.className = "grid grid-cols-2 gap-3";
+    wrap.className = "gap-3";
+    wrap.style.display = "grid";
+    wrap.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
     wrap.removeAttribute("data-favs");
   } else if(state.cardLayout === "grid"){
     wrap.className = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2";
@@ -2556,9 +2584,9 @@ function renderCards(){
       const isGrp = v._type === "group";
       const base = isGrp ? v.items[0] : v;
       const imgSrc = resolveImageSrc(base?.imagem);
-      const key = isGrp ? null : cartKeyFor(v);
-      const fav = key ? isFavoriteKey(key) : false;
-      card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2 shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
+      const segIco = segmentIcon(base?.segmento || v.segmento);
+      const isNew = v.isNew || (isGrp && v.items?.some(i=>i.isNew));
+      card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2.5 shadow-sm cursor-pointer hover:bg-oly-bg active:scale-[.99] transition-transform";
       card.tabIndex = 0;
       card.innerHTML = `
         <div class="h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center">
@@ -2570,7 +2598,10 @@ function renderCards(){
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          ${v.isNew||( isGrp&&v.items?.some(i=>i.isNew)) ? `<span class="badge-novo text-xs px-2 py-0.5">NOVO</span>` : ""}
+          ${isNew ? `<span class="badge-novo" style="font-size:10px;padding:2px 8px">NOVO</span>` : ""}
+          <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center">
+            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:14px"></i>
+          </div>
           <i class="fa-solid fa-chevron-right text-oly-muted text-xs"></i>
         </div>
       `;
@@ -2592,8 +2623,8 @@ function renderCards(){
       card.innerHTML = `
         <div class="relative aspect-[4/3] bg-oly-bg overflow-hidden flex items-center justify-center">
           ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-3xl"></i>`}
-          <div class="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:11px"></i>
+          <div class="absolute top-2 right-2 h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:15px"></i>
           </div>
           ${isNew ? `<span class="badge-novo absolute bottom-2 left-2" style="font-size:9px;padding:2px 7px">NOVO</span>` : ""}
         </div>
@@ -2621,8 +2652,8 @@ function renderCards(){
       card.innerHTML = `
         <div class="relative aspect-square bg-oly-bg flex items-center justify-center overflow-hidden">
           ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-2xl"></i>`}
-          <div class="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:8px"></i>
+          <div class="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIco} text-oly-blue" style="font-size:11px"></i>
           </div>
         </div>
         <div class="px-1.5 py-1.5 flex flex-col gap-0.5">
@@ -2650,8 +2681,8 @@ function renderCards(){
             <button class="btnCardZoom focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
     <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
   </button>
-          <div class="absolute left-3 top-3 h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
-            <i class="fa-solid ${segIcoG} text-oly-blue" style="font-size:12px"></i>
+          <div class="absolute left-3 top-3 h-10 w-10 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
+            <i class="fa-solid ${segIcoG} text-oly-blue" style="font-size:16px"></i>
           </div>
   <img data-cardimg="1" loading="lazy" decoding="async" alt="${escapeHtml(v.produto)}" src="${imgSrc}" class="h-full w-full object-contain bg-white"
             onerror="this.style.display='none'; this.parentElement.querySelector('.imgFallback').style.display='flex';">
@@ -2729,8 +2760,8 @@ card.querySelector(".imgHit").addEventListener("click", ()=> openProductModal({ 
                  title="${escapeHtml(g.label)}">
               <i class="fa-solid ${g.icon} ${g.isFemale ? "text-pink-500" : "text-oly-blue"}"></i>
             </div>
-            <div class="h-8 w-8 rounded-full bg-white/90 border border-oly-border flex items-center justify-center">
-              <i class="fa-solid ${segIcoV} text-oly-blue" style="font-size:12px"></i>
+            <div class="h-9 w-9 rounded-full bg-white/90 border border-oly-border flex items-center justify-center">
+              <i class="fa-solid ${segIcoV} text-oly-blue" style="font-size:14px"></i>
             </div>
           </div>
           <button class="btnCardZoom focus-ring absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Zoom">
