@@ -340,6 +340,14 @@
     .home-cat-sub { font-size: 12px; color: var(--muted, #6B7280); font-weight: 500; line-height: 1.3; }
     .home-cat-img-wrap { width: 72px; height: 56px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #F3F4F6; }
     .home-cat-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .home-cat-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px;
+      transition: opacity 0.3s ease;
+    }
+    .home-cat-img.loaded { display: block !important; }
+    .home-cat-img.loaded + .home-cat-placeholder { display: none !important; }
     .home-cat-arrow { font-size: 12px; color: var(--muted, #9CA3AF); margin-left: 4px; flex-shrink: 0; }
 
     /* Botão "Voltar à home" no header do catálogo */
@@ -690,7 +698,7 @@
           </div>
         </div>
         <div class="home-cat-img-wrap">
-          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=320&q=80&auto=format&fit=crop" alt="Tênis" class="home-cat-img" loading="lazy">
+          <img id="home-cat-img-FTW" alt="Tênis" class="home-cat-img" style="display:none"><div id="home-cat-ph-FTW" class="home-cat-placeholder" style="background:linear-gradient(135deg,#EFF6FF 60%,#BFDBFE)"><i class="fa-solid fa-shoe-prints" style="color:#2836D4;font-size:22px"></i></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -706,7 +714,7 @@
           </div>
         </div>
         <div class="home-cat-img-wrap">
-          <img src="https://images.unsplash.com/photo-1603487742131-4160ec999306?w=320&q=80&auto=format&fit=crop" alt="Chinelos" class="home-cat-img" loading="lazy">
+          <img id="home-cat-img-CHI" alt="Chinelos" class="home-cat-img" style="display:none"><div id="home-cat-ph-CHI" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF7ED 60%,#FED7AA)"><i class="fa-solid fa-person-walking" style="color:#F97316;font-size:22px"></i></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -722,7 +730,7 @@
           </div>
         </div>
         <div class="home-cat-img-wrap">
-          <img src="https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=320&q=80&auto=format&fit=crop" alt="Vestuário" class="home-cat-img" loading="lazy">
+          <img id="home-cat-img-VA" alt="Vestuário" class="home-cat-img" style="display:none"><div id="home-cat-ph-VA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#F0FDF4 60%,#BBF7D0)"><i class="fa-solid fa-shirt" style="color:#16A34A;font-size:22px"></i></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -738,7 +746,7 @@
           </div>
         </div>
         <div class="home-cat-img-wrap">
-          <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=320&q=80&auto=format&fit=crop" alt="Acessórios" class="home-cat-img" loading="lazy">
+          <img id="home-cat-img-ACC" alt="Acessórios" class="home-cat-img" style="display:none"><div id="home-cat-ph-ACC" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FDF4FF 60%,#E9D5FF)"><i class="fa-solid fa-glasses" style="color:#A855F7;font-size:22px"></i></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -754,7 +762,7 @@
           </div>
         </div>
         <div class="home-cat-img-wrap">
-          <img src="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=320&q=80&auto=format&fit=crop" alt="Meias" class="home-cat-img" loading="lazy">
+          <img id="home-cat-img-MEIA" alt="Meias" class="home-cat-img" style="display:none"><div id="home-cat-ph-MEIA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF1F2 60%,#FECDD3)"><i class="fa-solid fa-socks" style="color:#F43F5E;font-size:22px"></i></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -5272,6 +5280,73 @@ function updateSliderLabel(){
   }catch(e){}
 })();
 
+
+// ══════════════════════════════════════════════════
+// HOME SCREEN — Injetar imagens reais do catálogo
+// ══════════════════════════════════════════════════
+function injectHomeCategoryImages(){
+  if(!state.productsRaw || !state.productsRaw.length) return;
+
+  // Mapeamento: data-cat do HTML -> categoria interna
+  const CAT_MAP = {
+    "FTW":  "FTW",
+    "CHI":  "CHI",
+    "VA":   "V&A",
+    "ACC":  "ACC",
+    "MEIA": "MEIA",
+  };
+
+  for(const [htmlId, catKey] of Object.entries(CAT_MAP)){
+    const imgEl = document.getElementById("home-cat-img-" + htmlId);
+    const phEl  = document.getElementById("home-cat-ph-"  + htmlId);
+    if(!imgEl) continue;
+
+    // Filtra produtos da categoria e pega o mais caro com imagem
+    const produtos = state.productsRaw.filter(p => {
+      const cat = String(p.categoria || "").toUpperCase().trim();
+      return cat === catKey && p.imagem;
+    });
+
+    if(!produtos.length) continue;
+
+    // Ordena por preço desc, pega o mais caro
+    produtos.sort((a, b) => {
+      const pa = toNumberBR(a.precoRaw ?? a.preco ?? 0);
+      const pb = toNumberBR(b.precoRaw ?? b.preco ?? 0);
+      return pb - pa;
+    });
+
+    const best = produtos[0];
+    const src  = resolveImageSrc(best.imagem);
+    if(!src) continue;
+
+    imgEl.src = src;
+    imgEl.onload = () => {
+      imgEl.classList.add("loaded");
+      if(phEl) phEl.style.display = "none";
+    };
+    imgEl.onerror = () => {
+      // mantém placeholder se imagem falhar
+    };
+  }
+}
+
+// Hook no loadCatalog: após carregar produtos, injeta as imagens
+const _origLoadCatalog = window.loadCatalog;
+if(typeof loadCatalog !== "undefined"){
+  const __origLC = loadCatalog;
+  window.loadCatalog = function(...args){
+    const p = __origLC.apply(this, args);
+    if(p && typeof p.then === "function"){
+      p.then(() => { setTimeout(injectHomeCategoryImages, 100); });
+    }
+    return p;
+  };
+}
+// Tenta também quando o catálogo já está em cache e carrega rápido
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(injectHomeCategoryImages, 800);
+});
 </script>
 </body>
 </html>
