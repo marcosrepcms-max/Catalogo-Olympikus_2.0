@@ -297,6 +297,77 @@
     .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
     .safe-top { padding-top: max(0px, env(safe-area-inset-top)); }
 
+    /* ══════════════════════════════
+       HOME SCREEN — Categoria Cards
+       ══════════════════════════════ */
+    #homeScreen {
+      background: var(--bg, #F9FAFB);
+      min-height: 100vh;
+    }
+    .dark-mode #homeScreen { background: var(--bg, #111827); }
+
+    .home-cat-card {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 20px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      text-align: left;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .home-cat-card:active { transform: scale(0.98); box-shadow: none; }
+    .home-cat-card:hover { border-color: var(--primary, #2836D4); box-shadow: 0 4px 16px rgba(40,54,212,0.1); }
+    .home-cat-all { border-style: dashed; border-color: var(--primary, #2836D4); background: rgba(40,54,212,0.03); }
+    .dark-mode .home-cat-card { background: #1F2937; border-color: #374151; }
+    .dark-mode .home-cat-all  { background: rgba(40,54,212,0.08); }
+
+    .home-cat-info { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+    .home-cat-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .home-cat-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .home-cat-name { font-size: 15px; font-weight: 800; color: var(--text, #111827); line-height: 1.2; }
+    .dark-mode .home-cat-name { color: #F9FAFB; }
+    .home-cat-sub { font-size: 12px; color: var(--muted, #6B7280); font-weight: 500; line-height: 1.3; }
+    .home-cat-img-wrap { width: 72px; height: 56px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #F3F4F6; }
+    .home-cat-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .home-cat-arrow { font-size: 12px; color: var(--muted, #9CA3AF); margin-left: 4px; flex-shrink: 0; }
+
+    /* Botão "Voltar à home" no header do catálogo */
+    #btnBackToHome {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; color: var(--primary);
+      background: rgba(40,54,212,0.07); border: 1px solid rgba(40,54,212,0.18);
+      border-radius: 999px; padding: 5px 12px 5px 8px;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    #btnBackToHome:hover { background: rgba(40,54,212,0.13); }
+
+    /* ══════════════════════════════
+       CORREÇÕES DE UX — BOTÕES
+       Labels visíveis no mobile
+       ══════════════════════════════ */
+    .action-btn-wrap {
+      display: inline-flex; flex-direction: column;
+      align-items: center; gap: 1px;
+    }
+    .action-btn-mobile-label {
+      font-size: 9px; font-weight: 700; color: var(--primary);
+      line-height: 1; display: block; pointer-events: none;
+    }
+    @media (min-width: 640px) {
+      .action-btn-mobile-label { display: none; }
+    }
+
     @keyframes softPulse {
       0% { transform: translateY(0) scale(1); box-shadow: 0 10px 25px rgba(0,0,0,.10); }
       50% { transform: translateY(-1px) scale(1.03); box-shadow: 0 14px 30px rgba(0,0,0,.13); }
@@ -581,7 +652,131 @@
 </head>
 
 <body class="min-h-full">
-  <div id="app" class="min-h-full">
+
+  <!-- ══════════════════════════════════════════
+       TELA INICIAL — seleção de categorias
+       ══════════════════════════════════════════ -->
+  <div id="homeScreen" class="min-h-full flex flex-col safe-top">
+
+    <!-- Header igual ao catálogo -->
+    <header class="sticky top-0 z-40 border-b border-oly-border bg-white/90 backdrop-blur">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+        <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden shrink-0">
+          <img src="./logo-olympikus.png" alt="Olympikus" class="h-full w-full object-contain" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="text-[10px] font-bold text-oly-muted leading-none">Catálogo Digital</div>
+          <div class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo -->
+    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-6 flex flex-col gap-3">
+      <div class="mb-2">
+        <div class="text-2xl font-extrabold tracking-tight">Bem-vindo 👋</div>
+        <div class="text-sm text-oly-muted mt-1">Escolha uma categoria para começar</div>
+      </div>
+
+      <!-- Cards de categoria -->
+      <button class="home-cat-card focus-ring" data-cat="FTW">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#EFF6FF">
+            <i class="fa-solid fa-shoe-prints text-oly-blue"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name">Tênis</span>
+            <span class="home-cat-sub">Corrida, treino e lifestyle</span>
+          </div>
+        </div>
+        <div class="home-cat-img-wrap">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=320&q=80&auto=format&fit=crop" alt="Tênis" class="home-cat-img" loading="lazy">
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
+      </button>
+
+      <button class="home-cat-card focus-ring" data-cat="CHI">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#FFF7ED">
+            <i class="fa-solid fa-person-walking" style="color:#F97316"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name">Chinelos</span>
+            <span class="home-cat-sub">Conforto para o dia a dia</span>
+          </div>
+        </div>
+        <div class="home-cat-img-wrap">
+          <img src="https://images.unsplash.com/photo-1603487742131-4160ec999306?w=320&q=80&auto=format&fit=crop" alt="Chinelos" class="home-cat-img" loading="lazy">
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
+      </button>
+
+      <button class="home-cat-card focus-ring" data-cat="V&A">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#F0FDF4">
+            <i class="fa-solid fa-shirt" style="color:#16A34A"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name">Vestuário</span>
+            <span class="home-cat-sub">Roupas e acessórios</span>
+          </div>
+        </div>
+        <div class="home-cat-img-wrap">
+          <img src="https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=320&q=80&auto=format&fit=crop" alt="Vestuário" class="home-cat-img" loading="lazy">
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
+      </button>
+
+      <button class="home-cat-card focus-ring" data-cat="ACC">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#FDF4FF">
+            <i class="fa-solid fa-glasses" style="color:#A855F7"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name">Acessórios</span>
+            <span class="home-cat-sub">Mochilas, bonés e mais</span>
+          </div>
+        </div>
+        <div class="home-cat-img-wrap">
+          <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=320&q=80&auto=format&fit=crop" alt="Acessórios" class="home-cat-img" loading="lazy">
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
+      </button>
+
+      <button class="home-cat-card focus-ring" data-cat="MEIA">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#FFF1F2">
+            <i class="fa-solid fa-socks" style="color:#F43F5E"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name">Meias</span>
+            <span class="home-cat-sub">Performance e casual</span>
+          </div>
+        </div>
+        <div class="home-cat-img-wrap">
+          <img src="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=320&q=80&auto=format&fit=crop" alt="Meias" class="home-cat-img" loading="lazy">
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
+      </button>
+
+      <!-- Ver tudo -->
+      <button class="home-cat-card home-cat-all focus-ring" data-cat="">
+        <div class="home-cat-info">
+          <div class="home-cat-icon" style="background:#F0F9FF">
+            <i class="fa-solid fa-border-all text-oly-blue"></i>
+          </div>
+          <div class="home-cat-label">
+            <span class="home-cat-name" style="color:var(--primary)">Ver todos os produtos</span>
+            <span class="home-cat-sub">Catálogo completo</span>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
+      </button>
+    </div>
+  </div>
+  <!-- /homeScreen -->
+
+  <div id="app" class="min-h-full hidden">
     <!-- Header -->
     <header class="safe-top sticky top-0 z-40 border-b border-oly-border bg-white/90 backdrop-blur">
       <div class="mx-auto max-w-7xl px-3 sm:px-6 py-2.5 sm:py-4">
@@ -596,6 +791,11 @@
             <div id="headerStatusMobile" class="hidden"></div>
           </div>
 
+          <!-- Botão Voltar à Home (visível ao entrar pelo seletor de categorias) -->
+          <button id="btnBackToHome" class="hidden" title="Voltar à seleção de categorias" aria-label="Voltar à seleção de categorias">
+            <i class="fa-solid fa-arrow-left" style="font-size:11px"></i>
+            Categorias
+          </button>
           <div class="actionbar-wrap" id="actionBarWrap">
           <div id="actionBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap scroll-smooth -mx-1 px-1 overscroll-x-contain">
             <!-- Search: icon-only -> expands -->
@@ -610,52 +810,72 @@
               </button>
             </div>
 
-            <button id="btnOpenDrawerFilters" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Filtros">
-              <i class="fa-solid fa-sliders text-oly-blue"></i>
+            <button id="btnOpenDrawerFilters" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir filtros de produto">
+              <span class="action-btn-wrap">
+                <i class="fa-solid fa-sliders text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Filtros</span>
+              </span>
               <span class="hidden sm:inline">Filtros</span>
+              <span id="filterActiveBadge" class="hidden rounded-full bg-oly-blue px-1.5 py-0.5 text-[10px] font-bold text-white leading-tight">0</span>
             </button>
 
-            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Atualizar">
-              <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
+            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
+              <span class="action-btn-wrap">
+                <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Atualizar</span>
+              </span>
               <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
             </button>
 
-            <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar">
-              <i class="fa-solid fa-broom text-oly-blue"></i>
-              <span class="hidden sm:inline">Limpar</span>
+            <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar filtros ativos">
+              <span class="action-btn-wrap">
+                <i class="fa-solid fa-broom text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Limpar</span>
+              </span>
+              <span class="hidden sm:inline">Limpar filtros</span>
             </button>
 
             <!-- ✅ Favoritos (toggle view) -->
-            <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Favoritos">
-              <i id="btnFavsIcon" class="fa-regular fa-heart text-oly-blue"></i>
+            <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Ver produtos favoritos">
+              <span class="action-btn-wrap">
+                <i id="btnFavsIcon" class="fa-regular fa-heart text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Favoritos</span>
+              </span>
               <span id="btnFavsText" class="hidden sm:inline">Favoritos</span>
               <span id="favCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
                 <!-- ✅ Ações de Favoritos (aparecem somente no modo favoritos) -->
                 <div id="favsActions" class="hidden items-center gap-1.5">
-                  <button id="btnFavsSelect" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Selecionar para remover">
-                    <i class="fa-regular fa-square-check sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Selecionar</span>
+                  <button id="btnFavsSelect" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Selecionar favoritos para remover">
+                    <i class="fa-regular fa-square-check sm:mr-2 text-oly-blue"></i><span class="sm:hidden" style="font-size:9px;display:inline">Remover</span><span class="hidden sm:inline">Selecionar para remover</span>
                   </button>
                   <button id="btnFavsRemoveSelected" class="hidden h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Remover selecionados">
                     <i class="fa-solid fa-trash-can sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Remover</span>
                   </button>
                   <button id="btnFavsClear" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Limpar todos os favoritos">
-                    <i class="fa-solid fa-broom sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Limpar</span>
+                    <i class="fa-solid fa-broom sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Limpar favoritos</span>
                   </button>
                 </div>
 
 
-            <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Sacola">
-              <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
+            <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir sacola de compras">
+              <span class="action-btn-wrap">
+                <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Sacola</span>
+              </span>
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
-            <button id="btnLayout" title="Alterar Visualização" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
-              <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
+            <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
+              <span class="action-btn-wrap">
+                <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Layout</span>
+              </span>
               <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
             </button>
-            <button id="btnDark" title="Modo escuro" class="focus-ring h-9 w-9 flex items-center justify-center rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0">
+            <button id="btnDark" title="Alternar modo claro/escuro" class="focus-ring flex flex-col items-center justify-center gap-0.5 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0 px-2 py-1.5 sm:h-9 sm:w-9 sm:p-0">
               <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
+              <span class="action-btn-mobile-label">Tema</span>
             </button>
           </div><!-- /actionBar -->
           </div><!-- /actionbar-wrap -->
@@ -956,8 +1176,8 @@
                   <div id="packQuickWrap" class="hidden mt-4 rounded-2xl border border-oly-border bg-oly-bg p-4">
                     <div class="text-sm font-extrabold">Atalho (pares)</div>
                     <div class="mt-3 flex gap-2">
-                      <button id="btnPack6" class="focus-ring flex-1 inline-flex items-center justify-center rounded-2xl border border-oly-border bg-white px-4 py-3 text-sm font-extrabold hover:bg-white/90">+6</button>
-                      <button id="btnPack12" class="focus-ring flex-1 inline-flex items-center justify-center rounded-2xl bg-oly-blue px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">+12</button>
+                      <button id="btnPack6" class="focus-ring flex-1 inline-flex items-center justify-center rounded-2xl border border-oly-border bg-white px-4 py-3 text-sm font-extrabold hover:bg-white/90" title="Adicionar 6 pares de uma vez">+6 pares</button>
+                      <button id="btnPack12" class="focus-ring flex-1 inline-flex items-center justify-center rounded-2xl bg-oly-blue px-4 py-3 text-sm font-extrabold text-white hover:opacity-95" title="Adicionar 12 pares de uma vez">+12 pares</button>
                     </div>
                   </div>
 
@@ -1072,19 +1292,19 @@
                   </div>
 
                   <div class="mt-4 grid grid-cols-1 gap-2">
-                    <button id="btnWhatsCheckout" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
-                      <i class="fa-brands fa-whatsapp text-lg"></i>
-                      <span>Solicitar via WhatsApp</span>
+                    <button id="btnWhatsCheckout" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-4 text-base font-extrabold text-white hover:opacity-95 shadow-sm" title="Enviar pedido completo via WhatsApp">
+                      <i class="fa-brands fa-whatsapp text-xl"></i>
+                      <span>Enviar pedido via WhatsApp</span>
                     </button>
 
                     <div class="grid grid-cols-2 gap-2">
-                      <button id="btnExportXlsx" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-3 py-3 text-xs sm:text-sm font-extrabold text-white hover:opacity-95">
+                      <button id="btnExportXlsx" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-3 py-3 text-xs sm:text-sm font-extrabold text-white hover:opacity-95" title="Exportar sacola como planilha Excel">
                         <i class="fa-solid fa-file-excel"></i>
-                        <span>Excel</span>
+                        <span>Exportar Excel</span>
                       </button>
-                      <button id="btnExportPdf" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-3 py-3 text-xs sm:text-sm font-extrabold hover:bg-oly-bg">
+                      <button id="btnExportPdf" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-3 py-3 text-xs sm:text-sm font-extrabold hover:bg-oly-bg" title="Baixar sacola em PDF">
                         <i class="fa-solid fa-file-pdf text-oly-blue"></i>
-                        <span>PDF</span>
+                        <span>Baixar PDF</span>
                       </button>
                     </div>
                   </div>
@@ -1166,9 +1386,9 @@
             <i class="fa-solid fa-bag-shopping"></i>
             <span>Adicionar Grade à Sacola</span>
           </button>
-          <button id="btnGradeLater" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-5 py-3 text-sm font-bold text-oly-muted hover:bg-oly-bg">
-            <i class="fa-regular fa-clock"></i>
-            <span>Preencher depois</span>
+          <button id="btnGradeLater" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-5 py-3 text-sm font-bold text-oly-muted hover:bg-oly-bg" title="Fechar sem salvar a grade de tamanhos">
+            <i class="fa-regular fa-xmark-circle"></i>
+            <span>Cancelar <span class="text-xs font-normal">(não salva a grade)</span></span>
           </button>
         </div>
       </div>
@@ -4921,6 +5141,136 @@ function updateSliderLabel(){
 
 // ── Patch buildFilterOptions to calibrate slider max ──
 // slider max calibrated in updateSliderAfterLoad() below
+
+
+
+// ══════════════════════════════════════════════════
+// HOME SCREEN — Seleção de categoria
+// ══════════════════════════════════════════════════
+(function initHomeScreen(){
+  const homeScreen = document.getElementById("homeScreen");
+  const appDiv     = document.getElementById("app");
+  const btnBack    = document.getElementById("btnBackToHome");
+
+  // Garante estado inicial: home visível, app oculto
+  if(homeScreen) homeScreen.classList.remove("hidden");
+  if(appDiv)     appDiv.classList.add("hidden");
+  if(btnBack)    btnBack.classList.add("hidden");
+
+  function enterCatalog(cat){
+    // Mostra catálogo, oculta home
+    if(homeScreen) homeScreen.classList.add("hidden");
+    if(appDiv)     appDiv.classList.remove("hidden");
+    if(btnBack)    btnBack.classList.remove("hidden");
+
+    // Aguarda catálogo estar no DOM e aplica filtro
+    if(cat){
+      // Seta o filtro de categoria
+      state.filters.category = cat;
+      // Sincroniza chips de categoria no drawer
+      document.querySelectorAll(".cat-chip").forEach(b=>{
+        b.classList.toggle("active", b.dataset.cat === cat);
+      });
+      const hiddenSel = document.getElementById("filterCategory");
+      if(hiddenSel) hiddenSel.value = cat;
+      // Dispara refresh se catálogo já carregado
+      if(state.productsRaw && state.productsRaw.length > 0){
+        refreshView(true);
+      }
+    } else {
+      // "Ver todos" — limpa filtros
+      clearAllFilters();
+    }
+    window.scrollTo({top:0, behavior:"instant"});
+  }
+
+  function goHome(){
+    if(homeScreen) homeScreen.classList.remove("hidden");
+    if(appDiv)     appDiv.classList.add("hidden");
+    if(btnBack)    btnBack.classList.add("hidden");
+    window.scrollTo({top:0, behavior:"instant"});
+  }
+
+  // Cliques nos cards de categoria
+  document.querySelectorAll(".home-cat-card").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      const cat = card.dataset.cat ?? "";
+      // Animação de saída suave
+      homeScreen.style.transition = "opacity 0.2s ease";
+      homeScreen.style.opacity = "0";
+      setTimeout(()=>{
+        homeScreen.style.opacity = "";
+        homeScreen.style.transition = "";
+        enterCatalog(cat);
+      }, 180);
+    });
+  });
+
+  // Botão voltar à home no header do catálogo
+  if(btnBack){
+    btnBack.addEventListener("click", ()=>{
+      appDiv.style.transition = "opacity 0.18s ease";
+      appDiv.style.opacity = "0";
+      setTimeout(()=>{
+        appDiv.style.opacity = "";
+        appDiv.style.transition = "";
+        goHome();
+      }, 160);
+    });
+  }
+
+  // Botão logo já existente: mantém comportamento original mas também pode voltar
+  const btnGoHome = document.getElementById("btnGoHome");
+  if(btnGoHome){
+    // Duplo clique no logo volta para a home screen
+    btnGoHome.addEventListener("dblclick", ()=> goHome());
+  }
+
+  // Atualiza badge de filtros ativos na action bar
+  function updateFilterBadge(){
+    const badge = document.getElementById("filterActiveBadge");
+    if(!badge) return;
+    const f = state.filters;
+    let count = 0;
+    if(f.category)  count++;
+    if(f.segment)   count++;
+    if(f.gender)    count++;
+    if(f.q)         count++;
+    if(f.priceMax !== Infinity) count++;
+    badge.textContent = String(count);
+    badge.classList.toggle("hidden", count === 0);
+  }
+
+  // Monitora mudanças de filtro para atualizar badge
+  const origRefreshView = window.refreshView;
+  if(typeof refreshView !== "undefined"){
+    const _orig = refreshView;
+    window.refreshView = function(...args){
+      const r = _orig.apply(this, args);
+      updateFilterBadge();
+      return r;
+    };
+  }
+  // Também atualiza na aplicação de clearAllFilters
+  const origClearAllFilters = window.clearAllFilters;
+  if(typeof clearAllFilters !== "undefined"){
+    const _orig2 = clearAllFilters;
+    window.clearAllFilters = function(...args){
+      const r = _orig2.apply(this, args);
+      updateFilterBadge();
+      return r;
+    };
+  }
+
+  // Aplica dark mode na home screen
+  try{
+    const dark = lsGet("oly_dark") === "1";
+    if(dark){
+      document.documentElement.classList.add("dark-mode");
+      document.body.classList.add("dark-mode");
+    }
+  }catch(e){}
+})();
 
 </script>
 </body>
