@@ -5276,42 +5276,67 @@ function updateSliderLabel(){
   const appDiv     = document.getElementById("app");
   const btnBack    = document.getElementById("btnBackToHome");
 
-  // Garante estado inicial: home visível, app oculto
+  // Estado inicial: home visível, catálogo oculto
   if(homeScreen) homeScreen.classList.remove("hidden");
   if(appDiv)     appDiv.classList.add("hidden");
   if(btnBack)    btnBack.classList.add("hidden");
 
-  function enterCatalog(cat){
-    // Mostra catálogo, oculta home
-    if(homeScreen) homeScreen.classList.add("hidden");
-    if(appDiv)     appDiv.classList.remove("hidden");
-    if(btnBack)    btnBack.classList.remove("hidden");
+  // Categoria pendente para aplicar após catálogo carregar
+  let _pendingCat = null;
 
-    // Aguarda catálogo estar no DOM e aplica filtro
+  // Chamado pelo loadCatalog quando termina de carregar
+  window._onCatalogReady = function(){
+    if(_pendingCat !== null){
+      _applyCategory(_pendingCat);
+      _pendingCat = null;
+    }
+    _updateFilterBadge();
+    // Injeta imagens reais nas categorias da home
+    if(typeof injectHomeCategoryImages === "function"){
+      setTimeout(injectHomeCategoryImages, 80);
+    }
+  };
+
+  function _applyCategory(cat){
     if(cat){
-      // Seta o filtro de categoria
       state.filters.category = cat;
-      // Sincroniza chips de categoria no drawer
       document.querySelectorAll(".cat-chip").forEach(b=>{
         b.classList.toggle("active", b.dataset.cat === cat);
       });
-      const hiddenSel = document.getElementById("filterCategory");
-      if(hiddenSel) hiddenSel.value = cat;
-      // Dispara refresh se catálogo já carregado
-      if(state.productsRaw && state.productsRaw.length > 0){
-        refreshView(true);
-      }
+      const sel = document.getElementById("filterCategory");
+      if(sel) sel.value = cat;
     } else {
-      // "Ver todos" — limpa filtros
-      clearAllFilters();
+      // limpa apenas categoria, mantém resto
+      state.filters.category = "";
+      document.querySelectorAll(".cat-chip").forEach(b=>{
+        b.classList.toggle("active", b.dataset.cat === "");
+      });
+      const sel = document.getElementById("filterCategory");
+      if(sel) sel.value = "";
     }
+    refreshView(true);
+    _updateFilterBadge();
+  }
+
+  function enterCatalog(cat){
+    homeScreen.classList.add("hidden");
+    appDiv.classList.remove("hidden");
+    if(btnBack) btnBack.classList.remove("hidden");
     window.scrollTo({top:0, behavior:"instant"});
+
+    if(state.productsRaw && state.productsRaw.length > 0){
+      // Catálogo já carregado — aplica imediatamente
+      _applyCategory(cat);
+    } else {
+      // Catálogo ainda carregando — guarda para aplicar quando terminar
+      _pendingCat = cat ?? "";
+    }
   }
 
   function goHome(){
-    if(homeScreen) homeScreen.classList.remove("hidden");
-    if(appDiv)     appDiv.classList.add("hidden");
-    if(btnBack)    btnBack.classList.add("hidden");
+    homeScreen.classList.remove("hidden");
+    appDiv.classList.add("hidden");
+    if(btnBack) btnBack.classList.add("hidden");
     window.scrollTo({top:0, behavior:"instant"});
   }
 
@@ -5319,77 +5344,53 @@ function updateSliderLabel(){
   document.querySelectorAll(".home-cat-card").forEach(card=>{
     card.addEventListener("click", ()=>{
       const cat = card.dataset.cat ?? "";
-      // Animação de saída suave
-      homeScreen.style.transition = "opacity 0.2s ease";
+      homeScreen.style.transition = "opacity 0.18s ease";
       homeScreen.style.opacity = "0";
       setTimeout(()=>{
         homeScreen.style.opacity = "";
         homeScreen.style.transition = "";
         enterCatalog(cat);
-      }, 180);
+      }, 160);
     });
   });
 
-  // Botão voltar à home no header do catálogo
+  // Botão Categorias no header do catálogo
   if(btnBack){
     btnBack.addEventListener("click", ()=>{
-      appDiv.style.transition = "opacity 0.18s ease";
+      appDiv.style.transition = "opacity 0.15s ease";
       appDiv.style.opacity = "0";
       setTimeout(()=>{
         appDiv.style.opacity = "";
         appDiv.style.transition = "";
         goHome();
-      }, 160);
+      }, 140);
     });
   }
 
-  // Botão logo já existente: mantém comportamento original mas também pode voltar
+  // Duplo-clique no logo também volta para home
   const btnGoHome = document.getElementById("btnGoHome");
-  if(btnGoHome){
-    // Duplo clique no logo volta para a home screen
-    btnGoHome.addEventListener("dblclick", ()=> goHome());
-  }
+  if(btnGoHome) btnGoHome.addEventListener("dblclick", goHome);
 
-  // Atualiza badge de filtros ativos na action bar
-  function updateFilterBadge(){
+  // Badge de filtros ativos — atualizado via evento personalizado
+  function _updateFilterBadge(){
     const badge = document.getElementById("filterActiveBadge");
     if(!badge) return;
     const f = state.filters;
-    let count = 0;
-    if(f.category)  count++;
-    if(f.segment)   count++;
-    if(f.gender)    count++;
-    if(f.q)         count++;
-    if(f.priceMax !== Infinity) count++;
-    badge.textContent = String(count);
-    badge.classList.toggle("hidden", count === 0);
+    let n = 0;
+    if(f.category)            n++;
+    if(f.segment)             n++;
+    if(f.gender)              n++;
+    if(f.q)                   n++;
+    if(f.priceMax !== Infinity) n++;
+    badge.textContent = String(n);
+    badge.classList.toggle("hidden", n === 0);
   }
+  // Escuta evento customizado disparado após cada refreshView
+  document.addEventListener("oly:filtersChanged", _updateFilterBadge);
 
-  // Monitora mudanças de filtro para atualizar badge
-  const origRefreshView = window.refreshView;
-  if(typeof refreshView !== "undefined"){
-    const _orig = refreshView;
-    window.refreshView = function(...args){
-      const r = _orig.apply(this, args);
-      updateFilterBadge();
-      return r;
-    };
-  }
-  // Também atualiza na aplicação de clearAllFilters
-  const origClearAllFilters = window.clearAllFilters;
-  if(typeof clearAllFilters !== "undefined"){
-    const _orig2 = clearAllFilters;
-    window.clearAllFilters = function(...args){
-      const r = _orig2.apply(this, args);
-      updateFilterBadge();
-      return r;
-    };
-  }
-
-  // Aplica dark mode na home screen
+  // Dark mode na home
   try{
-    const dark = lsGet("oly_dark") === "1";
-    if(dark){
+    if(lsGet("oly_dark") === "1"){
       document.documentElement.classList.add("dark-mode");
       document.body.classList.add("dark-mode");
     }
@@ -5398,70 +5399,75 @@ function updateSliderLabel(){
 
 
 // ══════════════════════════════════════════════════
+// HOME SCREEN — Hook no loadCatalog
+// ══════════════════════════════════════════════════
+(function patchLoadCatalogForHome(){
+  // Aguarda o script principal definir loadCatalog, então envolve
+  const _orig = loadCatalog;
+  window.loadCatalog = function(...args){
+    const p = _orig.apply(this, args);
+    const finish = () => {
+      if(typeof window._onCatalogReady === "function") window._onCatalogReady();
+    };
+    if(p && typeof p.then === "function") p.then(finish).catch(finish);
+    else finish();
+    return p;
+  };
+})();
+
+// Dispara oly:filtersChanged após cada refreshView
+(function patchRefreshViewForBadge(){
+  const _orig = refreshView;
+  window.refreshView = function(...args){
+    const r = _orig.apply(this, args);
+    document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
+    return r;
+  };
+  refreshView = window.refreshView;
+})();
+
+// ══════════════════════════════════════════════════
 // HOME SCREEN — Injetar imagens reais do catálogo
 // ══════════════════════════════════════════════════
 function injectHomeCategoryImages(){
-  if(!state.productsRaw || !state.productsRaw.length) return;
-
-  // Mapeamento: data-cat do HTML -> categoria interna
-  const CAT_MAP = {
-    "FTW":  "FTW",
-    "CHI":  "CHI",
-    "VA":   "V&A",
-    "ACC":  "ACC",
-    "MEIA": "MEIA",
+  // Imagens fixas definidas pelo usuário (nome exato do arquivo na pasta imagens_olympikus)
+  const CAT_IMAGES = {
+    "FTW":  "43777397_ARENML__02",
+    "CHI":  "54111405_AMR_LM__02",
+    "VA":   "OIWCR25104_PRETO",
+    "ACC":  "OIWB211800_OLYMPN__04",
+    "MEIA": "OBMSR241922_AMBCLC__03",
   };
 
-  for(const [htmlId, catKey] of Object.entries(CAT_MAP)){
+  // Extensões a tentar (o catálogo usa jpg/jpeg/png/webp)
+  const EXTS = [".jpg", ".jpeg", ".png", ".webp"];
+
+  for(const [htmlId, imgName] of Object.entries(CAT_IMAGES)){
     const imgEl = document.getElementById("home-cat-img-" + htmlId);
     const phEl  = document.getElementById("home-cat-ph-"  + htmlId);
     if(!imgEl) continue;
 
-    // Filtra produtos da categoria e pega o mais caro com imagem
-    const produtos = state.productsRaw.filter(p => {
-      const cat = String(p.categoria || "").toUpperCase().trim();
-      return cat === catKey && p.imagem;
-    });
-
-    if(!produtos.length) continue;
-
-    // Ordena por preço desc, pega o mais caro
-    produtos.sort((a, b) => {
-      const pa = toNumberBR(a.precoRaw ?? a.preco ?? 0);
-      const pb = toNumberBR(b.precoRaw ?? b.preco ?? 0);
-      return pb - pa;
-    });
-
-    const best = produtos[0];
-    const src  = resolveImageSrc(best.imagem);
-    if(!src) continue;
-
-    imgEl.src = src;
-    imgEl.onload = () => {
-      imgEl.classList.add("loaded");
-      if(phEl) phEl.style.display = "none";
-    };
-    imgEl.onerror = () => {
-      // mantém placeholder se imagem falhar
-    };
+    // Tenta cada extensão em sequência até achar uma que carrega
+    let extIdx = 0;
+    function tryNext(){
+      if(extIdx >= EXTS.length) return; // todas falharam, mantém placeholder
+      const src = (DATA_CONFIG.imagesBasePath || "./imagens_olympikus/") + imgName + EXTS[extIdx];
+      extIdx++;
+      imgEl.src = src;
+      imgEl.onload = () => {
+        imgEl.classList.add("loaded");
+        if(phEl) phEl.style.display = "none";
+      };
+      imgEl.onerror = tryNext;
+    }
+    tryNext();
   }
 }
 
-// Hook no loadCatalog: após carregar produtos, injeta as imagens
-const _origLoadCatalog = window.loadCatalog;
-if(typeof loadCatalog !== "undefined"){
-  const __origLC = loadCatalog;
-  window.loadCatalog = function(...args){
-    const p = __origLC.apply(this, args);
-    if(p && typeof p.then === "function"){
-      p.then(() => { setTimeout(injectHomeCategoryImages, 100); });
-    }
-    return p;
-  };
-}
-// Tenta também quando o catálogo já está em cache e carrega rápido
+// Injeção de imagens chamada via _onCatalogReady (ver patchLoadCatalogForHome acima)
+// Também tenta no DOMContentLoaded como fallback para cache
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(injectHomeCategoryImages, 800);
+  setTimeout(injectHomeCategoryImages, 600);
 });
 </script>
 </body>
