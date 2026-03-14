@@ -350,6 +350,45 @@
     .home-cat-img.loaded + .home-cat-placeholder { display: none !important; }
     .home-cat-arrow { font-size: 12px; color: var(--muted, #9CA3AF); margin-left: 4px; flex-shrink: 0; }
 
+    /* ── Hero Banner ── */
+    .home-hero {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    @media (min-width: 480px) { .home-hero { height: 240px; } }
+    .home-hero-img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 30%;
+      display: block;
+    }
+    .home-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.10) 0%,
+        rgba(0,0,0,0.55) 100%
+      );
+    }
+    .home-hero-content {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 20px 20px 22px;
+    }
+    .home-hero-title {
+      font-size: 26px; font-weight: 900;
+      color: #fff; line-height: 1.1;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      letter-spacing: -0.5px;
+    }
+    .home-hero-sub {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      margin-top: 4px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
     /* Botão "Voltar à home" no header do catálogo */
     #btnBackToHome {
       display: inline-flex; align-items: center; gap: 6px;
@@ -679,12 +718,25 @@
       </div>
     </header>
 
-    <!-- Conteúdo -->
-    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-6 flex flex-col gap-3">
-      <div class="mb-2">
-        <div class="text-2xl font-extrabold tracking-tight">Bem-vindo 👋</div>
-        <div class="text-sm text-oly-muted mt-1">Escolha uma categoria para começar</div>
+    <!-- Hero Banner -->
+    <div class="home-hero">
+      <img
+        src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=900&q=85&auto=format&fit=crop&crop=center"
+        alt="Pessoa correndo"
+        class="home-hero-img"
+        loading="eager"
+        onerror="this.style.display='none'"
+      >
+      <div class="home-hero-overlay"></div>
+      <div class="home-hero-content">
+        <div class="home-hero-title">Bem-vindo 👋</div>
+        <div class="home-hero-sub">Escolha uma categoria para começar</div>
       </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-4 flex flex-col gap-3">
+      <div class="mb-0">
 
       <!-- Cards de categoria -->
       <button class="home-cat-card focus-ring" data-cat="FTW">
@@ -818,6 +870,7 @@
               </button>
             </div>
 
+            <!-- 1. Filtros -->
             <button id="btnOpenDrawerFilters" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir filtros de produto">
               <span class="action-btn-wrap">
                 <i class="fa-solid fa-sliders text-oly-blue"></i>
@@ -827,14 +880,26 @@
               <span id="filterActiveBadge" class="hidden rounded-full bg-oly-blue px-1.5 py-0.5 text-[10px] font-bold text-white leading-tight">0</span>
             </button>
 
-            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
+            <!-- 2. Sacola -->
+            <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir sacola de compras">
               <span class="action-btn-wrap">
-                <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Atualizar</span>
+                <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Sacola</span>
               </span>
-              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
+              <span class="hidden sm:inline">Sacola</span>
+              <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
 
+            <!-- 3. Layout -->
+            <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
+              <span class="action-btn-wrap">
+                <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Layout</span>
+              </span>
+              <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
+            </button>
+
+            <!-- 4. Limpar filtros -->
             <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar filtros ativos">
               <span class="action-btn-wrap">
                 <i class="fa-solid fa-broom text-oly-blue"></i>
@@ -843,7 +908,7 @@
               <span class="hidden sm:inline">Limpar filtros</span>
             </button>
 
-            <!-- ✅ Favoritos (toggle view) -->
+            <!-- 5. Favoritos (toggle view) -->
             <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Ver produtos favoritos">
               <span class="action-btn-wrap">
                 <i id="btnFavsIcon" class="fa-regular fa-heart text-oly-blue"></i>
@@ -852,7 +917,7 @@
               <span id="btnFavsText" class="hidden sm:inline">Favoritos</span>
               <span id="favCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
-                <!-- ✅ Ações de Favoritos (aparecem somente no modo favoritos) -->
+                <!-- Ações de Favoritos (aparecem somente no modo favoritos) -->
                 <div id="favsActions" class="hidden items-center gap-1.5">
                   <button id="btnFavsSelect" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Selecionar favoritos para remover">
                     <i class="fa-regular fa-square-check sm:mr-2 text-oly-blue"></i><span class="sm:hidden" style="font-size:9px;display:inline">Remover</span><span class="hidden sm:inline">Selecionar para remover</span>
@@ -865,25 +930,19 @@
                   </button>
                 </div>
 
-
-            <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir sacola de compras">
-              <span class="action-btn-wrap">
-                <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Sacola</span>
-              </span>
-              <span class="hidden sm:inline">Sacola</span>
-              <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
-            </button>
-            <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
-              <span class="action-btn-wrap">
-                <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Layout</span>
-              </span>
-              <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
-            </button>
+            <!-- 6. Tema -->
             <button id="btnDark" title="Alternar modo claro/escuro" class="focus-ring flex flex-col items-center justify-center gap-0.5 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0 px-2 py-1.5 sm:h-9 sm:w-9 sm:p-0">
               <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
               <span class="action-btn-mobile-label">Tema</span>
+            </button>
+
+            <!-- 7. Atualizar -->
+            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
+              <span class="action-btn-wrap">
+                <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
+                <span class="action-btn-mobile-label">Atualizar</span>
+              </span>
+              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
             </button>
           </div><!-- /actionBar -->
           </div><!-- /actionbar-wrap -->
