@@ -4972,7 +4972,7 @@ updateFavHeaderUI();
 })();
 
 setHeaderStatus("Carregando…");
-loadCatalog({ cacheBust:false });
+// ⚠️ loadCatalog() movido para o fim do script — após initHomeScreen definir _onCatalogReady
 
 document.addEventListener("input", (e)=>{
   if(e.target && (e.target.id === "ckName" || e.target.id === "ckCity")) saveCustomerToStorage();
@@ -5433,11 +5433,18 @@ function injectHomeCategoryImages(){
   }
 }
 
-// Injeção de imagens chamada via _onCatalogReady (ver patchLoadCatalogForHome acima)
-// Também tenta no DOMContentLoaded como fallback para cache
+// Injeção de imagens chamada via _onCatalogReady
+// Fallback DOMContentLoaded para cache rápido
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(injectHomeCategoryImages, 600);
+  setTimeout(injectHomeCategoryImages, 400);
 });
+
+// ══════════════════════════════════════════════════
+// BOOT — chamado AQUI, depois de initHomeScreen ter
+// definido window._onCatalogReady
+// ══════════════════════════════════════════════════
+setHeaderStatus("Carregando…");
+loadCatalog({ cacheBust:false });
 </script>
 </body>
 </html>
