@@ -1949,6 +1949,7 @@ async function loadCatalog({ cacheBust=false } = {}){
       // ✅ Calibra slider de preço
       (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
     refreshView(true);
+
     $("loadingState").classList.add("hidden");
     $("grid").classList.remove("hidden");
     document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
@@ -4971,7 +4972,6 @@ updateFavHeaderUI();
   setTimeout(check, 600);
 })();
 
-setHeaderStatus("Carregando…");
 // ⚠️ loadCatalog() movido para o fim do script — após initHomeScreen definir _onCatalogReady
 
 document.addEventListener("input", (e)=>{
@@ -5276,6 +5276,8 @@ function updateSliderLabel(){
 // ══════════════════════════════════════════════════
 // HOME SCREEN — Seleção de categoria
 // ══════════════════════════════════════════════════
+// HOME SCREEN — Seleção de categoria
+// ══════════════════════════════════════════════════
 (function initHomeScreen(){
   const homeScreen = document.getElementById("homeScreen");
   const appDiv     = document.getElementById("app");
@@ -5295,7 +5297,6 @@ function updateSliderLabel(){
       const cat = _pendingCat;
       _pendingCat = null;
       // ✅ FIX BUG #1: usa enterCatalog() para garantir que #app fica visível
-      // _applyCategory() sozinha só renderizava os cards mas mantinha #app hidden
       enterCatalog(cat);
     }
     _updateFilterBadge();
@@ -5311,7 +5312,6 @@ function updateSliderLabel(){
     const sel = document.getElementById("filterCategory");
     if(sel) sel.value = cat || "";
     if(!cat) {
-      // "Ver todos" — reseta filtros completamente
       clearAllFilters();
     } else {
       refreshView(true);
@@ -5393,9 +5393,8 @@ function updateSliderLabel(){
   }catch(e){}
 })();
 
-
 // ── oly:filtersChanged disparado diretamente no refreshView ──
-// (sem monkey-patch — injetado inline no loadCatalog abaixo)
+// (sem monkey-patch — injetado inline no loadCatalog acima)
 
 // ══════════════════════════════════════════════════
 // HOME SCREEN — Injetar imagens reais do catálogo
@@ -5453,4 +5452,3 @@ requestAnimationFrame(() => loadCatalog({ cacheBust:false }));
 </script>
 </body>
 </html>
-
