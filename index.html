@@ -1899,6 +1899,8 @@ async function loadCatalog({ cacheBust=false } = {}){
          refreshView(true);
          $("loadingState").classList.add("hidden");
          $("grid").classList.remove("hidden");
+         document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
+         if(typeof window._onCatalogReady==="function") window._onCatalogReady();
          return;
        }
      }
@@ -1947,9 +1949,10 @@ async function loadCatalog({ cacheBust=false } = {}){
       // ✅ Calibra slider de preço
       (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
     refreshView(true);
-
     $("loadingState").classList.add("hidden");
     $("grid").classList.remove("hidden");
+    document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
+    if(typeof window._onCatalogReady==="function") window._onCatalogReady();
   }catch(err){
     console.error(err);
     setHeaderStatus("Erro ao carregar");
@@ -1964,6 +1967,8 @@ async function loadCatalog({ cacheBust=false } = {}){
        refreshView(true);
        $("loadingState").classList.add("hidden");
        $("grid").classList.remove("hidden");
+       document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
+       if(typeof window._onCatalogReady==="function") window._onCatalogReady();
        return;
      }
     $("loadHint").innerHTML = `
@@ -5276,116 +5281,105 @@ function updateSliderLabel(){
   const appDiv     = document.getElementById("app");
   const btnBack    = document.getElementById("btnBackToHome");
 
-  // Estado inicial: home visível, catálogo oculto
-  if(homeScreen) homeScreen.classList.remove("hidden");
-  if(appDiv)     appDiv.classList.add("hidden");
-  if(btnBack)    btnBack.classList.add("hidden");
+  // Estado inicial
+  homeScreen.classList.remove("hidden");
+  appDiv.classList.add("hidden");
+  if(btnBack) btnBack.classList.add("hidden");
 
-  // Categoria pendente para aplicar após catálogo carregar
+  // Categoria escolhida antes do catálogo terminar de carregar
   let _pendingCat = null;
 
-  // Chamado pelo loadCatalog quando termina de carregar
+  // ── Chamado diretamente pelos 3 pontos de saída do loadCatalog ──
   window._onCatalogReady = function(){
     if(_pendingCat !== null){
-      _applyCategory(_pendingCat);
+      const cat = _pendingCat;
       _pendingCat = null;
+      _applyCategory(cat);
     }
     _updateFilterBadge();
-    // Injeta imagens reais nas categorias da home
-    if(typeof injectHomeCategoryImages === "function"){
-      setTimeout(injectHomeCategoryImages, 80);
-    }
+    if(typeof injectHomeCategoryImages === "function") injectHomeCategoryImages();
   };
 
+  // ── Aplica filtro de categoria e re-renderiza ──
   function _applyCategory(cat){
-    if(cat){
-      state.filters.category = cat;
-      document.querySelectorAll(".cat-chip").forEach(b=>{
-        b.classList.toggle("active", b.dataset.cat === cat);
-      });
-      const sel = document.getElementById("filterCategory");
-      if(sel) sel.value = cat;
+    state.filters.category = cat || "";
+    document.querySelectorAll(".cat-chip").forEach(b =>
+      b.classList.toggle("active", b.dataset.cat === (cat || ""))
+    );
+    const sel = document.getElementById("filterCategory");
+    if(sel) sel.value = cat || "";
+    if(!cat) {
+      // "Ver todos" — reseta filtros completamente
+      clearAllFilters();
     } else {
-      // limpa apenas categoria, mantém resto
-      state.filters.category = "";
-      document.querySelectorAll(".cat-chip").forEach(b=>{
-        b.classList.toggle("active", b.dataset.cat === "");
-      });
-      const sel = document.getElementById("filterCategory");
-      if(sel) sel.value = "";
+      refreshView(true);
     }
-    refreshView(true);
-    _updateFilterBadge();
   }
 
+  // ── Entra no catálogo ──
   function enterCatalog(cat){
     homeScreen.classList.add("hidden");
     appDiv.classList.remove("hidden");
     if(btnBack) btnBack.classList.remove("hidden");
-    window.scrollTo({top:0, behavior:"instant"});
+    window.scrollTo({ top:0, behavior:"instant" });
 
     if(state.productsRaw && state.productsRaw.length > 0){
-      // Catálogo já carregado — aplica imediatamente
       _applyCategory(cat);
     } else {
-      // Catálogo ainda carregando — guarda para aplicar quando terminar
+      // Catálogo ainda carregando — guarda e aplica quando _onCatalogReady disparar
       _pendingCat = cat ?? "";
     }
   }
 
+  // ── Volta para home ──
   function goHome(){
     homeScreen.classList.remove("hidden");
     appDiv.classList.add("hidden");
     if(btnBack) btnBack.classList.add("hidden");
-    window.scrollTo({top:0, behavior:"instant"});
+    window.scrollTo({ top:0, behavior:"instant" });
   }
 
-  // Cliques nos cards de categoria
-  document.querySelectorAll(".home-cat-card").forEach(card=>{
-    card.addEventListener("click", ()=>{
+  // Cliques nos cards
+  document.querySelectorAll(".home-cat-card").forEach(card => {
+    card.addEventListener("click", () => {
       const cat = card.dataset.cat ?? "";
-      homeScreen.style.transition = "opacity 0.18s ease";
       homeScreen.style.opacity = "0";
-      setTimeout(()=>{
+      homeScreen.style.transition = "opacity 0.16s ease";
+      setTimeout(() => {
         homeScreen.style.opacity = "";
         homeScreen.style.transition = "";
         enterCatalog(cat);
-      }, 160);
+      }, 150);
     });
   });
 
-  // Botão Categorias no header do catálogo
+  // Botão "← Categorias"
   if(btnBack){
-    btnBack.addEventListener("click", ()=>{
-      appDiv.style.transition = "opacity 0.15s ease";
+    btnBack.addEventListener("click", () => {
       appDiv.style.opacity = "0";
-      setTimeout(()=>{
+      appDiv.style.transition = "opacity 0.14s ease";
+      setTimeout(() => {
         appDiv.style.opacity = "";
         appDiv.style.transition = "";
         goHome();
-      }, 140);
+      }, 130);
     });
   }
 
-  // Duplo-clique no logo também volta para home
+  // Duplo-clique no logo
   const btnGoHome = document.getElementById("btnGoHome");
   if(btnGoHome) btnGoHome.addEventListener("dblclick", goHome);
 
-  // Badge de filtros ativos — atualizado via evento personalizado
+  // Badge de filtros — escuta evento disparado pelo loadCatalog
   function _updateFilterBadge(){
     const badge = document.getElementById("filterActiveBadge");
     if(!badge) return;
     const f = state.filters;
-    let n = 0;
-    if(f.category)            n++;
-    if(f.segment)             n++;
-    if(f.gender)              n++;
-    if(f.q)                   n++;
-    if(f.priceMax !== Infinity) n++;
+    const n = [f.category, f.segment, f.gender, f.q].filter(Boolean).length
+            + (f.priceMax !== Infinity ? 1 : 0);
     badge.textContent = String(n);
     badge.classList.toggle("hidden", n === 0);
   }
-  // Escuta evento customizado disparado após cada refreshView
   document.addEventListener("oly:filtersChanged", _updateFilterBadge);
 
   // Dark mode na home
@@ -5398,33 +5392,8 @@ function updateSliderLabel(){
 })();
 
 
-// ══════════════════════════════════════════════════
-// HOME SCREEN — Hook no loadCatalog
-// ══════════════════════════════════════════════════
-(function patchLoadCatalogForHome(){
-  // Aguarda o script principal definir loadCatalog, então envolve
-  const _orig = loadCatalog;
-  window.loadCatalog = function(...args){
-    const p = _orig.apply(this, args);
-    const finish = () => {
-      if(typeof window._onCatalogReady === "function") window._onCatalogReady();
-    };
-    if(p && typeof p.then === "function") p.then(finish).catch(finish);
-    else finish();
-    return p;
-  };
-})();
-
-// Dispara oly:filtersChanged após cada refreshView
-(function patchRefreshViewForBadge(){
-  const _orig = refreshView;
-  window.refreshView = function(...args){
-    const r = _orig.apply(this, args);
-    document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
-    return r;
-  };
-  refreshView = window.refreshView;
-})();
+// ── oly:filtersChanged disparado diretamente no refreshView ──
+// (sem monkey-patch — injetado inline no loadCatalog abaixo)
 
 // ══════════════════════════════════════════════════
 // HOME SCREEN — Injetar imagens reais do catálogo
