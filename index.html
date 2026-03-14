@@ -656,17 +656,56 @@
     .actionbar-wrap.at-end::after {
       opacity: 0;
     }
+
+    /* ── HOME SCREEN ── */
+    #homeScreen { background: var(--bg, #F9FAFB); min-height: 100vh; }
+    .dark-mode #homeScreen { background: var(--bg, #111827); }
+
+    .home-hero { position:relative; width:100%; height:130px; overflow:hidden; flex-shrink:0; }
+    @media(min-width:480px){ .home-hero { height:150px; } }
+    .home-hero-grid { display:grid; grid-template-columns:1fr 1fr 1fr; height:100%; gap:2px; }
+    .home-hero-cell { overflow:hidden; background:#111; }
+    .home-hero-cell-img { width:100%; height:100%; object-fit:cover; object-position:center 20%; display:block; transition:transform 0.4s ease; }
+    .home-hero-cell:hover .home-hero-cell-img { transform:scale(1.05); }
+    .home-hero-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.62) 100%); pointer-events:none; }
+    .home-hero-content { position:absolute; bottom:0; left:0; right:0; padding:14px 16px 16px; }
+    .home-hero-title { font-size:22px; font-weight:900; color:#fff; line-height:1.1; text-shadow:0 2px 8px rgba(0,0,0,0.4); letter-spacing:-0.4px; }
+    .home-hero-sub { font-size:12px; font-weight:600; color:rgba(255,255,255,0.88); margin-top:3px; text-shadow:0 1px 4px rgba(0,0,0,0.5); }
+
+    .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:14px 16px; cursor:pointer; transition:transform 0.15s ease,box-shadow 0.15s ease,border-color 0.15s ease; text-align:left; box-shadow:0 1px 3px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
+    .home-cat-card:active { transform:scale(0.98); box-shadow:none; }
+    .home-cat-card:hover { border-color:var(--primary,#2836D4); box-shadow:0 4px 16px rgba(40,54,212,0.1); }
+    .home-cat-all { border-style:dashed; border-color:var(--primary,#2836D4); background:rgba(40,54,212,0.03); }
+    .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; }
+    .dark-mode .home-cat-all { background:rgba(40,54,212,0.08); }
+    .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
+    .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .home-cat-label { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .home-cat-name { font-size:15px; font-weight:800; color:var(--text,#111827); line-height:1.2; }
+    .dark-mode .home-cat-name { color:#F9FAFB; }
+    .home-cat-sub { font-size:12px; color:var(--muted,#6B7280); font-weight:500; line-height:1.3; }
+    .home-cat-img-wrap { width:72px; height:56px; border-radius:12px; overflow:hidden; flex-shrink:0; background:#F3F4F6; }
+    .home-cat-img { width:100%; height:100%; object-fit:cover; display:block; }
+    .home-cat-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:12px; }
+    .home-cat-img.loaded { display:block !important; }
+    .home-cat-img.loaded + .home-cat-placeholder { display:none !important; }
+    .home-cat-arrow { font-size:12px; color:var(--muted,#9CA3AF); margin-left:4px; flex-shrink:0; }
+
+    /* ── BOTÃO VOLTAR ── */
+    #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(40,54,212,0.07); border:1px solid rgba(40,54,212,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
+    #btnBackToHome:hover { background:rgba(40,54,212,0.13); }
+
+    /* ── LABELS MOBILE NOS BOTÕES DA ACTION BAR ── */
+    .action-btn-wrap { display:inline-flex; flex-direction:column; align-items:center; gap:1px; }
+    .action-btn-mobile-label { font-size:9px; font-weight:700; color:var(--primary); line-height:1; display:block; pointer-events:none; }
+    @media(min-width:640px){ .action-btn-mobile-label { display:none; } }
 </style>
 </head>
 
 <body class="min-h-full">
 
-  <!-- ══════════════════════════════════════════
-       TELA INICIAL — seleção de categorias
-       ══════════════════════════════════════════ -->
+  <!-- HOME SCREEN -->
   <div id="homeScreen" class="min-h-full flex flex-col safe-top">
-
-    <!-- Header igual ao catálogo -->
     <header class="sticky top-0 z-40 border-b border-oly-border bg-white/90 backdrop-blur">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
         <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white border border-oly-border flex items-center justify-center overflow-hidden shrink-0">
@@ -678,113 +717,90 @@
         </div>
       </div>
     </header>
-
-    <!-- Conteúdo -->
-    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-6 flex flex-col gap-3">
-      <div class="mb-2">
-        <div class="text-2xl font-extrabold tracking-tight">Bem-vindo 👋</div>
-        <div class="text-sm text-oly-muted mt-1">Escolha uma categoria para começar</div>
+    <div class="home-hero">
+      <div class="home-hero-grid">
+        <div class="home-hero-cell"><img src="./hero1.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
+        <div class="home-hero-cell"><img src="./hero2.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
+        <div class="home-hero-cell"><img src="./hero3.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
       </div>
-
-      <!-- Cards de categoria -->
+      <div class="home-hero-overlay"></div>
+      <div class="home-hero-content">
+        <div class="home-hero-title">Bem-vindo 👋</div>
+        <div class="home-hero-sub">Escolha uma categoria para começar</div>
+      </div>
+    </div>
+    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-4 flex flex-col gap-3">
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#EFF6FF">
-            <i class="fa-solid fa-shoe-prints text-oly-blue"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name">Tênis</span>
-            <span class="home-cat-sub">Corrida, treino e lifestyle</span>
-          </div>
+          <div class="home-cat-icon" style="background:#EFF6FF"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#2836D4" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#2836D4" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#2836D4" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name">Tênis</span><span class="home-cat-sub">Corrida, treino e lifestyle</span></div>
         </div>
         <div class="home-cat-img-wrap">
-          <img id="home-cat-img-FTW" alt="Tênis" class="home-cat-img" style="display:none"><div id="home-cat-ph-FTW" class="home-cat-placeholder" style="background:linear-gradient(135deg,#EFF6FF 60%,#BFDBFE)"><i class="fa-solid fa-shoe-prints" style="color:#2836D4;font-size:22px"></i></div>
+          <img id="home-cat-img-FTW" alt="Tênis" class="home-cat-img" style="display:none">
+          <div id="home-cat-ph-FTW" class="home-cat-placeholder" style="background:linear-gradient(135deg,#EFF6FF 60%,#BFDBFE)"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#2836D4" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#2836D4" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#2836D4" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
-
       <button class="home-cat-card focus-ring" data-cat="CHI">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FFF7ED">
-            <i class="fa-solid fa-person-walking" style="color:#F97316"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name">Chinelos</span>
-            <span class="home-cat-sub">Conforto para o dia a dia</span>
-          </div>
+          <div class="home-cat-icon" style="background:#FFF7ED"><svg viewBox="0 0 44 30" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="18"><ellipse cx="22" cy="22" rx="18" ry="6" fill="#F97316" opacity="0.15" stroke="#F97316" stroke-width="2"/><path d="M14 22 C14 22 15 10 22 8 C29 6 30 22 30 22" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M18 18 C18 18 20 13 22 12" stroke="#F97316" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name">Chinelos</span><span class="home-cat-sub">Conforto para o dia a dia</span></div>
         </div>
         <div class="home-cat-img-wrap">
-          <img id="home-cat-img-CHI" alt="Chinelos" class="home-cat-img" style="display:none"><div id="home-cat-ph-CHI" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF7ED 60%,#FED7AA)"><i class="fa-solid fa-person-walking" style="color:#F97316;font-size:22px"></i></div>
+          <img id="home-cat-img-CHI" alt="Chinelos" class="home-cat-img" style="display:none">
+          <div id="home-cat-ph-CHI" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF7ED 60%,#FED7AA)"><svg viewBox="0 0 44 30" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="18"><ellipse cx="22" cy="22" rx="18" ry="6" fill="#F97316" opacity="0.15" stroke="#F97316" stroke-width="2"/><path d="M14 22 C14 22 15 10 22 8 C29 6 30 22 30 22" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M18 18 C18 18 20 13 22 12" stroke="#F97316" stroke-width="1.5" stroke-linecap="round"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
-
       <button class="home-cat-card focus-ring" data-cat="V&A">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#F0FDF4">
-            <i class="fa-solid fa-shirt" style="color:#16A34A"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name">Vestuário</span>
-            <span class="home-cat-sub">Roupas e acessórios</span>
-          </div>
+          <div class="home-cat-icon" style="background:#F0FDF4"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name">Vestuário</span><span class="home-cat-sub">Roupas e acessórios esportivos</span></div>
         </div>
         <div class="home-cat-img-wrap">
-          <img id="home-cat-img-VA" alt="Vestuário" class="home-cat-img" style="display:none"><div id="home-cat-ph-VA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#F0FDF4 60%,#BBF7D0)"><i class="fa-solid fa-shirt" style="color:#16A34A;font-size:22px"></i></div>
+          <img id="home-cat-img-VA" alt="Vestuário" class="home-cat-img" style="display:none">
+          <div id="home-cat-ph-VA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#F0FDF4 60%,#BBF7D0)"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
-
       <button class="home-cat-card focus-ring" data-cat="ACC">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FDF4FF">
-            <i class="fa-solid fa-glasses" style="color:#A855F7"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name">Acessórios</span>
-            <span class="home-cat-sub">Mochilas, bonés e mais</span>
-          </div>
+          <div class="home-cat-icon" style="background:#FDF4FF"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect x="8" y="14" width="24" height="20" rx="3" fill="#A855F7" opacity="0.15" stroke="#A855F7" stroke-width="2"/><path d="M14 14 L14 10 C14 7 17 5 20 5 C23 5 26 7 26 10 L26 14" stroke="#A855F7" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 22 L24 22" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/><path d="M16 26 L22 26" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name">Acessórios</span><span class="home-cat-sub">Mochilas, bonés e mais</span></div>
         </div>
         <div class="home-cat-img-wrap">
-          <img id="home-cat-img-ACC" alt="Acessórios" class="home-cat-img" style="display:none"><div id="home-cat-ph-ACC" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FDF4FF 60%,#E9D5FF)"><i class="fa-solid fa-glasses" style="color:#A855F7;font-size:22px"></i></div>
+          <img id="home-cat-img-ACC" alt="Acessórios" class="home-cat-img" style="display:none">
+          <div id="home-cat-ph-ACC" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FDF4FF 60%,#E9D5FF)"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect x="8" y="14" width="24" height="20" rx="3" fill="#A855F7" opacity="0.15" stroke="#A855F7" stroke-width="2"/><path d="M14 14 L14 10 C14 7 17 5 20 5 C23 5 26 7 26 10 L26 14" stroke="#A855F7" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 22 L24 22" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/><path d="M16 26 L22 26" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
-
       <button class="home-cat-card focus-ring" data-cat="MEIA">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FFF1F2">
-            <i class="fa-solid fa-socks" style="color:#F43F5E"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name">Meias</span>
-            <span class="home-cat-sub">Performance e casual</span>
-          </div>
+          <div class="home-cat-icon" style="background:#FFF1F2"><svg viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="24"><path d="M12 4 L12 24 C12 24 10 26 8 30 C6 34 10 38 14 38 L26 38 C30 38 32 34 28 30 L24 24 L24 4 Z" fill="#F43F5E" opacity="0.15" stroke="#F43F5E" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 L24 10" stroke="#F43F5E" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 2"/><path d="M12 15 L24 15" stroke="#F43F5E" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2" opacity="0.6"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name">Meias</span><span class="home-cat-sub">Performance e casual</span></div>
         </div>
         <div class="home-cat-img-wrap">
-          <img id="home-cat-img-MEIA" alt="Meias" class="home-cat-img" style="display:none"><div id="home-cat-ph-MEIA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF1F2 60%,#FECDD3)"><i class="fa-solid fa-socks" style="color:#F43F5E;font-size:22px"></i></div>
+          <img id="home-cat-img-MEIA" alt="Meias" class="home-cat-img" style="display:none">
+          <div id="home-cat-ph-MEIA" class="home-cat-placeholder" style="background:linear-gradient(135deg,#FFF1F2 60%,#FECDD3)"><svg viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="24"><path d="M12 4 L12 24 C12 24 10 26 8 30 C6 34 10 38 14 38 L26 38 C30 38 32 34 28 30 L24 24 L24 4 Z" fill="#F43F5E" opacity="0.15" stroke="#F43F5E" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 L24 10" stroke="#F43F5E" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 2"/><path d="M12 15 L24 15" stroke="#F43F5E" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2" opacity="0.6"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
-
-      <!-- Ver tudo -->
       <button class="home-cat-card home-cat-all focus-ring" data-cat="">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#F0F9FF">
-            <i class="fa-solid fa-border-all text-oly-blue"></i>
-          </div>
-          <div class="home-cat-label">
-            <span class="home-cat-name" style="color:var(--primary)">Ver todos os produtos</span>
-            <span class="home-cat-sub">Catálogo completo</span>
-          </div>
+          <div class="home-cat-icon" style="background:#F0F9FF"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22"><rect x="3" y="3" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="20" y="3" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="3" y="20" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="20" y="20" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/></svg></div>
+          <div class="home-cat-label"><span class="home-cat-name" style="color:var(--primary)">Ver todos os produtos</span><span class="home-cat-sub">Catálogo completo</span></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
       </button>
     </div>
   </div>
-  <!-- /homeScreen -->
+  <!-- /HOME SCREEN -->
 
-  <div id="app" class="min-h-full hidden">
+
+  <!-- ══════════════════════════════════════════
+       TELA INICIAL — seleção de categorias
+       ══════════════════════════════════════════ -->
+  <div id="app" class="min-h-full " style="display:none">
     <!-- Header -->
     <header class="safe-top sticky top-0 z-40 border-b border-oly-border bg-white/90 backdrop-blur">
       <div class="mx-auto max-w-7xl px-3 sm:px-6 py-2.5 sm:py-4">
@@ -804,6 +820,9 @@
             <i class="fa-solid fa-arrow-left" style="font-size:11px"></i>
             Categorias
           </button>
+          <button id="btnBackToHome" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);background:rgba(40,54,212,0.07);border:1px solid rgba(40,54,212,0.18);border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0" title="Voltar à seleção de categorias">
+            <i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Categorias
+          </button>
           <div class="actionbar-wrap" id="actionBarWrap">
           <div id="actionBar" class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-nowrap scroll-smooth -mx-1 px-1 overscroll-x-contain">
             <!-- Search: icon-only -> expands -->
@@ -818,72 +837,54 @@
               </button>
             </div>
 
+            <!-- 1 Filtros -->
             <button id="btnOpenDrawerFilters" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir filtros de produto">
-              <span class="action-btn-wrap">
-                <i class="fa-solid fa-sliders text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Filtros</span>
-              </span>
+              <span class="action-btn-wrap"><i class="fa-solid fa-sliders text-oly-blue"></i><span class="action-btn-mobile-label">Filtros</span></span>
               <span class="hidden sm:inline">Filtros</span>
               <span id="filterActiveBadge" class="hidden rounded-full bg-oly-blue px-1.5 py-0.5 text-[10px] font-bold text-white leading-tight">0</span>
             </button>
-
-            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
-              <span class="action-btn-wrap">
-                <i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Atualizar</span>
-              </span>
-              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
-            </button>
-
-            <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar filtros ativos">
-              <span class="action-btn-wrap">
-                <i class="fa-solid fa-broom text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Limpar</span>
-              </span>
-              <span class="hidden sm:inline">Limpar filtros</span>
-            </button>
-
-            <!-- ✅ Favoritos (toggle view) -->
-            <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Ver produtos favoritos">
-              <span class="action-btn-wrap">
-                <i id="btnFavsIcon" class="fa-regular fa-heart text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Favoritos</span>
-              </span>
-              <span id="btnFavsText" class="hidden sm:inline">Favoritos</span>
-              <span id="favCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
-            </button>
-                <!-- ✅ Ações de Favoritos (aparecem somente no modo favoritos) -->
-                <div id="favsActions" class="hidden items-center gap-1.5">
-                  <button id="btnFavsSelect" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Selecionar favoritos para remover">
-                    <i class="fa-regular fa-square-check sm:mr-2 text-oly-blue"></i><span class="sm:hidden" style="font-size:9px;display:inline">Remover</span><span class="hidden sm:inline">Selecionar para remover</span>
-                  </button>
-                  <button id="btnFavsRemoveSelected" class="hidden h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Remover selecionados">
-                    <i class="fa-solid fa-trash-can sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Remover</span>
-                  </button>
-                  <button id="btnFavsClear" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Limpar todos os favoritos">
-                    <i class="fa-solid fa-broom sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Limpar favoritos</span>
-                  </button>
-                </div>
-
-
+            <!-- 2 Sacola -->
             <button id="btnOpenCart" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Abrir sacola de compras">
-              <span class="action-btn-wrap">
-                <i class="fa-solid fa-bag-shopping text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Sacola</span>
-              </span>
+              <span class="action-btn-wrap"><i class="fa-solid fa-bag-shopping text-oly-blue"></i><span class="action-btn-mobile-label">Sacola</span></span>
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
             </button>
+            <!-- 3 Layout -->
             <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
-              <span class="action-btn-wrap">
-                <i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i>
-                <span class="action-btn-mobile-label">Layout</span>
-              </span>
+              <span class="action-btn-wrap"><i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i><span class="action-btn-mobile-label">Layout</span></span>
               <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
             </button>
+            <!-- 4 Limpar -->
+            <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar filtros ativos">
+              <span class="action-btn-wrap"><i class="fa-solid fa-broom text-oly-blue"></i><span class="action-btn-mobile-label">Limpar</span></span>
+              <span class="hidden sm:inline">Limpar filtros</span>
+            </button>
+            <!-- 5 Favoritos -->
+            <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Ver produtos favoritos">
+              <span class="action-btn-wrap"><i id="btnFavsIcon" class="fa-regular fa-heart text-oly-blue"></i><span class="action-btn-mobile-label">Favoritos</span></span>
+              <span id="btnFavsText" class="hidden sm:inline">Favoritos</span>
+              <span id="favCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
+            </button>
+            <div id="favsActions" class="hidden items-center gap-1.5">
+              <button id="btnFavsSelect" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Selecionar favoritos para remover">
+                <i class="fa-regular fa-square-check sm:mr-2 text-oly-blue"></i><span class="sm:hidden" style="font-size:9px;display:inline">Remover</span><span class="hidden sm:inline">Selecionar para remover</span>
+              </button>
+              <button id="btnFavsRemoveSelected" class="hidden h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Remover selecionados">
+                <i class="fa-solid fa-trash-can sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Remover</span>
+              </button>
+              <button id="btnFavsClear" class="h-9 px-2.5 sm:px-3 rounded-full border border-oly-border bg-white hover:bg-oly-bg text-xs sm:text-sm font-extrabold" title="Limpar todos os favoritos">
+                <i class="fa-solid fa-broom sm:mr-2 text-oly-blue"></i><span class="hidden sm:inline">Limpar favoritos</span>
+              </button>
+            </div>
+            <!-- 6 Tema -->
             <button id="btnDark" title="Alternar modo claro/escuro" class="focus-ring flex flex-col items-center justify-center gap-0.5 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0 px-2 py-1.5 sm:h-9 sm:w-9 sm:p-0">
               <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
               <span class="action-btn-mobile-label">Tema</span>
+            </button>
+            <!-- 7 Atualizar -->
+            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
+              <span class="action-btn-wrap"><i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i><span class="action-btn-mobile-label">Atualizar</span></span>
+              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
             </button>
           </div><!-- /actionBar -->
           </div><!-- /actionbar-wrap -->
@@ -1783,6 +1784,7 @@ async function loadCatalog({ cacheBust=false } = {}){
          refreshView(true);
          $("loadingState").classList.add("hidden");
          $("grid").classList.remove("hidden");
+         if(typeof window._onCatalogReady==="function") window._onCatalogReady();
          return;
        }
      }
@@ -1831,9 +1833,9 @@ async function loadCatalog({ cacheBust=false } = {}){
       // ✅ Calibra slider de preço
       (function(){const sl=document.getElementById("sliderPrice");if(!sl||!state.productsRaw.length)return;const mx=Math.ceil(Math.max(...state.productsRaw.map(p=>costFromPrice(toNumberBR(p.precoRaw))))/100)*100||2000;sl.max=String(mx);sl.value=String(mx);if(typeof updateSliderLabel==="function")updateSliderLabel();})();
     refreshView(true);
-
     $("loadingState").classList.add("hidden");
     $("grid").classList.remove("hidden");
+    if(typeof window._onCatalogReady==="function") window._onCatalogReady();
   }catch(err){
     console.error(err);
     setHeaderStatus("Erro ao carregar");
@@ -1848,6 +1850,7 @@ async function loadCatalog({ cacheBust=false } = {}){
        refreshView(true);
        $("loadingState").classList.add("hidden");
        $("grid").classList.remove("hidden");
+       if(typeof window._onCatalogReady==="function") window._onCatalogReady();
        return;
      }
     $("loadHint").innerHTML = `
@@ -4850,8 +4853,7 @@ updateFavHeaderUI();
   setTimeout(check, 600);
 })();
 
-setHeaderStatus("Carregando…");
-loadCatalog({ cacheBust:false });
+// boot movido para o final — ver abaixo
 
 document.addEventListener("input", (e)=>{
   if(e.target && (e.target.id === "ckName" || e.target.id === "ckCity")) saveCustomerToStorage();
@@ -5331,23 +5333,139 @@ function injectHomeCategoryImages(){
   }
 }
 
-// Hook no loadCatalog: após carregar produtos, injeta as imagens
-const _origLoadCatalog = window.loadCatalog;
-if(typeof loadCatalog !== "undefined"){
-  const __origLC = loadCatalog;
-  window.loadCatalog = function(...args){
-    const p = __origLC.apply(this, args);
-    if(p && typeof p.then === "function"){
-      p.then(() => { setTimeout(injectHomeCategoryImages, 100); });
+
+
+// ════════════════════════════════════════════════════
+// HOME SCREEN — inicialização
+// REGRA: este bloco roda ANTES de loadCatalog() ser chamado
+// ════════════════════════════════════════════════════
+(function initHomeScreen(){
+  var homeScreen = document.getElementById("homeScreen");
+  var appDiv     = document.getElementById("app");
+  var btnBack    = document.getElementById("btnBackToHome");
+
+  // Estado inicial
+  if(homeScreen){ homeScreen.style.display=""; homeScreen.classList.remove("hidden"); }
+  if(appDiv)    { appDiv.style.display="none"; }
+  if(btnBack)   { btnBack.style.display="none"; }
+
+  var _pendingCat = null;
+
+  // Chamado pelos 3 pontos de saída do loadCatalog (acima)
+  window._onCatalogReady = function(){
+    if(_pendingCat !== null){
+      var cat = _pendingCat;
+      _pendingCat = null;
+      _applyCategory(cat);
     }
-    return p;
+    _updateFilterBadge();
+    if(typeof injectHomeCategoryImages === "function") injectHomeCategoryImages();
   };
+
+  function _applyCategory(cat){
+    state.filters.category = cat || "";
+    document.querySelectorAll(".cat-chip").forEach(function(b){
+      b.classList.toggle("active", b.dataset.cat === (cat || ""));
+    });
+    var sel = document.getElementById("filterCategory");
+    if(sel) sel.value = cat || "";
+    if(!cat){ clearAllFilters(); } else { refreshView(true); }
+  }
+
+  function enterCatalog(cat){
+    if(homeScreen){ homeScreen.style.display="none"; }
+    if(appDiv)    { appDiv.style.display=""; }
+    if(btnBack)   { btnBack.style.display="inline-flex"; }
+    window.scrollTo({ top:0, behavior:"instant" });
+    if(state.productsRaw && state.productsRaw.length > 0){
+      _applyCategory(cat);
+    } else {
+      _pendingCat = (cat !== undefined && cat !== null) ? cat : "";
+    }
+  }
+
+  function goHome(){
+    if(homeScreen){ homeScreen.style.display=""; }
+    if(appDiv)    { appDiv.style.display="none"; }
+    if(btnBack)   { btnBack.style.display="none"; }
+    window.scrollTo({ top:0, behavior:"instant" });
+  }
+
+  document.querySelectorAll(".home-cat-card").forEach(function(card){
+    card.addEventListener("click", function(){
+      var cat = card.dataset.cat !== undefined ? card.dataset.cat : "";
+      homeScreen.style.opacity = "0";
+      homeScreen.style.transition = "opacity 0.15s ease";
+      setTimeout(function(){
+        homeScreen.style.opacity = "";
+        homeScreen.style.transition = "";
+        enterCatalog(cat);
+      }, 140);
+    });
+  });
+
+  var btnBack2 = document.getElementById("btnBackToHome");
+  if(btnBack2){
+    btnBack2.addEventListener("click", function(){
+      goHome();
+    });
+  }
+
+  var btnGoHome = document.getElementById("btnGoHome");
+  if(btnGoHome) btnGoHome.addEventListener("dblclick", goHome);
+
+  function _updateFilterBadge(){
+    var badge = document.getElementById("filterActiveBadge");
+    if(!badge) return;
+    var f = state.filters;
+    var n = (f.category?1:0)+(f.segment?1:0)+(f.gender?1:0)+(f.q?1:0)+(f.priceMax!==Infinity?1:0);
+    badge.textContent = String(n);
+    badge.classList.toggle("hidden", n===0);
+  }
+  document.addEventListener("oly:filtersChanged", _updateFilterBadge);
+
+  try{
+    if(typeof lsGet === "function" && lsGet("oly_dark")==="1"){
+      document.documentElement.classList.add("dark-mode");
+      document.body.classList.add("dark-mode");
+    }
+  }catch(e){}
+})();
+
+// Imagens fixas por categoria
+function injectHomeCategoryImages(){
+  var CAT_IMAGES = {
+    "FTW":  "43777397_ARENML__02",
+    "CHI":  "54111405_AMR_LM__02",
+    "VA":   "OIWCR25104_PRETO",
+    "ACC":  "OIWB211800_OLYMPN__04",
+    "MEIA": "OBMSR241922_AMBCLC__03"
+  };
+  var EXTS = [".jpg",".jpeg",".png",".webp"];
+  var base = (typeof DATA_CONFIG !== "undefined" && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./imagens_olympikus/";
+  Object.keys(CAT_IMAGES).forEach(function(htmlId){
+    var imgName = CAT_IMAGES[htmlId];
+    var imgEl = document.getElementById("home-cat-img-"+htmlId);
+    var phEl  = document.getElementById("home-cat-ph-"+htmlId);
+    if(!imgEl) return;
+    var extIdx = 0;
+    function tryNext(){
+      if(extIdx >= EXTS.length) return;
+      var src = base + imgName + EXTS[extIdx]; extIdx++;
+      imgEl.src = src;
+      imgEl.onload = function(){ imgEl.classList.add("loaded"); if(phEl) phEl.style.display="none"; };
+      imgEl.onerror = tryNext;
+    }
+    tryNext();
+  });
 }
-// Tenta também quando o catálogo já está em cache e carrega rápido
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(injectHomeCategoryImages, 800);
-});
+
+// ════════════════════════════════════════════════════
+// BOOT — loadCatalog chamado AQUI, após _onCatalogReady
+// estar definido pelo initHomeScreen acima
+// ════════════════════════════════════════════════════
+setHeaderStatus("Carregando\u2026");
+loadCatalog({ cacheBust:false });
 </script>
 </body>
 </html>
-
