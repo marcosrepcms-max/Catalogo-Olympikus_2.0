@@ -806,7 +806,7 @@
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
 
-      <button class="home-cat-card focus-ring" data-cat="VA">
+      <button class="home-cat-card focus-ring" data-cat="V&A">
         <div class="home-cat-info">
           <div class="home-cat-icon" style="background:#F0FDF4"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
   <path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/>
@@ -1034,7 +1034,7 @@
               <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="CHI">
                 <i class="fa-solid fa-person-walking text-oly-blue" style="font-size:15px"></i><span>Chinelos</span>
               </button>
-              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="VA">
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="V&A">
                 <i class="fa-solid fa-shirt text-oly-blue" style="font-size:15px"></i><span>Vest.</span>
               </button>
               <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="ACC">
@@ -1555,7 +1555,7 @@ const STORAGE_KEYS = {
   favorites: "olympikus_favs_v1",
   productsCache: "olympikus_products_cache_v1"
 };
-const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "VA":"VESTUÁRIO", "V&A":"VESTUÁRIO" };
+const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "V&A":"VESTUÁRIO" };
 
 const state = {
   productsRaw: [],
@@ -1899,8 +1899,6 @@ async function loadCatalog({ cacheBust=false } = {}){
          refreshView(true);
          $("loadingState").classList.add("hidden");
          $("grid").classList.remove("hidden");
-         document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
-         if(typeof window._onCatalogReady==="function") window._onCatalogReady();
          return;
        }
      }
@@ -1952,8 +1950,6 @@ async function loadCatalog({ cacheBust=false } = {}){
 
     $("loadingState").classList.add("hidden");
     $("grid").classList.remove("hidden");
-    document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
-    if(typeof window._onCatalogReady==="function") window._onCatalogReady();
   }catch(err){
     console.error(err);
     setHeaderStatus("Erro ao carregar");
@@ -1968,8 +1964,6 @@ async function loadCatalog({ cacheBust=false } = {}){
        refreshView(true);
        $("loadingState").classList.add("hidden");
        $("grid").classList.remove("hidden");
-       document.dispatchEvent(new CustomEvent("oly:filtersChanged"));
-       if(typeof window._onCatalogReady==="function") window._onCatalogReady();
        return;
      }
     $("loadHint").innerHTML = `
@@ -4972,7 +4966,8 @@ updateFavHeaderUI();
   setTimeout(check, 600);
 })();
 
-// ⚠️ loadCatalog() movido para o fim do script — após initHomeScreen definir _onCatalogReady
+setHeaderStatus("Carregando…");
+loadCatalog({ cacheBust:false });
 
 document.addEventListener("input", (e)=>{
   if(e.target && (e.target.id === "ckName" || e.target.id === "ckCity")) saveCustomerToStorage();
@@ -5276,179 +5271,199 @@ function updateSliderLabel(){
 // ══════════════════════════════════════════════════
 // HOME SCREEN — Seleção de categoria
 // ══════════════════════════════════════════════════
-// HOME SCREEN — Seleção de categoria
-// ══════════════════════════════════════════════════
 (function initHomeScreen(){
   const homeScreen = document.getElementById("homeScreen");
   const appDiv     = document.getElementById("app");
   const btnBack    = document.getElementById("btnBackToHome");
 
-  // Estado inicial
-  homeScreen.classList.remove("hidden");
-  appDiv.classList.add("hidden");
-  if(btnBack) btnBack.classList.add("hidden");
+  // Garante estado inicial: home visível, app oculto
+  if(homeScreen) homeScreen.classList.remove("hidden");
+  if(appDiv)     appDiv.classList.add("hidden");
+  if(btnBack)    btnBack.classList.add("hidden");
 
-  // Categoria escolhida antes do catálogo terminar de carregar
-  let _pendingCat = null;
-
-  // ── Chamado diretamente pelos 3 pontos de saída do loadCatalog ──
-  window._onCatalogReady = function(){
-    if(_pendingCat !== null){
-      const cat = _pendingCat;
-      _pendingCat = null;
-      // ✅ FIX BUG #1: usa enterCatalog() para garantir que #app fica visível
-      enterCatalog(cat);
-    }
-    _updateFilterBadge();
-    if(typeof injectHomeCategoryImages === "function") injectHomeCategoryImages();
-  };
-
-  // ── Aplica filtro de categoria e re-renderiza ──
-  function _applyCategory(cat){
-    state.filters.category = cat || "";
-    document.querySelectorAll(".cat-chip").forEach(b =>
-      b.classList.toggle("active", b.dataset.cat === (cat || ""))
-    );
-    const sel = document.getElementById("filterCategory");
-    if(sel) sel.value = cat || "";
-    if(!cat) {
-      clearAllFilters();
-    } else {
-      refreshView(true);
-    }
-  }
-
-  // ── Entra no catálogo ──
   function enterCatalog(cat){
-    homeScreen.classList.add("hidden");
-    appDiv.classList.remove("hidden");
-    if(btnBack) btnBack.classList.remove("hidden");
-    window.scrollTo({ top:0, behavior:"instant" });
+    // Mostra catálogo, oculta home
+    if(homeScreen) homeScreen.classList.add("hidden");
+    if(appDiv)     appDiv.classList.remove("hidden");
+    if(btnBack)    btnBack.classList.remove("hidden");
 
-    if(state.productsRaw && state.productsRaw.length > 0){
-      _applyCategory(cat);
+    // Aguarda catálogo estar no DOM e aplica filtro
+    if(cat){
+      // Seta o filtro de categoria
+      state.filters.category = cat;
+      // Sincroniza chips de categoria no drawer
+      document.querySelectorAll(".cat-chip").forEach(b=>{
+        b.classList.toggle("active", b.dataset.cat === cat);
+      });
+      const hiddenSel = document.getElementById("filterCategory");
+      if(hiddenSel) hiddenSel.value = cat;
+      // Dispara refresh se catálogo já carregado
+      if(state.productsRaw && state.productsRaw.length > 0){
+        refreshView(true);
+      }
     } else {
-      // Catálogo ainda carregando — guarda e aplica quando _onCatalogReady disparar
-      _pendingCat = cat ?? "";
+      // "Ver todos" — limpa filtros
+      clearAllFilters();
     }
+    window.scrollTo({top:0, behavior:"instant"});
   }
 
-  // ── Volta para home ──
   function goHome(){
-    homeScreen.classList.remove("hidden");
-    appDiv.classList.add("hidden");
-    if(btnBack) btnBack.classList.add("hidden");
-    window.scrollTo({ top:0, behavior:"instant" });
+    if(homeScreen) homeScreen.classList.remove("hidden");
+    if(appDiv)     appDiv.classList.add("hidden");
+    if(btnBack)    btnBack.classList.add("hidden");
+    window.scrollTo({top:0, behavior:"instant"});
   }
 
-  // Cliques nos cards
-  document.querySelectorAll(".home-cat-card").forEach(card => {
-    card.addEventListener("click", () => {
+  // Cliques nos cards de categoria
+  document.querySelectorAll(".home-cat-card").forEach(card=>{
+    card.addEventListener("click", ()=>{
       const cat = card.dataset.cat ?? "";
+      // Animação de saída suave
+      homeScreen.style.transition = "opacity 0.2s ease";
       homeScreen.style.opacity = "0";
-      homeScreen.style.transition = "opacity 0.16s ease";
-      setTimeout(() => {
+      setTimeout(()=>{
         homeScreen.style.opacity = "";
         homeScreen.style.transition = "";
         enterCatalog(cat);
-      }, 150);
+      }, 180);
     });
   });
 
-  // Botão "← Categorias"
+  // Botão voltar à home no header do catálogo
   if(btnBack){
-    btnBack.addEventListener("click", () => {
+    btnBack.addEventListener("click", ()=>{
+      appDiv.style.transition = "opacity 0.18s ease";
       appDiv.style.opacity = "0";
-      appDiv.style.transition = "opacity 0.14s ease";
-      setTimeout(() => {
+      setTimeout(()=>{
         appDiv.style.opacity = "";
         appDiv.style.transition = "";
         goHome();
-      }, 130);
+      }, 160);
     });
   }
 
-  // Duplo-clique no logo
+  // Botão logo já existente: mantém comportamento original mas também pode voltar
   const btnGoHome = document.getElementById("btnGoHome");
-  if(btnGoHome) btnGoHome.addEventListener("dblclick", goHome);
+  if(btnGoHome){
+    // Duplo clique no logo volta para a home screen
+    btnGoHome.addEventListener("dblclick", ()=> goHome());
+  }
 
-  // Badge de filtros — escuta evento disparado pelo loadCatalog
-  function _updateFilterBadge(){
+  // Atualiza badge de filtros ativos na action bar
+  function updateFilterBadge(){
     const badge = document.getElementById("filterActiveBadge");
     if(!badge) return;
     const f = state.filters;
-    const n = [f.category, f.segment, f.gender, f.q].filter(Boolean).length
-            + (f.priceMax !== Infinity ? 1 : 0);
-    badge.textContent = String(n);
-    badge.classList.toggle("hidden", n === 0);
+    let count = 0;
+    if(f.category)  count++;
+    if(f.segment)   count++;
+    if(f.gender)    count++;
+    if(f.q)         count++;
+    if(f.priceMax !== Infinity) count++;
+    badge.textContent = String(count);
+    badge.classList.toggle("hidden", count === 0);
   }
-  document.addEventListener("oly:filtersChanged", _updateFilterBadge);
 
-  // Dark mode na home
+  // Monitora mudanças de filtro para atualizar badge
+  const origRefreshView = window.refreshView;
+  if(typeof refreshView !== "undefined"){
+    const _orig = refreshView;
+    window.refreshView = function(...args){
+      const r = _orig.apply(this, args);
+      updateFilterBadge();
+      return r;
+    };
+  }
+  // Também atualiza na aplicação de clearAllFilters
+  const origClearAllFilters = window.clearAllFilters;
+  if(typeof clearAllFilters !== "undefined"){
+    const _orig2 = clearAllFilters;
+    window.clearAllFilters = function(...args){
+      const r = _orig2.apply(this, args);
+      updateFilterBadge();
+      return r;
+    };
+  }
+
+  // Aplica dark mode na home screen
   try{
-    if(lsGet("oly_dark") === "1"){
+    const dark = lsGet("oly_dark") === "1";
+    if(dark){
       document.documentElement.classList.add("dark-mode");
       document.body.classList.add("dark-mode");
     }
   }catch(e){}
 })();
 
-// ── oly:filtersChanged disparado diretamente no refreshView ──
-// (sem monkey-patch — injetado inline no loadCatalog acima)
 
 // ══════════════════════════════════════════════════
 // HOME SCREEN — Injetar imagens reais do catálogo
 // ══════════════════════════════════════════════════
 function injectHomeCategoryImages(){
-  // Imagens fixas definidas pelo usuário (nome exato do arquivo na pasta imagens_olympikus)
-  const CAT_IMAGES = {
-    "FTW":  "43777397_ARENML__02",
-    "CHI":  "54111405_AMR_LM__02",
-    "VA":   "OIWCR25104_PRETO",
-    "ACC":  "OIWB211800_OLYMPN__04",
-    "MEIA": "OBMSR241922_AMBCLC__03",
+  if(!state.productsRaw || !state.productsRaw.length) return;
+
+  // Mapeamento: data-cat do HTML -> categoria interna
+  const CAT_MAP = {
+    "FTW":  "FTW",
+    "CHI":  "CHI",
+    "VA":   "V&A",
+    "ACC":  "ACC",
+    "MEIA": "MEIA",
   };
 
-  // Extensões a tentar (o catálogo usa jpg/jpeg/png/webp)
-  const EXTS = [".jpg", ".jpeg", ".png", ".webp"];
-
-  for(const [htmlId, imgName] of Object.entries(CAT_IMAGES)){
+  for(const [htmlId, catKey] of Object.entries(CAT_MAP)){
     const imgEl = document.getElementById("home-cat-img-" + htmlId);
     const phEl  = document.getElementById("home-cat-ph-"  + htmlId);
     if(!imgEl) continue;
 
-    // Tenta cada extensão em sequência até achar uma que carrega
-    let extIdx = 0;
-    function tryNext(){
-      if(extIdx >= EXTS.length) return; // todas falharam, mantém placeholder
-      const src = (DATA_CONFIG.imagesBasePath || "./imagens_olympikus/") + imgName + EXTS[extIdx];
-      extIdx++;
-      imgEl.src = src;
-      imgEl.onload = () => {
-        imgEl.classList.add("loaded");
-        if(phEl) phEl.style.display = "none";
-      };
-      imgEl.onerror = tryNext;
-    }
-    tryNext();
+    // Filtra produtos da categoria e pega o mais caro com imagem
+    const produtos = state.productsRaw.filter(p => {
+      const cat = String(p.categoria || "").toUpperCase().trim();
+      return cat === catKey && p.imagem;
+    });
+
+    if(!produtos.length) continue;
+
+    // Ordena por preço desc, pega o mais caro
+    produtos.sort((a, b) => {
+      const pa = toNumberBR(a.precoRaw ?? a.preco ?? 0);
+      const pb = toNumberBR(b.precoRaw ?? b.preco ?? 0);
+      return pb - pa;
+    });
+
+    const best = produtos[0];
+    const src  = resolveImageSrc(best.imagem);
+    if(!src) continue;
+
+    imgEl.src = src;
+    imgEl.onload = () => {
+      imgEl.classList.add("loaded");
+      if(phEl) phEl.style.display = "none";
+    };
+    imgEl.onerror = () => {
+      // mantém placeholder se imagem falhar
+    };
   }
 }
 
-// Injeção de imagens chamada via _onCatalogReady
-// Fallback DOMContentLoaded para cache rápido
+// Hook no loadCatalog: após carregar produtos, injeta as imagens
+const _origLoadCatalog = window.loadCatalog;
+if(typeof loadCatalog !== "undefined"){
+  const __origLC = loadCatalog;
+  window.loadCatalog = function(...args){
+    const p = __origLC.apply(this, args);
+    if(p && typeof p.then === "function"){
+      p.then(() => { setTimeout(injectHomeCategoryImages, 100); });
+    }
+    return p;
+  };
+}
+// Tenta também quando o catálogo já está em cache e carrega rápido
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(injectHomeCategoryImages, 400);
+  setTimeout(injectHomeCategoryImages, 800);
 });
-
-// ══════════════════════════════════════════════════
-// BOOT — chamado AQUI, depois de initHomeScreen ter
-// definido window._onCatalogReady
-// ✅ FIX BUG #3: requestAnimationFrame garante que initHomeScreen
-// já executou e window._onCatalogReady está definido antes de
-// loadCatalog disparar (especialmente no caso de cache instantâneo)
-// ══════════════════════════════════════════════════
-setHeaderStatus("Carregando…");
-requestAnimationFrame(() => loadCatalog({ cacheBust:false }));
 </script>
 </body>
 </html>
+
