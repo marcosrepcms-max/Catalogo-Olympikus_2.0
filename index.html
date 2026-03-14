@@ -806,7 +806,7 @@
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
 
-      <button class="home-cat-card focus-ring" data-cat="V&A">
+      <button class="home-cat-card focus-ring" data-cat="VA">
         <div class="home-cat-info">
           <div class="home-cat-icon" style="background:#F0FDF4"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
   <path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/>
@@ -1034,7 +1034,7 @@
               <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="CHI">
                 <i class="fa-solid fa-person-walking text-oly-blue" style="font-size:15px"></i><span>Chinelos</span>
               </button>
-              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="V&A">
+              <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="VA">
                 <i class="fa-solid fa-shirt text-oly-blue" style="font-size:15px"></i><span>Vest.</span>
               </button>
               <button class="cat-chip focus-ring flex flex-col items-center gap-1 rounded-2xl border border-oly-border bg-white px-3 py-2 text-xs font-bold hover:bg-oly-bg" data-cat="ACC">
@@ -1555,7 +1555,7 @@ const STORAGE_KEYS = {
   favorites: "olympikus_favs_v1",
   productsCache: "olympikus_products_cache_v1"
 };
-const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "V&A":"VESTUÁRIO" };
+const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "VA":"VESTUÁRIO", "V&A":"VESTUÁRIO" };
 
 const state = {
   productsRaw: [],
@@ -5294,7 +5294,9 @@ function updateSliderLabel(){
     if(_pendingCat !== null){
       const cat = _pendingCat;
       _pendingCat = null;
-      _applyCategory(cat);
+      // ✅ FIX BUG #1: usa enterCatalog() para garantir que #app fica visível
+      // _applyCategory() sozinha só renderizava os cards mas mantinha #app hidden
+      enterCatalog(cat);
     }
     _updateFilterBadge();
     if(typeof injectHomeCategoryImages === "function") injectHomeCategoryImages();
@@ -5442,9 +5444,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // ══════════════════════════════════════════════════
 // BOOT — chamado AQUI, depois de initHomeScreen ter
 // definido window._onCatalogReady
+// ✅ FIX BUG #3: requestAnimationFrame garante que initHomeScreen
+// já executou e window._onCatalogReady está definido antes de
+// loadCatalog disparar (especialmente no caso de cache instantâneo)
 // ══════════════════════════════════════════════════
 setHeaderStatus("Carregando…");
-loadCatalog({ cacheBust:false });
+requestAnimationFrame(() => loadCatalog({ cacheBust:false }));
 </script>
 </body>
 </html>
