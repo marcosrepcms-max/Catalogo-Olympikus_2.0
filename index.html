@@ -699,7 +699,65 @@
     .action-btn-wrap { display:inline-flex; flex-direction:column; align-items:center; gap:1px; }
     .action-btn-mobile-label { font-size:9px; font-weight:700; color:var(--primary); line-height:1; display:block; pointer-events:none; }
     @media(min-width:640px){ .action-btn-mobile-label { display:none; } }
-</style>
+
+
+    /* ── Modal Exportação Pedido Excel ── */
+    #orderExportModal .order-sheet {
+      width:min(720px, calc(100vw - 24px));
+      max-height:min(92vh, 900px);
+      background: var(--card-bg, #fff);
+      border:1px solid var(--border);
+      border-radius: 28px;
+      overflow:hidden;
+      box-shadow: 0 24px 70px rgba(0,0,0,.22);
+      transform: translateY(16px) scale(.98);
+      opacity:0;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    #orderExportModal.open .order-sheet {
+      transform: translateY(0) scale(1);
+      opacity:1;
+    }
+    .order-modal-grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .order-modal-grid { grid-template-columns: 1fr; }
+    }
+    .order-field-label {
+      display:block;
+      font-size:12px;
+      font-weight:800;
+      color: var(--muted);
+      margin-bottom:6px;
+    }
+    .order-field-control {
+      width:100%;
+      min-height:48px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:var(--input-bg, #fff);
+      color:var(--text);
+      padding:12px 14px;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+    }
+    .order-field-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    .order-modal-note {
+      border:1px dashed var(--border);
+      background: var(--bg, #F9FAFB);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .dark-mode .order-modal-note { background: rgba(255,255,255,.03); }
+
+  </style>
 </head>
 
 <body class="min-h-full">
@@ -1322,6 +1380,120 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Modal Exportação Pedido Excel -->
+    <div id="orderExportModal" class="hidden fixed inset-0 z-[82]">
+      <div id="orderExportBackdrop" class="backdrop absolute inset-0"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-5">
+        <div class="order-sheet">
+          <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-oly-muted uppercase tracking-[0.12em]">Pedido no layout operacional</div>
+              <div class="text-lg sm:text-xl font-black text-oly-text">Configurar exportação Excel</div>
+            </div>
+            <button id="btnCloseOrderExport" class="focus-ring h-11 w-11 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar modal de exportação">
+              <i class="fa-solid fa-xmark text-oly-blue"></i>
+            </button>
+          </div>
+
+          <div class="px-5 sm:px-6 py-5 overflow-y-auto" style="max-height:calc(92vh - 154px);">
+            <div class="order-modal-note mb-4">
+              Os dados de <strong>A até X</strong> serão repetidos em todas as linhas exportadas. O bloco do produto será preenchido de <strong>Y até BG</strong>, incluindo grade e total conforme o tipo do item.
+            </div>
+
+            <div class="order-modal-grid">
+              <div>
+                <label class="order-field-label" for="oxCommission">Comissionista</label>
+                <select id="oxCommission" class="order-field-control">
+                  <option value="3616654">3616654</option>
+                  <option value="114611">114611</option>
+                </select>
+              </div>
+              <div>
+                <label class="order-field-label" for="oxClientCode">Código Cliente</label>
+                <input id="oxClientCode" class="order-field-control" placeholder="Ex.: 104988" inputmode="numeric" />
+              </div>
+
+              <div>
+                <label class="order-field-label" for="oxPayment">Cond. Pagamento</label>
+                <select id="oxPayment" class="order-field-control"></select>
+              </div>
+              <div>
+                <label class="order-field-label" for="oxPriceTable">Tab. de Preço</label>
+                <select id="oxPriceTable" class="order-field-control">
+                  <option value="OL025">OL025</option>
+                  <option value="OL024">OL024</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="order-field-label" for="oxCampaign">Campanha</label>
+                <select id="oxCampaign" class="order-field-control">
+                  <option value="CO681 +28DD OLY">CO681 +28DD OLY</option>
+                  <option value="CO689 +56DD OLY">CO689 +56DD OLY</option>
+                  <option value="CO684 +28DD UA">CO684 +28DD UA</option>
+                  <option value="CO690 +56DD UA">CO690 +56DD UA</option>
+                </select>
+              </div>
+              <div>
+                <label class="order-field-label" for="oxPacking">Forma de Embalar</label>
+                <select id="oxPacking" class="order-field-control">
+                  <option value="M: Musical">M: Musical</option>
+                  <option value="P: Padrão">P: Padrão</option>
+                  <option value="S: Sólida">S: Sólida</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="order-field-label" for="oxDeliveryType">Tipo de Entrega</label>
+                <select id="oxDeliveryType" class="order-field-control">
+                  <option value="3: Total Artigo/Cor">3: Total Artigo/Cor</option>
+                  <option value="2: Total Artigo">2: Total Artigo</option>
+                  <option value="1: Total Encomenda">1: Total Encomenda</option>
+                </select>
+              </div>
+              <div>
+                <label class="order-field-label" for="oxDataFirme">Data Firme</label>
+                <select id="oxDataFirme" class="order-field-control">
+                  <option value="S: Sim">S: Sim</option>
+                  <option value="N: Não">N: Não</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="order-field-label" for="oxPedidoMae">Pedido Mãe</label>
+                <select id="oxPedidoMae" class="order-field-control">
+                  <option value="N: Não">N: Não</option>
+                  <option value="S: Sim">S: Sim</option>
+                </select>
+              </div>
+              <div>
+                <label class="order-field-label" for="oxAntecipacao">Aceita Antecipação?</label>
+                <select id="oxAntecipacao" class="order-field-control">
+                  <option value="N: Não">N: Não</option>
+                  <option value="S: Sim">S: Sim</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-5 sm:px-6 py-4 border-t border-oly-border bg-oly-bg flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <div class="text-xs font-bold text-oly-muted">
+              Será gerada 1 linha por produto da sacola, com grade distribuída no layout do pedido.
+            </div>
+            <div class="grid grid-cols-2 gap-2 sm:flex">
+              <button id="btnCancelOrderExport" class="focus-ring inline-flex items-center justify-center rounded-2xl border border-oly-border bg-white px-4 py-3 text-sm font-extrabold hover:bg-white">Cancelar</button>
+              <button id="btnConfirmOrderExport" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-4 py-3 text-sm font-extrabold text-white hover:opacity-95">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Gerar Excel</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3878,43 +4050,273 @@ function openWhatsApp(){
 $("btnWhatsCheckout").addEventListener("click", openWhatsApp);
 
 /** Export XLSX */
-function exportOrderXlsx(){
+const ORDER_PAYMENT_OPTIONS = [
+  "Z01 - A VISTA",
+  "Z02 - 14 D",
+  "Z03 - 21 D",
+  "Z04 - 28 D",
+  "Z05 - 35 D",
+  "Z06 - 42 D",
+  "Z07 - 49 D",
+  "Z08 - 56 D",
+  "Z09 - 63 D",
+  "Z10 - 70 D",
+  "Z11 - 77 D",
+  "Z12 - 84 D",
+  "Z13 - 91 D",
+  "Z14 - 98 D",
+  "Z15 - 105 D",
+  "Z16 - 112 D",
+  "Z17 - 119 D",
+  "Z18 - 21/49 D",
+  "Z19 - 28/56 D",
+  "Z20 - 35/63 D",
+  "Z21 - 42/70 D",
+  "Z22 - 49/77 D",
+  "Z23 - 56/84 D",
+  "Z24 - 63/91 D",
+  "Z25 - 70/98 D",
+  "Z26 - 77/105 D",
+  "Z27 - 84/112 D",
+  "Z28 - 91/119 D",
+  "Z29 - 21/49/77 D",
+  "Z30 - 28/56/84 D",
+  "Z31 - 35/63/91 D",
+  "Z32 - 42/70/98 D",
+  "Z33 - 49/77/105 D",
+  "Z34 - 56/84/112 D",
+  "Z35 - 63/91/119 D"
+];
+
+const ORDER_EXPORT_HEADERS = [
+  "Nº", "Comissionista", "Loja", "Cliente", "Pedido do Cliente", "Observação da NF", "Observação do Pedido", "Tabela de Preço", "Prazo Médio", "Número de Parcelas", "Condição de Pagamento", "Campanha", "Desconto Global", "Forma de Embalar", "Tipo de Entrega", "Data Firme", "Pedido Mãe", "Aceita Antecipação?", "Data Desejada", "Data de Faturamento", "Data Início da Agenda", "Horário Início da Agenda", "Horário Fim da Agenda", "Data da Liberação do Faturamento", "Artigo", "Descrição", "Cor", "Quantidade de Caixas", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "33/34", "35/36", "37/38", "39/40", "41/42", "43/44", "PP", "P", "M", "G", "GG", "U", "33/38", "39/44", "Total"
+];
+
+const ORDER_EXPORT_COLS = [
+  { wch:8 }, { wch:15 }, { wch:10 }, { wch:12 }, { wch:15 }, { wch:16 }, { wch:18 }, { wch:12 }, { wch:10 }, { wch:12 }, { wch:16 }, { wch:12 }, { wch:12 }, { wch:12 }, { wch:13 }, { wch:10 }, { wch:11 }, { wch:15 }, { wch:13 }, { wch:15 }, { wch:15 }, { wch:12 }, { wch:12 }, { wch:18 }, { wch:14 }, { wch:30 }, { wch:12 }, { wch:12 },
+  { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }
+];
+
+const ORDER_EXPORT_DEFAULTS = {
+  commission: "3616654",
+  clientCode: "",
+  payment: "Z35 - 63/91/119 D",
+  priceTable: "OL025",
+  campaign: "CO689 +56DD OLY",
+  packing: "M: Musical",
+  deliveryType: "3: Total Artigo/Cor",
+  dataFirme: "S: Sim",
+  pedidoMae: "N: Não",
+  antecipacao: "N: Não"
+};
+
+function populateOrderPaymentSelect(){
+  const el = $("oxPayment");
+  if(!el || el.dataset.ready === "1") return;
+  el.innerHTML = ORDER_PAYMENT_OPTIONS.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  el.dataset.ready = "1";
+}
+
+function saveOrderExportConfig(cfg){
+  lsSet("olympikus_order_export_cfg_v1", JSON.stringify(cfg || {}));
+}
+function loadOrderExportConfig(){
+  try{
+    const raw = lsGet("olympikus_order_export_cfg_v1");
+    if(!raw) return { ...ORDER_EXPORT_DEFAULTS };
+    const parsed = JSON.parse(raw);
+    return { ...ORDER_EXPORT_DEFAULTS, ...(parsed || {}) };
+  }catch(e){
+    return { ...ORDER_EXPORT_DEFAULTS };
+  }
+}
+function getOrderExportFormData(){
+  return {
+    commission: $("oxCommission")?.value || ORDER_EXPORT_DEFAULTS.commission,
+    clientCode: $("oxClientCode")?.value?.trim() || "",
+    payment: $("oxPayment")?.value || ORDER_EXPORT_DEFAULTS.payment,
+    priceTable: $("oxPriceTable")?.value || ORDER_EXPORT_DEFAULTS.priceTable,
+    campaign: $("oxCampaign")?.value || ORDER_EXPORT_DEFAULTS.campaign,
+    packing: $("oxPacking")?.value || ORDER_EXPORT_DEFAULTS.packing,
+    deliveryType: $("oxDeliveryType")?.value || ORDER_EXPORT_DEFAULTS.deliveryType,
+    dataFirme: $("oxDataFirme")?.value || ORDER_EXPORT_DEFAULTS.dataFirme,
+    pedidoMae: $("oxPedidoMae")?.value || ORDER_EXPORT_DEFAULTS.pedidoMae,
+    antecipacao: $("oxAntecipacao")?.value || ORDER_EXPORT_DEFAULTS.antecipacao,
+  };
+}
+function fillOrderExportForm(cfg){
+  const data = { ...ORDER_EXPORT_DEFAULTS, ...(cfg || {}) };
+  if($("oxCommission")) $("oxCommission").value = data.commission;
+  if($("oxClientCode")) $("oxClientCode").value = data.clientCode;
+  if($("oxPayment")) $("oxPayment").value = data.payment;
+  if($("oxPriceTable")) $("oxPriceTable").value = data.priceTable;
+  if($("oxCampaign")) $("oxCampaign").value = data.campaign;
+  if($("oxPacking")) $("oxPacking").value = data.packing;
+  if($("oxDeliveryType")) $("oxDeliveryType").value = data.deliveryType;
+  if($("oxDataFirme")) $("oxDataFirme").value = data.dataFirme;
+  if($("oxPedidoMae")) $("oxPedidoMae").value = data.pedidoMae;
+  if($("oxAntecipacao")) $("oxAntecipacao").value = data.antecipacao;
+}
+
+function openOrderExportModal(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
-  const rows = [];
+  populateOrderPaymentSelect();
+  fillOrderExportForm(loadOrderExportConfig());
+  const modal = $("orderExportModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+  requestAnimationFrame(()=> modal.classList.add("open"));
+}
+function closeOrderExportModal(){
+  const modal = $("orderExportModal");
+  if(!modal) return;
+  modal.classList.remove("open");
+  setTimeout(()=> modal.classList.add("hidden"), 180);
+}
+
+function parsePaymentInfo(label){
+  const text = String(label || "");
+  const right = text.includes("-") ? text.split("-").slice(1).join("-").trim() : text;
+  const nums = (right.match(/\d+/g) || []).map(Number).filter(Number.isFinite);
+  const prazoMedio = nums.length ? Math.round(nums.reduce((acc, n)=>acc+n, 0) / nums.length) : "";
+  return { prazoMedio, parcelas: nums.length || "" };
+}
+function extractLeadingCode(value, fallbackLen=5){
+  const s = String(value || "").trim();
+  const m = s.match(/^[A-Za-z0-9]{1,5}/);
+  return (m ? m[0] : s.slice(0, fallbackLen)).toUpperCase();
+}
+function extractLeadingToken(value){
+  return String(value || "").split(":")[0].trim();
+}
+function normalizeHeaderKey(v){
+  return String(v || "").trim().toUpperCase();
+}
+function isAccessoryCategory(cat){
+  return normalizeHeaderKey(cat) === "ACC";
+}
+function isSockCategory(cat){
+  return normalizeHeaderKey(cat) === "MEIA";
+}
+function isApparelCategory(cat){
+  return normalizeHeaderKey(cat) === "V&A";
+}
+function isFootwearCategory(cat){
+  const c = normalizeHeaderKey(cat);
+  return c === "FTW" || c === "CHI";
+}
+function getItemTotalQty(it){
+  if(it?.grade && Object.keys(it.grade).length){
+    return Object.values(it.grade).reduce((acc, n)=> acc + (Number(n) || 0), 0);
+  }
+  return Number(it?.qty) || 0;
+}
+function detectSockColumn(it){
+  const hay = normalizeName([it?.produto, it?.tam, it?.cor, it?.corCodigo].filter(Boolean).join(" "));
+  if(hay.includes("33/38")) return "33/38";
+  if(hay.includes("39/44")) return "39/44";
+  return "";
+}
+function calcQtdCaixas(it, totalQty){
+  if(!isFootwearCategory(it?.categoria)) return "";
+  return totalQty > 0 ? (totalQty % 6 === 0 ? totalQty : "") : "";
+}
+function buildOrderExportRows(cfg){
+  const headers = ORDER_EXPORT_HEADERS.slice();
+  const idx = Object.fromEntries(headers.map((h, i)=> [h, i]));
+  const aoa = [headers];
+  const pay = parsePaymentInfo(cfg.payment);
+  const warnings = [];
+
   for(const it of state.cart.values()){
-    if(it.grade && Object.keys(it.grade).length > 0){
-      // Uma linha por tamanho da grade
+    const row = new Array(headers.length).fill("");
+    const totalQty = getItemTotalQty(it);
+    const corPedido = String(it.corCodigo || it.cor || "").trim();
+    const qtdCaixas = calcQtdCaixas(it, totalQty);
+
+    row[idx["Nº"]] = 1;
+    row[idx["Comissionista"]] = cfg.commission;
+    row[idx["Cliente"]] = cfg.clientCode;
+    row[idx["Tabela de Preço"]] = cfg.priceTable;
+    row[idx["Prazo Médio"]] = pay.prazoMedio;
+    row[idx["Número de Parcelas"]] = pay.parcelas;
+    row[idx["Campanha"]] = extractLeadingCode(cfg.campaign, 5);
+    row[idx["Forma de Embalar"]] = extractLeadingToken(cfg.packing);
+    row[idx["Tipo de Entrega"]] = Number(extractLeadingToken(cfg.deliveryType)) || extractLeadingToken(cfg.deliveryType);
+    row[idx["Data Firme"]] = extractLeadingToken(cfg.dataFirme);
+    row[idx["Pedido Mãe"]] = extractLeadingToken(cfg.pedidoMae);
+    row[idx["Aceita Antecipação?"]] = extractLeadingToken(cfg.antecipacao);
+
+    row[idx["Artigo"]] = String(it.codigo || "").trim();
+    row[idx["Descrição"]] = String(it.produto || "").trim();
+    row[idx["Cor"]] = corPedido;
+    row[idx["Quantidade de Caixas"]] = qtdCaixas;
+
+    if(isSockCategory(it.categoria)){
+      const sockCol = detectSockColumn(it);
+      if(sockCol && idx[sockCol] !== undefined) row[idx[sockCol]] = totalQty;
+      else warnings.push(`Meia sem faixa identificada: ${it.produto || it.codigo}`);
+    } else if(isAccessoryCategory(it.categoria)){
+      row[idx["U"]] = totalQty;
+    } else if(it.grade && Object.keys(it.grade).length){
       for(const [tam, qty] of Object.entries(it.grade)){
-        rows.push({
-          "Código": it.codigo,
-          "Produto": it.produto,
-          "Cor": it.cor,
-          "Cor código": it.corCodigo,
-          "Tamanho": tam,
-          "Quantidade": qty
-        });
+        const header = String(tam || "").trim().toUpperCase();
+        if(idx[header] !== undefined) row[idx[header]] = Number(qty) || "";
+        else warnings.push(`Tamanho sem coluna no layout: ${it.produto || it.codigo} — ${tam}`);
       }
-    } else {
-      rows.push({
-        "Código": it.codigo,
-        "Produto": it.produto,
-        "Cor": it.cor,
-        "Cor código": it.corCodigo,
-        "Tamanho": it.tam || "",
-        "Quantidade": it.qty
-      });
+    } else if(it.tam){
+      const header = String(it.tam || "").trim().toUpperCase();
+      if(idx[header] !== undefined) row[idx[header]] = totalQty;
+      else if(isAccessoryCategory(it.categoria)) row[idx["U"]] = totalQty;
+    }
+
+    row[idx["Total"]] = totalQty;
+    aoa.push(row);
+
+    if(isFootwearCategory(it.categoria) && totalQty > 0 && totalQty % 6 !== 0){
+      warnings.push(`Calçado fora do múltiplo de 6: ${it.produto || it.codigo} — total ${totalQty}`);
     }
   }
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws["!cols"] = [{wch:14},{wch:38},{wch:18},{wch:12},{wch:10},{wch:12}];
+  return { aoa, warnings };
+}
+
+function exportOrderXlsxFromModal(){
+  if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
+  const cfg = getOrderExportFormData();
+  if(!cfg.clientCode){
+    toast("Preencha o Código Cliente ✅");
+    $("oxClientCode")?.focus();
+    return;
+  }
+  saveOrderExportConfig(cfg);
+  const { aoa, warnings } = buildOrderExportRows(cfg);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = ORDER_EXPORT_COLS;
+  ws["!autofilter"] = { ref: `A1:BG${aoa.length}` };
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Pedido");
+
   const now = new Date();
   const pad = (n)=>String(n).padStart(2,"0");
-  XLSX.writeFile(wb, `pedido_olympikus_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`);
-  toast("Excel gerado ✅");
+  const fileName = `pedido_layout_operacional_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+  closeOrderExportModal();
+
+  if(warnings.length){
+    console.warn("Avisos da exportação Excel:", warnings);
+    toast(`Excel gerado com ${warnings.length} aviso(s) ✅`);
+  } else {
+    toast("Excel gerado ✅");
+  }
 }
-$("btnExportXlsx").addEventListener("click", exportOrderXlsx);
+
+$("btnExportXlsx").addEventListener("click", openOrderExportModal);
+$("btnCloseOrderExport")?.addEventListener("click", closeOrderExportModal);
+$("btnCancelOrderExport")?.addEventListener("click", closeOrderExportModal);
+$("orderExportBackdrop")?.addEventListener("click", closeOrderExportModal);
+$("btnConfirmOrderExport")?.addEventListener("click", exportOrderXlsxFromModal);
+
 
 /** Export PDF: grid compacto + imagem preservando proporção */
 async function loadImgForPdf(src){
@@ -4832,6 +5234,8 @@ loadFavsFromStorage();
 loadCartFromStorage();
 renderCartUI();
 loadCustomerFromStorage();
+populateOrderPaymentSelect();
+fillOrderExportForm(loadOrderExportConfig());
 updateFavHeaderUI();
 
 /** ✅ Gradiente de scroll no actionBar — some quando chega no fim */
