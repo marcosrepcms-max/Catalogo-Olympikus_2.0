@@ -515,7 +515,46 @@
       padding: 12px 12px;
     }
 
-  
+    .card-color-chip{
+      display:inline-flex; align-items:center; gap:6px; max-width:100%;
+      border-radius:999px; border:1px solid var(--border); background:var(--bg);
+      padding:5px 10px; font-size:11px; font-weight:800; line-height:1;
+      color:var(--text);
+    }
+    .card-color-chip i{ color:var(--primary); font-size:10px; flex:0 0 auto; }
+    .card-color-chip .card-color-text{
+      display:inline-block; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .card-color-chip.is-group{ color:var(--muted); }
+
+    @media (min-width: 1024px){
+      #productModal .backdrop{ backdrop-filter: blur(7px); }
+      #productModalSheet{
+        width:min(1240px, calc(100vw - 48px)) !important;
+        max-width:min(1240px, calc(100vw - 48px)) !important;
+        max-height:92vh !important;
+        border-radius:28px !important;
+      }
+      #pmScroll{ padding:24px !important; }
+      .pm-main-grid{
+        display:grid;
+        grid-template-columns:minmax(0, 1.12fr) minmax(360px, .88fr);
+        gap:24px;
+        align-items:start;
+      }
+      .pm-side-col{
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+        position:sticky;
+        top:0;
+        align-self:start;
+      }
+      .pm-side-col > *{ margin-top:0 !important; }
+      .pm-main-col .aspect-\[4\/3\]{ aspect-ratio: 16 / 10; }
+      #pmActionCard{ position:sticky; top:0; z-index:2; }
+    }
+
     /* ✅ Ajustes de legibilidade no modal em telas muito pequenas */
     @media (max-width: 480px){
       .pm-meta-row{ padding: 10px 10px; gap: 8px; }
@@ -1147,7 +1186,7 @@
     <div id="productModal" class="hidden fixed inset-0 z-50">
       <div class="backdrop absolute inset-0" data-close="true"></div>
       <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-0 sm:p-6">
-        <div class="sheet w-full sm:max-w-3xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col" id="productModalSheet">
+        <div class="sheet w-full sm:max-w-3xl xl:max-w-6xl bg-white shadow-lift sm:rounded-3xl overflow-hidden max-h-[92vh] sm:max-h-[86vh] flex flex-col" id="productModalSheet">
           <!-- Drag handle – mobile only -->
           <div id="pmDragHandle" class="sm:hidden flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing shrink-0" aria-hidden="true">
             <div class="w-10 h-1 rounded-full bg-oly-border opacity-60"></div>
@@ -1169,8 +1208,8 @@
           </div>
 
           <div id="pmScroll" class="p-4 sm:p-6 overflow-y-auto no-scrollbar">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              <div>
+            <div class="pm-main-grid grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div class="pm-main-col">
                 <div class="relative aspect-[4/3] rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center">
                   <button id="btnZoomImage" class="focus-ring absolute right-3 top-3 h-10 w-10 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg" aria-label="Ver imagem em tela cheia">
                     <i class="fa-solid fa-magnifying-glass-plus text-oly-blue"></i>
@@ -1197,8 +1236,8 @@
                 </div>
               </div>
 
-              <div>
-                <div class="rounded-3xl border border-oly-border bg-oly-bg p-4">
+              <div class="pm-side-col">
+                <div id="pmMetaCard" class="rounded-3xl border border-oly-border bg-oly-bg p-4">
                   <div class="text-xs text-oly-muted font-bold">
                     <span id="pmCodeSeg">—</span>
                   </div>
@@ -1227,7 +1266,7 @@
                 <div id="pmStatusBadges" class="mt-2 flex flex-wrap gap-1.5"></div>
                 </div>
 
-                <div class="mt-4 rounded-3xl border border-oly-border bg-white p-4">
+                <div id="pmActionCard" class="mt-4 rounded-3xl border border-oly-border bg-white p-4">
                   <div class="text-sm font-extrabold">Quantidade</div>
 
                   <div class="mt-3 flex items-center gap-3">
@@ -2712,6 +2751,22 @@ function genderIcon(gen){
   return { icon:"fa-user", label:"Gênero", isFemale:false };
 }
 
+function renderCardColorChip(entry, {isGroup=false, size="md", showCode=true} = {}){
+  const base = isGroup ? (entry?.items?.[0] || {}) : (entry || {});
+  const label = isGroup
+    ? `${entry?.colorCount || entry?.colors?.length || 0} cores`
+    : (base?.cor || "—");
+  const code = !isGroup && showCode ? String(base?.corCodigo || "").trim() : "";
+  const text = code ? `${label} · ${code}` : label;
+  const sizeCls = size === "sm"
+    ? "card-color-chip text-[10px] px-2 py-1"
+    : (size === "xs" ? "card-color-chip text-[9px] px-2 py-1" : "card-color-chip");
+  return `<span class="${sizeCls} ${isGroup ? "is-group" : ""}" title="${escapeHtml(text)}">
+    <i class="fa-solid fa-palette"></i>
+    <span class="card-color-text">${escapeHtml(text)}</span>
+  </span>`;
+}
+
 /** Card qty state */
 function getCardQty(key){
   return state.cardQty.has(key) ? state.cardQty.get(key) : 1;
@@ -3041,7 +3096,7 @@ function renderCards(){
         </div>
         <div class="min-w-0 flex-1">
           <div class="font-extrabold text-sm leading-snug truncate">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          <div class="text-xs text-oly-muted truncate">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base?.cor||"—")}</div>
+          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
           ${badgesHtml}
         </div>
@@ -3084,7 +3139,7 @@ function renderCards(){
         <div class="px-2.5 py-2 flex flex-col gap-0.5">
           <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
           <div class="text-xs font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${isGrp ? `<div class="text-[10px] text-oly-muted">${v.colorCount||0} cores</div>` : ""}
+          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
@@ -3119,7 +3174,7 @@ function renderCards(){
         <div class="px-2 py-1.5 flex flex-col gap-0.5">
           <div class="font-extrabold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
           <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${isGrp ? `<div class="text-[9px] text-oly-muted">${v.colorCount||0} cores</div>` : ""}
+          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"xs" })}
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
@@ -3159,7 +3214,7 @@ function renderCards(){
         <div class="grid-thumbs flex gap-1 px-2 pt-1.5 pb-0.5 overflow-x-auto" style="min-height:44px;scrollbar-width:none"></div>
         <div class="px-3 py-2 cursor-pointer" data-gridopen="1">
           <div class="font-extrabold text-sm leading-snug">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          <div class="text-xs text-oly-muted mt-0.5">${isGrp ? `${v.colorCount||0} cores` : escapeHtml(base?.cor||"—")}</div>
+          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
           <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
         </div>
       `;
