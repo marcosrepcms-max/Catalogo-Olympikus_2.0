@@ -530,29 +530,37 @@
     @media (min-width: 1024px){
       #productModal .backdrop{ backdrop-filter: blur(7px); }
       #productModalSheet{
-        width:min(1240px, calc(100vw - 48px)) !important;
-        max-width:min(1240px, calc(100vw - 48px)) !important;
+        width:min(1280px, calc(100vw - 40px)) !important;
+        max-width:min(1280px, calc(100vw - 40px)) !important;
         max-height:92vh !important;
         border-radius:28px !important;
       }
       #pmScroll{ padding:24px !important; }
       .pm-main-grid{
         display:grid;
-        grid-template-columns:minmax(0, 1.12fr) minmax(360px, .88fr);
+        grid-template-columns:minmax(0, 1.08fr) minmax(430px, .92fr);
         gap:24px;
         align-items:start;
       }
       .pm-side-col{
         display:flex;
         flex-direction:column;
-        gap:16px;
+        gap:14px;
         position:sticky;
         top:0;
         align-self:start;
       }
       .pm-side-col > *{ margin-top:0 !important; }
       .pm-main-col .aspect-\[4\/3\]{ aspect-ratio: 16 / 10; }
-      #pmActionCard{ position:sticky; top:0; z-index:2; }
+      #pmActionCard{ position:sticky; top:0; z-index:2; padding:14px !important; }
+      #pmActionCard .text-sm.font-extrabold{ font-size:15px; }
+      #pmActionCard #qtyMinus,
+      #pmActionCard #qtyPlus{ width:42px; height:42px; }
+      #pmActionCard #qtyValue{ min-width:48px; font-size:28px; line-height:1; }
+      #packQuickWrap{ padding:12px !important; }
+      #btnPack6, #btnPack12,
+      #btnPmOpenGrade{ padding-top:12px !important; padding-bottom:12px !important; }
+      #btnAddToCart{ padding-top:14px !important; padding-bottom:14px !important; }
     }
 
     /* ✅ Ajustes de legibilidade no modal em telas muito pequenas */
@@ -1263,10 +1271,9 @@
                     </div>
                   </div>
                 </div>
-                <div id="pmStatusBadges" class="mt-2 flex flex-wrap gap-1.5"></div>
-                </div>
+                <div id="pmStatusBadges" class="flex flex-wrap gap-1.5"></div>
 
-                <div id="pmActionCard" class="mt-4 rounded-3xl border border-oly-border bg-white p-4">
+                <div id="pmActionCard" class="rounded-3xl border border-oly-border bg-white p-4">
                   <div class="text-sm font-extrabold">Quantidade</div>
 
                   <div class="mt-3 flex items-center gap-3">
