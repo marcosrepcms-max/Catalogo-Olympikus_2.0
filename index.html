@@ -2439,10 +2439,85 @@ $("btnFavsRemoveSelected")?.addEventListener("click", ()=>{
 
 
 /** View + paging */
-$("btnLoadMore").addEventListener("click", ()=>{
-  state.pagination.shown = Math.min(state.pagination.shown + state.pagination.pageSize, state.productsView.length);
-  renderCards();
-});
+let __lastLoadMoreAt = 0;
+
+function handleLoadMore(ev){
+  if(ev){
+    ev.preventDefault?.();
+    ev.stopPropagation?.();
+  }
+
+  const now = Date.now();
+  if(now - __lastLoadMoreAt < 350) return;
+  __lastLoadMoreAt = now;
+
+  const btn = $("btnLoadMore");
+  const wrap = $("loadMoreWrap");
+
+  if(btn){
+    btn.style.touchAction = "manipulation";
+    btn.style.pointerEvents = "auto";
+  }
+  if(wrap){
+    wrap.style.pointerEvents = "auto";
+  }
+
+  try{
+    const total = Array.isArray(state.productsView) ? state.productsView.length : 0;
+    const pageSize = Math.max(1, Number(state.pagination?.pageSize) || 24);
+    const shown = Math.max(0, Number(state.pagination?.shown) || 0);
+
+    console.info("[LoadMore] trigger", {
+      eventType: ev?.type || "manual",
+      total,
+      shown,
+      pageSize,
+      userAgent: navigator.userAgent
+    });
+
+    if(total === 0){
+      console.warn("[LoadMore] productsView vazio ou indisponível");
+      renderCards();
+      return;
+    }
+
+    if(shown >= total){
+      btn?.classList.add("hidden");
+      console.info("[LoadMore] nenhum item restante para carregar");
+      return;
+    }
+
+    state.pagination.shown = Math.min(shown + pageSize, total);
+    requestAnimationFrame(() => renderCards());
+  }catch(err){
+    console.error("[LoadMore] falha ao carregar mais produtos", err);
+    toast("Não foi possível carregar mais produtos");
+  }
+}
+
+(function bindLoadMoreButton(){
+  const btn = $("btnLoadMore");
+  const wrap = $("loadMoreWrap");
+  if(!btn) return;
+
+  btn.style.touchAction = "manipulation";
+  btn.style.webkitTapHighlightColor = "transparent";
+  btn.style.pointerEvents = "auto";
+  if(wrap) wrap.style.pointerEvents = "auto";
+
+  if(btn.dataset.boundLoadMore === "1") return;
+  btn.dataset.boundLoadMore = "1";
+
+  btn.addEventListener("click", handleLoadMore, { passive: false });
+  btn.addEventListener("pointerup", handleLoadMore, { passive: false });
+  btn.addEventListener("touchend", handleLoadMore, { passive: false });
+  btn.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" || e.key === " "){
+      handleLoadMore(e);
+    }
+  });
+})();
+
 function getPriceNum(v){ return v._type === "group" ? (v.minPriceNum ?? 0) : (v.priceNum ?? toNumberBR(v.precoRaw)); }
 function getTitle(v){ return v.produto; }
 
