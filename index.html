@@ -530,37 +530,122 @@
     @media (min-width: 1024px){
       #productModal .backdrop{ backdrop-filter: blur(7px); }
       #productModalSheet{
-        width:min(1280px, calc(100vw - 40px)) !important;
-        max-width:min(1280px, calc(100vw - 40px)) !important;
-        max-height:92vh !important;
+        width:min(1320px, calc(100vw - 24px)) !important;
+        max-width:min(1320px, calc(100vw - 24px)) !important;
+        max-height:min(96vh, 980px) !important;
         border-radius:28px !important;
       }
-      #pmScroll{ padding:24px !important; }
+      #productModalSheet > .border-b{ padding:14px 20px !important; }
+      #pmScroll{
+        padding:14px 20px 16px !important;
+        overflow:hidden !important;
+        flex:1 1 auto;
+        min-height:0;
+      }
       .pm-main-grid{
         display:grid;
-        grid-template-columns:minmax(0, 1.08fr) minmax(430px, .92fr);
-        gap:24px;
+        grid-template-columns:minmax(0, 1.02fr) minmax(420px, .98fr);
+        gap:20px;
         align-items:start;
+        min-height:0;
+      }
+      .pm-main-col,
+      .pm-side-col{ min-height:0; }
+      .pm-main-col{
+        display:grid;
+        grid-template-rows:auto auto auto;
+        align-content:start;
+        gap:8px;
+      }
+      .pm-main-col > .relative.aspect-\[4\/3\]{
+        height:clamp(250px, 41vh, 390px);
+        aspect-ratio:auto !important;
+      }
+      #pmAngleThumbsWrap{ margin-top:8px !important; }
+      #pmThumbsWrap{ margin-top:4px !important; }
+      #pmThumbsWrap .text-xs{ margin-bottom:4px !important; }
+      .pm-thumbs{
+        gap:8px;
+        padding:4px 0 0;
+        overflow:visible;
+        flex-wrap:wrap;
+      }
+      .pm-thumb{
+        width:54px;
+        height:54px;
+        border-radius:12px;
       }
       .pm-side-col{
         display:flex;
         flex-direction:column;
-        gap:14px;
-        position:sticky;
-        top:0;
+        gap:10px;
+        position:static;
         align-self:start;
       }
       .pm-side-col > *{ margin-top:0 !important; }
-      .pm-main-col .aspect-\[4\/3\]{ aspect-ratio: 16 / 10; }
-      #pmActionCard{ position:sticky; top:0; z-index:2; padding:14px !important; }
-      #pmActionCard .text-sm.font-extrabold{ font-size:15px; }
+      #pmMetaCard,
+      #pmActionCard{ padding:12px !important; }
+      #pmStatusBadges{ gap:6px; }
+      #pmActionCard .text-sm.font-extrabold{ font-size:14px; }
+      #pmActionCard .mt-3{ margin-top:10px !important; }
       #pmActionCard #qtyMinus,
-      #pmActionCard #qtyPlus{ width:42px; height:42px; }
-      #pmActionCard #qtyValue{ min-width:48px; font-size:28px; line-height:1; }
-      #packQuickWrap{ padding:12px !important; }
+      #pmActionCard #qtyPlus{ width:38px; height:38px; }
+      #pmActionCard #qtyValue{ min-width:42px; font-size:20px; line-height:1; }
+      #packQuickWrap{ padding:10px !important; margin-top:12px !important; }
+      #pmGradeWrap{ margin-top:12px !important; }
       #btnPack6, #btnPack12,
-      #btnPmOpenGrade{ padding-top:12px !important; padding-bottom:12px !important; }
-      #btnAddToCart{ padding-top:14px !important; padding-bottom:14px !important; }
+      #btnPmOpenGrade,
+      #btnAddToCart{
+        min-height:46px;
+        padding-top:10px !important;
+        padding-bottom:10px !important;
+      }
+      #btnAddToCart{ margin-top:12px !important; }
+    }
+
+    @media (min-width: 1024px) and (max-height: 920px){
+      #productModalSheet{
+        width:min(1320px, calc(100vw - 16px)) !important;
+        max-width:min(1320px, calc(100vw - 16px)) !important;
+        max-height:98vh !important;
+      }
+      #productModalSheet > .border-b{ padding:12px 16px !important; }
+      #pmScroll{ padding:12px 16px 14px !important; }
+      .pm-main-grid{
+        grid-template-columns:minmax(0, 1fr) minmax(390px, .96fr);
+        gap:16px;
+      }
+      .pm-main-col > .relative.aspect-\[4\/3\]{
+        height:clamp(210px, 34vh, 300px);
+      }
+      .pm-thumb{
+        width:46px;
+        height:46px;
+        border-radius:10px;
+      }
+      #pmMetaCard,
+      #pmActionCard{ padding:10px !important; }
+      #pmActionCard .text-sm.font-extrabold{ font-size:13px; }
+      #pmActionCard .mt-3{ margin-top:8px !important; }
+      #pmActionCard #qtyMinus,
+      #pmActionCard #qtyPlus{ width:34px; height:34px; }
+      #pmActionCard #qtyValue{ min-width:36px; font-size:18px; }
+      #packQuickWrap{ padding:8px !important; margin-top:10px !important; }
+      #btnPack6, #btnPack12,
+      #btnPmOpenGrade,
+      #btnAddToCart{
+        min-height:40px;
+        padding-top:8px !important;
+        padding-bottom:8px !important;
+        font-size:13px !important;
+      }
+      #pmThumbsWrap .text-xs,
+      #pmCodeSeg,
+      #pmMetaCard .text-xs,
+      #pmStatusBadges > *{
+        font-size:11px !important;
+      }
+      #pmPrecoMain{ font-size: clamp(24px, 2vw, 30px) !important; }
     }
 
     /* ✅ Ajustes de legibilidade no modal em telas muito pequenas */
@@ -3631,7 +3716,6 @@ $("btnCloseProductModal").addEventListener("click", closeProductModal);
 $("btnPmOpenGrade")?.addEventListener("click", ()=>{
   const item = state.productModal.item;
   if(!item) return;
-  closeProductModal();
   openGradeModal(item);
 });
 $("qtyMinus").addEventListener("click", ()=> setQty(state.productModal.qty - 1));
@@ -5062,10 +5146,12 @@ function openGradeModal(item, opts={}){
 
 function closeGradeModal(){
   const modal = $("gradeModal");
+  const keepProductLocked = !!state.productModal.open;
   modal.classList.remove("open");
   setTimeout(()=>{
     modal.classList.add("hidden");
-    document.body.style.overflow = "";
+    document.body.style.overflow = keepProductLocked ? "hidden" : "";
+    if(keepProductLocked) trapFocus("productModal");
   }, 300);
 }
 
