@@ -216,6 +216,64 @@
     #btnBulkGrade.hidden { display: none !important; }
     .dark-mode #btnBulkGrade { background:rgba(101,120,255,.15)!important; }
 
+    /* ── Bulk grade: seleção de produtos ── */
+    #bulkSelectBar.hidden,
+    #bulkGradeModeModal.hidden { display:none !important; }
+    #bulkSelectBar {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    #bulkSelectBar .bulk-select-actions {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
+    }
+    .bulk-select-btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      min-height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--border);
+      background:#fff; font-size:12px; font-weight:800; color:var(--text); cursor:pointer;
+    }
+    .bulk-select-btn.primary {
+      background:var(--primary); border-color:var(--primary); color:#fff;
+    }
+    .bulk-select-btn[disabled] { opacity:.45; cursor:not-allowed; }
+    .cart-bulk-pick {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:34px; height:34px; border-radius:999px; border:1.5px solid var(--border);
+      background:#fff; color:var(--muted); cursor:pointer; flex:0 0 auto;
+      transition:all .15s ease;
+    }
+    .cart-bulk-pick.on {
+      border-color:var(--primary); background:rgba(101,120,255,.10); color:var(--primary);
+      box-shadow:0 0 0 3px rgba(101,120,255,.12);
+    }
+    .cart-bulk-row-on {
+      border-color: rgba(101,120,255,.55) !important;
+      box-shadow: 0 0 0 3px rgba(101,120,255,.10);
+    }
+    #bulkGradeModeSheet {
+      width:min(100%, 420px); border-radius:28px; border:1px solid var(--border);
+      background:#fff; box-shadow:0 18px 60px rgba(15,23,42,.18); overflow:hidden;
+    }
+    .bulk-grade-mode-btn {
+      width:100%; text-align:left; border:1px solid var(--border); background:#fff; color:var(--text);
+      border-radius:22px; padding:16px; display:flex; gap:14px; align-items:flex-start; cursor:pointer;
+    }
+    .bulk-grade-mode-btn:hover { background:var(--bg); }
+    .bulk-grade-mode-btn .ico {
+      width:42px; height:42px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center;
+      background:rgba(101,120,255,.10); color:var(--primary); flex:0 0 auto;
+    }
+    .dark-mode #bulkSelectBar,
+    .dark-mode #bulkGradeModeSheet,
+    .dark-mode .bulk-grade-mode-btn,
+    .dark-mode .bulk-select-btn,
+    .dark-mode .cart-bulk-pick { background:var(--card-bg)!important; border-color:var(--border)!important; color:var(--text)!important; }
+    .dark-mode .bulk-select-btn.primary { background:var(--primary)!important; color:#fff!important; border-color:var(--primary)!important; }
+    .dark-mode .cart-bulk-pick.on,
+    .dark-mode .bulk-grade-mode-btn .ico { background:rgba(101,120,255,.16)!important; color:var(--primary)!important; }
+
     /* ── Product modal swipe-to-close ── */
     #productModalSheet {
       touch-action: pan-x pan-y;
@@ -1448,6 +1506,32 @@
                     <span class="bulk-sub" id="btnBulkGradeSub"></span>
                   </span>
                 </button>
+                <div id="bulkSelectBar" class="hidden">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold text-oly-muted uppercase tracking-[0.18em]">Seleção manual</div>
+                      <div id="bulkSelectSummary" class="mt-1 text-sm font-extrabold text-oly-text">0 produto selecionado</div>
+                      <div id="bulkSelectHint" class="mt-1 text-xs text-oly-muted">Marque os produtos e aplique a grade somente neles.</div>
+                    </div>
+                    <button id="btnBulkSelectCancelTop" class="bulk-select-btn" type="button">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div class="bulk-select-actions">
+                    <button id="btnBulkSelectAll" class="bulk-select-btn" type="button">
+                      <i class="fa-solid fa-check-double"></i>
+                      <span>Selecionar visíveis</span>
+                    </button>
+                    <button id="btnBulkApplySelected" class="bulk-select-btn primary" type="button" disabled>
+                      <i class="fa-solid fa-ruler-combined"></i>
+                      <span>Aplicar aos selecionados</span>
+                    </button>
+                    <button id="btnBulkSelectCancel" class="bulk-select-btn" type="button">
+                      <i class="fa-solid fa-ban"></i>
+                      <span>Cancelar</span>
+                    </button>
+                  </div>
+                </div>
                 <div id="cartItems" class="mt-3 space-y-3"></div>
               </div>
 
@@ -1666,6 +1750,39 @@
     </div>
 
     <!-- Modal de Grade -->
+    <div id="bulkGradeModeModal" class="hidden fixed inset-0 z-[74]">
+      <div id="bulkGradeModeBackdrop" class="backdrop absolute inset-0"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+        <div id="bulkGradeModeSheet">
+          <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-oly-border">
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-oly-muted uppercase tracking-[0.18em]">Grade em lote</div>
+              <div class="mt-1 text-lg font-extrabold text-oly-text">Como deseja aplicar?</div>
+            </div>
+            <button id="btnCloseBulkGradeMode" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" type="button" aria-label="Fechar seleção de modo">
+              <i class="fa-solid fa-xmark text-oly-blue"></i>
+            </button>
+          </div>
+          <div class="p-4 sm:p-5 space-y-3">
+            <button id="btnBulkModeGender" class="bulk-grade-mode-btn focus-ring" type="button">
+              <span class="ico"><i class="fa-solid fa-venus-mars"></i></span>
+              <span class="min-w-0">
+                <span class="block text-sm font-extrabold">Aplicar por gênero</span>
+                <span class="mt-1 block text-xs text-oly-muted">Usa o filtro atual da sacola. Se não houver filtro, aplica em todos os gêneros visíveis.</span>
+              </span>
+            </button>
+            <button id="btnBulkModeSelect" class="bulk-grade-mode-btn focus-ring" type="button">
+              <span class="ico"><i class="fa-solid fa-list-check"></i></span>
+              <span class="min-w-0">
+                <span class="block text-sm font-extrabold">Selecionar produtos</span>
+                <span class="mt-1 block text-xs text-oly-muted">Permite marcar manualmente os produtos desejados antes de abrir a grade.</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="gradeModal" class="hidden fixed inset-0 z-[75]">
       <div class="absolute inset-0 bg-black/40" id="gradeBackdrop"></div>
       <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" id="gradeSheet" style="max-width:520px;margin:0 auto;">
@@ -1762,6 +1879,8 @@ const state = {
   favorites: new Set(),
   favsSelectMode: false,
   cartGenderFilter: "",  // "" = todos | "masc"|"fem"|"inf"|"uni"
+  cartBulkSelectMode: false,
+  cartBulkSelected: new Set(),
   favsSelected: new Set(), // variant keys
 };
 
@@ -1799,6 +1918,38 @@ function expandTam(tam){
   }
   if(s.includes("-")) return s.split("-").map(x => x.trim()).filter(Boolean);
   return [s];
+}
+
+function cartGenderKeyFromItem(it){
+  const g = normalizeName(it?.genero||"");
+  if(g.includes("masc") || g.includes("homem")) return "masc";
+  if(g.includes("fem")  || g.includes("mulher")) return "fem";
+  if(g.includes("uni")) return "uni";
+  if(g.includes("inf") || g.includes("kids") || g.includes("cri")) return "inf";
+  return "";
+}
+function cartItemMatchesGenderFilter(it, filter=state.cartGenderFilter){
+  if(!filter) return true;
+  return cartGenderKeyFromItem(it) === filter;
+}
+function cartItemEligibleForBulkGrade(it, filter=state.cartGenderFilter){
+  if(!tamNeedsGrade(it?.categoria, it?.tam)) return false;
+  return cartItemMatchesGenderFilter(it, filter);
+}
+function getBulkGradeTargets(mode, opts={}){
+  const filter = Object.prototype.hasOwnProperty.call(opts, "filter") ? opts.filter : state.cartGenderFilter;
+  const selectedKeys = opts.selectedKeys || [];
+  if(mode === "selected"){
+    const wanted = new Set(selectedKeys);
+    return [...state.cart.entries()]
+      .filter(([key, it]) => wanted.has(key) && cartItemEligibleForBulkGrade(it, filter))
+      .map(([, it]) => it);
+  }
+  return [...state.cart.values()].filter(it => cartItemEligibleForBulkGrade(it, filter));
+}
+function clearCartBulkSelection(){
+  state.cartBulkSelectMode = false;
+  state.cartBulkSelected = new Set();
 }
 
 function normalizeName(s){
@@ -3919,6 +4070,99 @@ function cartTotals(){
   }
   return { items, cartSize, by, totalCost };
 }
+function closeBulkGradeModeModal(){
+  const modal = $("bulkGradeModeModal");
+  if(!modal) return;
+  modal.classList.add("hidden");
+}
+function openBulkGradeModeModal(){
+  const modal = $("bulkGradeModeModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+}
+function updateBulkSelectionToolbar(){
+  const bar = $("bulkSelectBar");
+  const summary = $("bulkSelectSummary");
+  const hint = $("bulkSelectHint");
+  const applyBtn = $("btnBulkApplySelected");
+  const selectBtn = $("btnBulkSelectAll");
+  if(!bar || !summary || !hint || !applyBtn) return;
+  if(!state.cartBulkSelectMode){
+    bar.classList.add("hidden");
+    return;
+  }
+  bar.classList.remove("hidden");
+  const visibleEligible = [...state.cart.values()].filter(it => cartItemEligibleForBulkGrade(it, state.cartGenderFilter));
+  const selectedVisibleCount = visibleEligible.filter(it => state.cartBulkSelected.has(it.key)).length;
+  summary.textContent = selectedVisibleCount + " produto" + (selectedVisibleCount!==1?"s":"") + " selecionado" + (selectedVisibleCount!==1?"s":"");
+  const scope = state.cartGenderFilter ? ({masc:"masculino", fem:"feminino", inf:"infantil", uni:"unissex"}[state.cartGenderFilter] || "filtrado") : "todos os gêneros";
+  hint.textContent = "Escopo atual: " + scope + " · marque apenas os produtos desejados.";
+  applyBtn.disabled = selectedVisibleCount === 0;
+  const allSelected = visibleEligible.length > 0 && selectedVisibleCount === visibleEligible.length;
+  if(selectBtn) selectBtn.querySelector("span").textContent = allSelected ? "Limpar visíveis" : "Selecionar visíveis";
+}
+function openBulkGradeFromTargets(targets, meta={}){
+  if(!targets.length){ toast("Nenhum item precisa de grade"); return; }
+  const templateItem = targets[0];
+  gradeState.bulkMode = true;
+  gradeState.bulkFilter = meta.filter || "";
+  gradeState.bulkApplyMode = meta.mode || "gender";
+  gradeState.bulkSelectedKeys = (meta.selectedKeys || []).slice();
+  gradeState.fromCart = false;
+  const cartModal = $("cartModal");
+  if(cartModal) cartModal.classList.add("hidden");
+  openGradeModal(templateItem, { fromCart:false, keepBulk:true });
+  const typeEl = document.querySelector("#gradeModal .text-xs.font-bold.text-oly-muted");
+  const prodEl = $("gradeProduto");
+  const corEl  = $("gradeCor");
+  if(typeEl) typeEl.textContent = "Grade em lote";
+  if(prodEl) prodEl.textContent = targets.length + " produto" + (targets.length!==1?"s":"");
+  if(corEl){
+    if(meta.mode === "selected") corEl.textContent = "Seleção manual · Será aplicada apenas nos marcados";
+    else {
+      const scope = meta.filter ? ({masc:"Masculino", fem:"Feminino", inf:"Infantil", uni:"Unissex"}[meta.filter] || "Filtrado") : "Todos";
+      corEl.textContent = "Gênero: " + scope + " · Será aplicada em todos";
+    }
+  }
+  const confirmSpan = $("btnConfirmGrade")?.querySelector("span");
+  if(confirmSpan) confirmSpan.textContent = meta.mode === "selected"
+    ? "Aplicar nos " + targets.length + " selecionados"
+    : "Aplicar em todos os " + targets.length;
+}
+function startBulkGradeByGender(){
+  const targets = getBulkGradeTargets("gender", { filter: state.cartGenderFilter });
+  if(!targets.length){ toast("Nenhum item precisa de grade"); return; }
+  closeBulkGradeModeModal();
+  openBulkGradeFromTargets(targets, { mode:"gender", filter: state.cartGenderFilter });
+}
+function startBulkSelectionMode(){
+  closeBulkGradeModeModal();
+  state.cartBulkSelectMode = true;
+  state.cartBulkSelected = new Set();
+  renderCartUI();
+}
+function toggleBulkVisibleSelection(){
+  const visibleEligible = [...state.cart.values()].filter(it => cartItemEligibleForBulkGrade(it, state.cartGenderFilter));
+  const selectedVisibleCount = visibleEligible.filter(it => state.cartBulkSelected.has(it.key)).length;
+  const allSelected = visibleEligible.length > 0 && selectedVisibleCount === visibleEligible.length;
+  const next = new Set(state.cartBulkSelected);
+  if(allSelected){
+    for(const it of visibleEligible) next.delete(it.key);
+  }else{
+    for(const it of visibleEligible) next.add(it.key);
+  }
+  state.cartBulkSelected = next;
+  renderCartUI();
+}
+function startBulkGradeBySelection(){
+  const selectedKeys = [...state.cartBulkSelected];
+  const targets = getBulkGradeTargets("selected", { filter: state.cartGenderFilter, selectedKeys });
+  if(!targets.length){ toast("Selecione ao menos 1 produto elegível"); return; }
+  clearCartBulkSelection();
+  renderCartUI();
+  openBulkGradeFromTargets(targets, { mode:"selected", filter: state.cartGenderFilter, selectedKeys });
+}
+
 function renderCartUI(){
   syncCardAddStatusFromCart();
   syncCardAddStatusFromCart();
@@ -3958,8 +4202,11 @@ function renderCartUI(){
   list.innerHTML = "";
   if(cartSize === 0){
     state.cartGenderFilter = "";
+    clearCartBulkSelection();
     const bar = document.getElementById("cartGenderFilter");
     if(bar){ bar.innerHTML=""; bar.style.display="none"; }
+    const bulkBar = document.getElementById("bulkSelectBar");
+    if(bulkBar) bulkBar.classList.add("hidden");
     refreshVisibleCardAddButtons();
     return;
   }
@@ -3973,14 +4220,7 @@ function renderCartUI(){
     // Count distinct genders
     const keys = new Set();
     for(const it of state.cart.values()){
-      const k = (()=>{
-        const g = normalizeName(it.genero||"");
-        if(g.includes("masc") || g.includes("homem")) return "masc";
-        if(g.includes("fem")  || g.includes("mulher")) return "fem";
-        if(g.includes("uni")) return "uni";
-        if(g.includes("inf") || g.includes("kids") || g.includes("cri")) return "inf";
-        return "";
-      })();
+      const k = cartGenderKeyFromItem(it);
       if(k) keys.add(k);
     }
 
@@ -4016,33 +4256,21 @@ function renderCartUI(){
 
   // ── Bulk grade button visibility ─────────────────
   (()=>{
-    const btn   = document.getElementById("btnBulkGrade");
-    const label = document.getElementById("btnBulkGradeLabel");
+    const btn = document.getElementById("btnBulkGrade");
     if(!btn) return;
 
-    // Count how many filtered items need a grade
     const activeFilter = state.cartGenderFilter;
-    let needsGradeCount = 0;
-    for(const it of state.cart.values()){
-      if(!tamNeedsGrade(it.categoria, it.tam)) continue;
-      if(activeFilter){
-        const g = normalizeName(it.genero||"");
-        let match = false;
-        if(activeFilter==="masc" && (g.includes("masc")||g.includes("homem"))) match=true;
-        else if(activeFilter==="fem"  && (g.includes("fem")||g.includes("mulher")))  match=true;
-        else if(activeFilter==="uni"  && g.includes("uni"))  match=true;
-        else if(activeFilter==="inf"  && (g.includes("inf")||g.includes("kids")||g.includes("cri"))) match=true;
-        if(!match) continue;
-      }
-      needsGradeCount++;
+    const eligibleItems = [...state.cart.values()].filter(it => cartItemEligibleForBulkGrade(it, activeFilter));
+    const needsGradeCount = eligibleItems.length;
+
+    if(needsGradeCount < 2){
+      btn.classList.add("hidden");
+      if(state.cartBulkSelectMode) clearCartBulkSelection();
+      updateBulkSelectionToolbar();
+      return;
     }
 
-    // Show button only when there are 2+ items needing grade
-    if(needsGradeCount < 2){
-      btn.classList.add("hidden"); return;
-    }
     btn.classList.remove("hidden");
-    // Update subtitle with context
     const sub = document.getElementById("btnBulkGradeSub");
     if(sub){
       const genLabel = activeFilter
@@ -4050,18 +4278,13 @@ function renderCartUI(){
         : "todos os gêneros";
       sub.textContent = needsGradeCount + " produto" + (needsGradeCount!==1?"s":"") + " · " + genLabel;
     }
+    updateBulkSelectionToolbar();
   })();
 
   // ── Filter items by selected gender ──────────────
   const _genFilter = state.cartGenderFilter;
   function _genMatch(it){
-    if(!_genFilter) return true;
-    const g = normalizeName(it.genero||"");
-    if(_genFilter==="masc") return g.includes("masc") || g.includes("homem");
-    if(_genFilter==="fem")  return g.includes("fem")  || g.includes("mulher");
-    if(_genFilter==="uni")  return g.includes("uni");
-    if(_genFilter==="inf")  return g.includes("inf")  || g.includes("kids") || g.includes("cri");
-    return true;
+    return cartItemMatchesGenderFilter(it, _genFilter);
   }
 
   for(const it of state.cart.values()){
@@ -4069,11 +4292,14 @@ function renderCartUI(){
     const needsGrade = tamNeedsGrade(it.categoria, it.tam);
     const hasGrade = it.grade && Object.keys(it.grade).length > 0;
     const isPending = needsGrade && !hasGrade;
+    const eligibleForBulk = cartItemEligibleForBulkGrade(it, state.cartGenderFilter);
+    const bulkSelected = state.cartBulkSelected.has(it.key);
 
     const row = document.createElement("div");
-    row.className = "rounded-3xl border border-oly-border bg-white p-4" + (isPending ? " border-amber-300" : "");
+    row.className = "rounded-3xl border border-oly-border bg-white p-4" + (isPending ? " border-amber-300" : "") + (bulkSelected ? " cart-bulk-row-on" : "");
     row.innerHTML = `
       <div class="flex gap-3">
+        ${state.cartBulkSelectMode && eligibleForBulk ? `<button class="cart-bulk-pick ${bulkSelected ? "on" : ""}" data-bulk-pick="true" aria-label="${bulkSelected ? "Desmarcar" : "Selecionar"} produto" title="${bulkSelected ? "Desmarcar" : "Selecionar"} produto"><i class="fa-solid ${bulkSelected ? "fa-circle-check" : "fa-circle"}"></i></button>` : ""}
         <div class="h-20 w-20 cursor-pointer rounded-2xl border border-oly-border bg-oly-bg overflow-hidden flex items-center justify-center shrink-0">
           ${it.imgSrc ? `<img loading="lazy" decoding="async" src="${it.imgSrc}" alt="${escapeHtml(it.produto)}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none';">`
             : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
@@ -4152,12 +4378,20 @@ function renderCartUI(){
     `;
 
     row.addEventListener("click", (e)=>{
+      const bp = e.target?.closest?.("[data-bulk-pick='true']");
       const rm = e.target?.closest?.("[data-remove='true']");
       const mn = e.target?.closest?.("[data-minus='true']");
       const pl = e.target?.closest?.("[data-plus='true']");
       const ed = e.target?.closest?.("[data-edit='true']");
       const eg = e.target?.closest?.("[data-edit-grade='true']");
 
+      if(bp){
+        const next = new Set(state.cartBulkSelected);
+        if(next.has(it.key)) next.delete(it.key); else next.add(it.key);
+        state.cartBulkSelected = next;
+        renderCartUI();
+        return;
+      }
       if(rm){
         state.cart.delete(it.key);
         saveCartToStorage();
@@ -4188,6 +4422,14 @@ function renderCartUI(){
           // Ao confirmar a grade, reabre a sacola
           gradeState.fromCart = true;
         }
+        return;
+      }
+
+      if(state.cartBulkSelectMode && eligibleForBulk){
+        const next = new Set(state.cartBulkSelected);
+        if(next.has(it.key)) next.delete(it.key); else next.add(it.key);
+        state.cartBulkSelected = next;
+        renderCartUI();
         return;
       }
 
@@ -5130,6 +5372,10 @@ document.addEventListener("keydown", (e)=>{
     return;
   }
   if(e.key === "Escape"){
+    if(!$("bulkGradeModeModal")?.classList.contains("hidden")){
+      closeBulkGradeModeModal();
+      return;
+    }
     // Grade modal tem prioridade sobre os outros
     if(!$("gradeModal").classList.contains("hidden")){
       closeGradeWithoutAdding();
@@ -5178,7 +5424,7 @@ function handleTrapKeydown(e){
 /** ✅ Sistema de Grade de Tamanhos */
 
 // gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
-const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null, bulkMode:false, bulkFilter:"" };
+const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null, bulkMode:false, bulkFilter:"", bulkApplyMode:"", bulkSelectedKeys:[] };
 
 function openGradeModal(item, opts={}){
   gradeState.item = item;
@@ -5188,6 +5434,8 @@ function openGradeModal(item, opts={}){
   if(!opts.keepBulk){
     gradeState.bulkMode   = false;
     gradeState.bulkFilter = "";
+    gradeState.bulkApplyMode = "";
+    gradeState.bulkSelectedKeys = [];
   }
   // Restore confirm button label in case it was changed by bulk mode
   const confirmBtn = document.getElementById("btnConfirmGrade");
@@ -5345,7 +5593,6 @@ function gradeToCartEntry(){
 $("btnConfirmGrade").addEventListener("click", ()=>{
   // ── Modo lote ─────────────────────────────────────
   if(gradeState.bulkMode){
-    // Build the grade from the modal inputs
     const gradeMap = {};
     let totalQty = 0;
     for(const s of gradeState.sizes){
@@ -5354,29 +5601,33 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
     if(totalQty === 0){ toast("Adicione ao menos 1 par ✅"); return; }
 
     const gradeResume = Object.entries(gradeMap).map(([t,q])=>t+"x"+q).join(" | ");
-    const bFilter = gradeState.bulkFilter;
-    let updated = 0;
+    const targets = gradeState.bulkApplyMode === "selected"
+      ? getBulkGradeTargets("selected", { filter: gradeState.bulkFilter, selectedKeys: gradeState.bulkSelectedKeys })
+      : getBulkGradeTargets("gender", { filter: gradeState.bulkFilter });
 
-    // Apply to all eligible cart items (those that need a grade)
+    if(!targets.length){
+      toast("Nenhum item elegível encontrado");
+      gradeState.bulkMode = false;
+      gradeState.bulkFilter = "";
+      gradeState.bulkApplyMode = "";
+      gradeState.bulkSelectedKeys = [];
+      closeGradeModal();
+      setTimeout(()=> openCartModal(), 320);
+      return;
+    }
+
+    let updated = 0;
+    const targetKeys = new Set(targets.map(it => it.key));
     for(const [key, it] of state.cart.entries()){
-      if(!tamNeedsGrade(it.categoria, it.tam)) continue;
-      // Apply gender filter if active
-      if(bFilter){
-        const g = normalizeName(it.genero||"");
-        let match = false;
-        if(bFilter==="masc") match = g.includes("masc")||g.includes("homem");
-        else if(bFilter==="fem")  match = g.includes("fem")||g.includes("mulher");
-        else if(bFilter==="uni")  match = g.includes("uni");
-        else if(bFilter==="inf")  match = g.includes("inf")||g.includes("kids")||g.includes("cri");
-        if(!match) continue;
-      }
-      // Update the EXISTING item — keep all its data, only overwrite grade fields
+      if(!targetKeys.has(key)) continue;
       state.cart.set(key, { ...it, grade: { ...gradeMap }, gradeResume, qty: totalQty });
       updated++;
     }
 
-    gradeState.bulkMode   = false;
+    gradeState.bulkMode = false;
     gradeState.bulkFilter = "";
+    gradeState.bulkApplyMode = "";
+    gradeState.bulkSelectedKeys = [];
     saveCartToStorage();
     renderCartUI();
     refreshVisibleCardAddButtons();
@@ -5444,6 +5695,8 @@ function closeGradeWithoutAdding(){
   const wasBulk   = gradeState.bulkMode;
   gradeState.bulkMode   = false;
   gradeState.bulkFilter = "";
+  gradeState.bulkApplyMode = "";
+  gradeState.bulkSelectedKeys = [];
   closeGradeModal();
   // Reopen cart if came from cart OR from bulk mode
   if(fromCart || wasBulk) setTimeout(()=> openCartModal(), 320);
@@ -5641,55 +5894,25 @@ function initSwipeModal(sheetId, modalId, closeFn){
   if(!btn) return;
 
   btn.addEventListener("click", ()=>{
-    const activeFilter = state.cartGenderFilter;
-
-    // Collect all eligible items (need grade, match current filter)
-    function matchesFilter(it){
-      if(!tamNeedsGrade(it.categoria, it.tam)) return false;
-      if(!activeFilter) return true;
-      const g = normalizeName(it.genero||"");
-      if(activeFilter==="masc") return g.includes("masc")||g.includes("homem");
-      if(activeFilter==="fem")  return g.includes("fem")||g.includes("mulher");
-      if(activeFilter==="uni")  return g.includes("uni");
-      if(activeFilter==="inf")  return g.includes("inf")||g.includes("kids")||g.includes("cri");
-      return false;
+    const eligibleCount = [...state.cart.values()].filter(it => cartItemEligibleForBulkGrade(it, state.cartGenderFilter)).length;
+    if(eligibleCount < 2){
+      toast("Nenhum grupo elegível para grade em lote");
+      return;
     }
-
-    const targets = [...state.cart.values()].filter(matchesFilter);
-    if(!targets.length){ toast("Nenhum item precisa de grade"); return; }
-
-    // Use first item's TAM range to build the size list
-    const templateItem = targets[0];
-
-    // Store bulk context BEFORE opening modal
-    gradeState.bulkMode   = true;
-    gradeState.bulkFilter = activeFilter;
-    gradeState.fromCart   = false; // we handle return ourselves
-
-    // Open grade modal using the template item's sizes
-    // Pass keepBulk so openGradeModal doesn't reset bulkMode
-    const cartModal = document.getElementById("cartModal");
-    if(cartModal) cartModal.classList.add("hidden");
-
-    openGradeModal(templateItem, { fromCart: false, keepBulk: true });
-
-    // Override modal header to show bulk context
-    const scope = activeFilter
-      ? ({masc:"Masculino", fem:"Feminino", inf:"Infantil", uni:"Unissex"}[activeFilter] || "Filtrado")
-      : "Todos";
-    const count = targets.length;
-    const prodEl = document.getElementById("gradeProduto");
-    const corEl  = document.getElementById("gradeCor");
-    const typeEl = document.querySelector("#gradeModal .text-xs.font-bold.text-oly-muted");
-    if(typeEl) typeEl.textContent = "Grade em lote";
-    if(prodEl) prodEl.textContent = count + " produto" + (count!==1?"s":"");
-    if(corEl)  corEl.textContent  = "Gênero: " + scope + " · Será aplicada em todos";
-
-    // Change confirm button label
-    const confirmBtn = document.getElementById("btnConfirmGrade");
-    const confirmSpan = confirmBtn && confirmBtn.querySelector("span");
-    if(confirmSpan) confirmSpan.textContent = "Aplicar em todos os " + count;
+    openBulkGradeModeModal();
   });
+})();
+
+(function initBulkGradeModeActions(){
+  const close = ()=> closeBulkGradeModeModal();
+  $("bulkGradeModeBackdrop")?.addEventListener("click", close);
+  $("btnCloseBulkGradeMode")?.addEventListener("click", close);
+  $("btnBulkModeGender")?.addEventListener("click", startBulkGradeByGender);
+  $("btnBulkModeSelect")?.addEventListener("click", startBulkSelectionMode);
+  $("btnBulkSelectAll")?.addEventListener("click", toggleBulkVisibleSelection);
+  $("btnBulkApplySelected")?.addEventListener("click", startBulkGradeBySelection);
+  $("btnBulkSelectCancel")?.addEventListener("click", ()=>{ clearCartBulkSelection(); renderCartUI(); });
+  $("btnBulkSelectCancelTop")?.addEventListener("click", ()=>{ clearCartBulkSelection(); renderCartUI(); });
 })();
 
 // ── Dark mode toggle ──────────────────────────────
