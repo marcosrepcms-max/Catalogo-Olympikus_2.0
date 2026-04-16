@@ -3250,7 +3250,28 @@ function updateAddButtonUI(btnAdd, key){
   }
 }
 
+function handleMainCardAdd(item, btn){
+  if(!item) return;
+  const key = cartKeyFor(item);
+  if(btn) updateAddButtonUI(btn, key);
+  if(getCardAddStatus(key) === "loading") return;
 
+  setCardAddStatus(key, "loading");
+  if(btn) updateAddButtonUI(btn, key);
+
+  try{
+    addToCart(item, 1);
+    setCardAddStatus(key, "added");
+    if(btn) updateAddButtonUI(btn, key);
+    updateCartBadge();
+    toast("Item adicionado à sacola");
+  }catch(err){
+    console.error(err);
+    setCardAddStatus(key, state.cart.has(key) ? "added" : "idle");
+    if(btn) updateAddButtonUI(btn, key);
+    toast("Não foi possível adicionar o item");
+  }
+}
 
 /** Cards */
 function renderCards(){
@@ -3406,17 +3427,25 @@ function renderCards(){
         ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
         : base, {cls:""});
 
+      const cardKey = cartKeyFor(base);
       card.className = "flex items-center gap-3 bg-white border border-oly-border rounded-2xl px-3 py-2.5 shadow-sm cursor-pointer active:scale-[.99] transition-transform";
       card.tabIndex = 0;
+      card.setAttribute("data-card-key", cardKey);
       card.innerHTML = `
-        <div class="shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center" style="width:64px;height:64px">
+        <div class="relative shrink-0 rounded-xl overflow-hidden bg-oly-bg border border-oly-border flex items-center justify-center" style="width:64px;height:64px">
           ${imgSrc ? `<img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}" class="h-full w-full object-contain bg-white" onerror="this.style.display='none'">` : `<i class="fa-solid fa-image text-oly-blue text-xl"></i>`}
+          <button class="btnZoomCard focus-ring absolute right-1.5 top-1.5 h-7 w-7 rounded-full border border-oly-border bg-white/95 hover:bg-oly-bg flex items-center justify-center" type="button" aria-label="Ampliar imagem">
+            <i class="fa-solid fa-magnifying-glass-plus text-oly-blue" style="font-size:11px"></i>
+          </button>
         </div>
         <div class="min-w-0 flex-1">
-          <div class="font-extrabold text-sm leading-snug truncate">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
-          <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          <div class="font-extrabold text-[15px] sm:text-base leading-snug truncate">${escapeHtml(v.produto||base?.produto||"—")}</div>
+          <div class="text-sm sm:text-base font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
           ${badgesHtml}
+          <div class="mt-1.5">${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}</div>
+          <button class="btnAdd focus-ring mt-2 h-9 w-full inline-flex items-center justify-center gap-2 rounded-full text-sm font-extrabold text-white hover:opacity-95" type="button">
+            <i class="fa-solid fa-bag-shopping"></i><span>Adicionar</span>
+          </button>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <div class="h-9 w-9 rounded-full bg-oly-bg border border-oly-border flex items-center justify-center pointer-events-none">
@@ -3427,6 +3456,9 @@ function renderCards(){
       `;
       card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      card.querySelector(".btnZoomCard")?.addEventListener("click", ev=>{ ev.stopPropagation(); openImageViewerAngles(buildAngleSrcs(base?.imagem), 0, base); });
+      card.querySelector(".btnAdd")?.addEventListener("click", ev=>{ ev.stopPropagation(); handleMainCardAdd(base, ev.currentTarget); });
+      updateAddButtonUI(card.querySelector(".btnAdd"), cardKey);
       wrap.appendChild(card);
       continue;
     }
@@ -3441,8 +3473,10 @@ function renderCards(){
         ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
         : base, {abs:true});
 
+      const cardKey = cartKeyFor(base);
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[.98] transition-transform";
       card.tabIndex = 0;
+      card.setAttribute("data-card-key", cardKey);
       card.innerHTML = `
         <div class="relative bg-oly-bg overflow-hidden flex items-center justify-center" style="aspect-ratio:4/3">
           ${imgSrc
@@ -3452,16 +3486,25 @@ function renderCards(){
                style="background:${g.isFemale?'rgba(236,72,153,.14)':'rgba(255,255,255,.9)'};border:1.5px solid ${g.isFemale?'rgba(236,72,153,.35)':'rgba(209,213,219,.9)'}">
             <i class="fa-solid ${g.icon} ${g.isFemale?'text-pink-500':'text-oly-blue'}" style="font-size:13px"></i>
           </div>
+          <button class="btnZoomCard focus-ring absolute top-2 right-2 h-8 w-8 rounded-full border border-oly-border bg-white/95 hover:bg-oly-bg flex items-center justify-center" type="button" aria-label="Ampliar imagem">
+            <i class="fa-solid fa-magnifying-glass-plus text-oly-blue" style="font-size:12px"></i>
+          </button>
           ${badgesHtml}
         </div>
-        <div class="px-2.5 py-2 flex flex-col gap-0.5">
-          <div class="font-extrabold text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          <div class="text-xs font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
+        <div class="px-2.5 py-2 flex flex-col gap-1.5">
+          <div class="font-extrabold text-sm sm:text-[15px] leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
+          <div class="text-sm sm:text-[15px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          <div>${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}</div>
+          <button class="btnAdd focus-ring mt-1 h-10 w-full inline-flex items-center justify-center gap-2 rounded-full text-sm font-extrabold text-white hover:opacity-95" type="button">
+            <i class="fa-solid fa-bag-shopping"></i><span>Adicionar</span>
+          </button>
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      card.querySelector(".btnZoomCard")?.addEventListener("click", ev=>{ ev.stopPropagation(); openImageViewerAngles(buildAngleSrcs(base?.imagem), 0, base); });
+      card.querySelector(".btnAdd")?.addEventListener("click", ev=>{ ev.stopPropagation(); handleMainCardAdd(base, ev.currentTarget); });
+      updateAddButtonUI(card.querySelector(".btnAdd"), cardKey);
       wrap.appendChild(card);
       continue;
     }
@@ -3476,8 +3519,10 @@ function renderCards(){
         ? {isLanc:v.items?.some(i=>i.isLanc), isNewColor:v.items?.some(i=>i.isNewColor)}
         : base, {abs:true});
 
+      const cardKey = cartKeyFor(base);
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[.98] transition-transform";
       card.tabIndex = 0;
+      card.setAttribute("data-card-key", cardKey);
       card.innerHTML = `
         <div class="relative bg-oly-bg overflow-hidden flex items-center justify-center" style="aspect-ratio:4/3">
           ${imgSrc
@@ -3487,16 +3532,25 @@ function renderCards(){
                style="background:${g.isFemale?'rgba(236,72,153,.14)':'rgba(255,255,255,.9)'};border:1.5px solid ${g.isFemale?'rgba(236,72,153,.35)':'rgba(209,213,219,.9)'}">
             <i class="fa-solid ${g.icon} ${g.isFemale?'text-pink-500':'text-oly-blue'}" style="font-size:10px"></i>
           </div>
+          <button class="btnZoomCard focus-ring absolute top-1.5 right-1.5 h-6 w-6 rounded-full border border-oly-border bg-white/95 hover:bg-oly-bg flex items-center justify-center" type="button" aria-label="Ampliar imagem">
+            <i class="fa-solid fa-magnifying-glass-plus text-oly-blue" style="font-size:10px"></i>
+          </button>
           ${badgesHtml}
         </div>
-        <div class="px-2 py-1.5 flex flex-col gap-0.5">
-          <div class="font-extrabold text-[10px] leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          <div class="text-[10px] font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
-          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"xs" })}
+        <div class="px-2 py-1.5 flex flex-col gap-1">
+          <div class="font-extrabold text-[11px] sm:text-xs leading-snug line-clamp-2">${escapeHtml(v.produto||base?.produto||"—")}</div>
+          <div class="text-[11px] sm:text-xs font-extrabold text-oly-blue">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          <div>${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"xs" })}</div>
+          <button class="btnAdd focus-ring mt-0.5 h-8 w-full inline-flex items-center justify-center gap-1.5 rounded-full text-[11px] font-extrabold text-white hover:opacity-95" type="button">
+            <i class="fa-solid fa-bag-shopping"></i><span>Adicionar</span>
+          </button>
         </div>
       `;
       card.addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      card.querySelector(".btnZoomCard")?.addEventListener("click", ev=>{ ev.stopPropagation(); openImageViewerAngles(buildAngleSrcs(base?.imagem), 0, base); });
+      card.querySelector(".btnAdd")?.addEventListener("click", ev=>{ ev.stopPropagation(); handleMainCardAdd(base, ev.currentTarget); });
+      updateAddButtonUI(card.querySelector(".btnAdd"), cardKey);
       wrap.appendChild(card);
       continue;
     }
@@ -3511,8 +3565,10 @@ function renderCards(){
         : base, {abs:true});
 
       const gInfo = genderIcon(base?.genero || "");
+      const cardKey = cartKeyFor(base);
       card.className = "flex flex-col bg-white border border-oly-border rounded-2xl overflow-hidden shadow-sm";
       card.tabIndex = 0;
+      card.setAttribute("data-card-key", cardKey);
       card.innerHTML = `
         <div class="grid-img-wrap relative bg-oly-bg overflow-hidden flex items-center justify-center select-none" style="aspect-ratio:4/3;touch-action:pan-y">
           <img class="grid-img h-full w-full object-contain bg-white pointer-events-none"
@@ -3520,6 +3576,9 @@ function renderCards(){
                src="${imgSrc}" alt="${escapeHtml(base?.produto||"")}"
                onerror="this.style.display='none'">
           <div class="absolute top-2 right-2 flex gap-1">
+            <button class="btnZoomCard focus-ring h-7 w-7 rounded-full bg-white/95 border border-oly-border hover:bg-oly-bg flex items-center justify-center" type="button" aria-label="Ampliar imagem">
+              <i class="fa-solid fa-magnifying-glass-plus text-oly-blue" style="font-size:11px"></i>
+            </button>
             <div class="h-7 w-7 rounded-full bg-white/90 border border-oly-border flex items-center justify-center pointer-events-none">
               <i class="fa-solid ${gInfo.icon} text-oly-blue" style="font-size:11px" title="${escapeHtml(gInfo.label)}"></i>
             </div>
@@ -3531,15 +3590,21 @@ function renderCards(){
         </div>
         <div class="grid-thumbs flex gap-1 px-2 pt-1.5 pb-0.5 overflow-x-auto" style="min-height:44px;scrollbar-width:none"></div>
         <div class="px-3 py-2 cursor-pointer" data-gridopen="1">
-          <div class="font-extrabold text-sm leading-snug">${escapeHtml(v.produto||base?.produto||"—")}</div>
-          ${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}
-          <div class="text-sm font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          <div class="font-extrabold text-[15px] sm:text-base leading-snug">${escapeHtml(v.produto||base?.produto||"—")}</div>
+          <div class="text-sm sm:text-base font-extrabold text-oly-blue mt-0.5">${isGrp ? escapeHtml(v.minPriceFmt||"—") : escapeHtml(v.priceFmt||"—")}</div>
+          <div class="mt-1.5">${renderCardColorChip(isGrp ? v : base, { isGroup:isGrp, size:"sm" })}</div>
+          <button class="btnAdd focus-ring mt-2 h-10 w-full inline-flex items-center justify-center gap-2 rounded-full text-sm font-extrabold text-white hover:opacity-95" type="button">
+            <i class="fa-solid fa-bag-shopping"></i><span>Adicionar</span>
+          </button>
         </div>
       `;
 
       // Abrir modal ao clicar no texto
       card.querySelector("[data-gridopen]").addEventListener("click", ()=> openProductModal({ item:base, group: isGrp?v:null }));
       card.addEventListener("keydown", ev=>{ if(ev.key==="Enter") openProductModal({ item:base, group: isGrp?v:null }); });
+      card.querySelector(".btnZoomCard")?.addEventListener("click", ev=>{ ev.stopPropagation(); openImageViewerAngles(buildAngleSrcs(base?.imagem), 0, base); });
+      card.querySelector(".btnAdd")?.addEventListener("click", ev=>{ ev.stopPropagation(); handleMainCardAdd(base, ev.currentTarget); });
+      updateAddButtonUI(card.querySelector(".btnAdd"), cardKey);
 
       // Swipe de ângulos — arrasta esq/dir para trocar, tap NO CENTRO (30% central) abre modal
       (function setupGridSwipe(cardEl, groups){
