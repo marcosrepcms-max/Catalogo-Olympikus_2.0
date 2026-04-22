@@ -5010,26 +5010,36 @@ async function exportOrderPdf(showGrade = true){
 
     // ── Informações à direita ────────────────────────────────
     const tx = infoAreaX;
-    let ty = cardY + 18;
+    let ty = cardY + 20;
+
+    // Nome do produto
     setColor(C.text);
     doc.setFont("helvetica","bold"); doc.setFontSize(13);
     const prodName = String(it.produto || "Produto");
     const prodLines = doc.splitTextToSize(prodName, infoAreaW - 4);
     doc.text(prodLines.slice(0,2), tx, ty);
-    ty += prodLines.slice(0,2).length * 15 + 6;
+    ty += prodLines.slice(0,2).length * 15 + 4;
+
+    // Preço de venda — mesma fonte do nome, azul
+    if(it.precoFmt){
+      setColor(C.blue);
+      doc.setFont("helvetica","bold"); doc.setFontSize(13);
+      doc.text(String(it.precoFmt), tx, ty);
+      ty += 18;
+    }
 
     // Código
     doc.setFont("helvetica","normal"); doc.setFontSize(9);
     setColor(C.muted); doc.text("Código:", tx, ty);
     setColor(C.text); doc.text(String(it.codigo || "-"), tx + 40, ty);
-    ty += 13;
+    ty += 14;
 
     // Cor
     setColor(C.muted); doc.text("Cor:", tx, ty);
     setColor(C.text);
     const corTxt = `${it.cor||"-"}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`;
     doc.text(corTxt.slice(0, 36), tx + 24, ty);
-    ty += 16;
+    ty += 18;
 
     // ── Grade ou total ────────────────────────────────────────
     if(showGrade && it.grade && Object.keys(it.grade).length > 0){
