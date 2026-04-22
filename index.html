@@ -4939,8 +4939,8 @@ async function exportOrderPdf(showGrade = true){
   }
 
   // ── Desenha um produto (card paisagem) ───────────────────────
-  // Layout: imagem à esquerda (480pt), info à direita (~282pt)
-  const imgAreaW = 480;
+  // Layout: imagem à esquerda (560pt), info à direita (~202pt)
+  const imgAreaW = 560;
   const infoAreaX = margin + imgAreaW + 14;
   const infoAreaW = contentW - imgAreaW - 14;
 
@@ -4982,7 +4982,7 @@ async function exportOrderPdf(showGrade = true){
     doc.setFont("helvetica","bold"); doc.setFontSize(7);
     doc.setTextColor(255,255,255);
     doc.text(catLabel, tx + 6, ty);
-    ty += 14;
+    ty += 8;
 
     // Nome do produto
     setColor(C.text);
