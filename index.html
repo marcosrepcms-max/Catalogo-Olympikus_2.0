@@ -4884,11 +4884,20 @@ async function exportOrderPdf(){
 
   const items = Array.from(state.cart.values());
 
+  const BASE = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
   const margin = 30;
   const blockH = (pageH - margin * 2) / 2;
+
+  function resolveImage(item){
+    let src = item.img || item.image || item.foto || item?.variant?.image || "";
+    if(!src) return "";
+    if(src.startsWith("http")) return src;
+    return BASE + src.replace(/^\.\//, "");
+  }
 
   async function loadImg(src){
     return new Promise((resolve)=>{
@@ -4919,50 +4928,95 @@ async function exportOrderPdf(){
     };
   }
 
-  async function drawItem(item, yOffset){
-    const imgBoxW = pageW * 0.65;
-    const infoX = imgBoxW + 20;
+  function mapItem(item){
+    return {
+      nome: item.nome || item.title || item.produto || "",
+      cor: item.cor || "",
+      codigo: item.referencia || item.codigo || "",
+      grade: item.tamanhos || item.grade || {},
+      total: item.total || item.qtdTotal || 0,
+      imagem: resolveImage(item)
+    };
+  }
 
-    const img = await loadImg(item.image || "");
+  async function drawItem(rawItem, yOffset){
+    const item = mapItem(rawItem);
+
+    const imgBoxW = pageW * 0.65;
+    const infoX = imgBoxW + 40;
+
+    // Image
+    const img = await loadImg(item.imagem);
     if(img){
-      const f = fit(img.w, img.h, imgBoxW - 20, blockH - 20);
+      const f = fit(img.w, img.h, imgBoxW - 40, blockH - 40);
       doc.addImage(img.data, "JPEG", margin + f.x, yOffset + f.y, f.w, f.h);
     }
 
-    let y = yOffset + 30;
+    let y = yOffset + 40;
 
+    // Categoria fixa (opcional futura)
     doc.setFontSize(10);
-    doc.text((item.category || "").toUpperCase(), infoX, y);
+    doc.setTextColor(80);
 
-    y += 20;
-    doc.setFontSize(16);
-    doc.text(item.name || "", infoX, y);
+    // Nome
+    doc.setFontSize(18);
+    doc.setTextColor(0);
+    doc.text(item.nome || "-", infoX, y);
 
-    y += 20;
-    doc.setFontSize(10);
-    doc.text("Código: " + (item.code || ""), infoX, y);
+    y += 25;
 
-    y += 15;
-    doc.text("Cor: " + (item.color || ""), infoX, y);
+    // Código
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text("Código:", infoX, y);
+    doc.setTextColor(0);
+    doc.text(String(item.codigo || "-"), infoX + 60, y);
 
-    y += 20;
+    y += 18;
+
+    // Cor
+    doc.setTextColor(100);
+    doc.text("Cor:", infoX, y);
+    doc.setTextColor(0);
+    doc.text(String(item.cor || "-"), infoX + 60, y);
+
+    y += 22;
+
+    // Grade título
+    doc.setTextColor(100);
     doc.text("Grade:", infoX, y);
 
     y += 10;
 
-    if(item.grade){
-      let x = infoX;
-      Object.entries(item.grade).forEach(([size, qty])=>{
-        doc.rect(x, y, 30, 20);
-        doc.text(size, x + 5, y + 8);
-        doc.text(String(qty), x + 5, y + 16);
-        x += 35;
-      });
-    }
+    // Grade boxes
+    let x = infoX;
+    const boxW = 42;
+    const boxH = 28;
+    const gap = 8;
 
-    y += 40;
+    Object.entries(item.grade || {}).forEach(([size, qty])=>{
+      doc.setDrawColor(200);
+      doc.rect(x, y, boxW, boxH);
+
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(size, x + 5, y + 10);
+
+      doc.setFontSize(11);
+      doc.setTextColor(40,54,212);
+      doc.text(String(qty), x + 5, y + 22);
+
+      x += boxW + gap;
+    });
+
+    y += 45;
+
+    // Total
     doc.setFontSize(12);
-    doc.text("Total: " + (item.total || 0) + " pares", infoX, y);
+    doc.setTextColor(100);
+    doc.text("Total:", infoX, y);
+    doc.setTextColor(0);
+    doc.text(String(item.total) + " pares", infoX + 50, y);
   }
 
   for(let i = 0; i < items.length; i++){
