@@ -4952,8 +4952,8 @@ async function exportOrderPdf(showGrade = true){
     setColor(C.bg,"fill");
     doc.roundedRect(cardX, cardY, contentW, cardH, 6, 6, "FD");
 
-    // Área da imagem
-    const imgPad = 10;
+    // Área da imagem — padding mínimo para a foto preencher quase tudo
+    const imgPad = 6;
     const imgBoxX = cardX + imgPad;
     const imgBoxY = cardY + imgPad;
     const imgBoxW = imgAreaW - imgPad * 2;
@@ -4964,33 +4964,36 @@ async function exportOrderPdf(showGrade = true){
 
     const img = it.imgSrc ? await loadImgForPdf(it.imgSrc) : null;
     if(img?.dataUrl){
-      const fit = fitRect(img.w, img.h, imgBoxW - 12, imgBoxH - 12);
+      // margem interna de apenas 4pt — produto ocupa ~97% do box
+      const margin4 = 4;
+      const fit = fitRect(img.w, img.h, imgBoxW - margin4 * 2, imgBoxH - margin4 * 2);
       doc.addImage(img.dataUrl, "PNG",
-        imgBoxX + 6 + fit.x, imgBoxY + 6 + fit.y,
+        imgBoxX + margin4 + fit.x, imgBoxY + margin4 + fit.y,
         fit.w, fit.h, undefined, "FAST");
     }
 
     // ── Informações à direita ────────────────────────────────
-    let ty = cardY + 18;
     const tx = infoAreaX;
+    const badgeH = 13;
+    let ty = cardY + 16;
 
     // Badge categoria
-    const catLabel = (categoryLabel(it.categoria) || it.categoria || "Produto").toUpperCase();
-    const badgeW = Math.min(doc.getTextWidth(catLabel) * (7.5/10) + 14, infoAreaW);
-    setColor(C.blue,"fill");
-    doc.roundedRect(tx, ty - 8, badgeW, 13, 2, 2, "F");
     doc.setFont("helvetica","bold"); doc.setFontSize(7);
+    const catLabel = (categoryLabel(it.categoria) || it.categoria || "Produto").toUpperCase();
+    const badgeW = Math.min(doc.getTextWidth(catLabel) + 14, infoAreaW);
+    setColor(C.blue,"fill");
+    doc.roundedRect(tx, ty, badgeW, badgeH, 2, 2, "F");
     doc.setTextColor(255,255,255);
-    doc.text(catLabel, tx + 6, ty);
-    ty += 8;
+    doc.text(catLabel, tx + 7, ty + 9);
 
-    // Nome do produto
+    // Nome do produto — começa imediatamente abaixo do badge com 5pt de gap
+    ty += badgeH + 5;
     setColor(C.text);
-    doc.setFont("helvetica","bold"); doc.setFontSize(12);
+    doc.setFont("helvetica","bold"); doc.setFontSize(13);
     const prodName = String(it.produto || "Produto");
     const prodLines = doc.splitTextToSize(prodName, infoAreaW - 4);
     doc.text(prodLines.slice(0,2), tx, ty);
-    ty += prodLines.slice(0,2).length * 14 + 6;
+    ty += prodLines.slice(0,2).length * 15 + 6;
 
     // Código
     doc.setFont("helvetica","normal"); doc.setFontSize(9);
