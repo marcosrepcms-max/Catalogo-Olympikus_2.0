@@ -5065,13 +5065,18 @@ async function exportOrderPdf(showGrade = true){
       setColor(C.text); doc.text(`${it.qty} pares`, tx + 32, ty);
 
     } else {
-      // Apenas total de pares
-      doc.setFont("helvetica","bold"); doc.setFontSize(28);
+      // Apenas total de pares — número grande + "pares" na mesma baseline
+      const baseline = ty + 28;
+      // mede largura do número ANTES de mudar a fonte
+      doc.setFont("helvetica","bold"); doc.setFontSize(32);
+      const numStr = String(it.qty);
+      const numW = doc.getTextWidth(numStr);
       setColor(C.blue);
-      doc.text(String(it.qty), tx, ty + 22);
-      doc.setFont("helvetica","normal"); doc.setFontSize(11);
+      doc.text(numStr, tx, baseline);
+      // "pares" alinhado à direita do número, fonte menor, baseline igual
+      doc.setFont("helvetica","normal"); doc.setFontSize(13);
       setColor(C.muted);
-      doc.text("pares", tx + doc.getTextWidth(String(it.qty)) + 6, ty + 22);
+      doc.text("pares", tx + numW + 5, baseline);
     }
 
     // Obs (se houver)
