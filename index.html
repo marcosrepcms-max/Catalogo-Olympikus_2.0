@@ -1584,10 +1584,25 @@
                         <i class="fa-solid fa-file-excel"></i>
                         <span>Exportar Excel</span>
                       </button>
-                      <button id="btnExportPdf" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-3 py-3 text-xs sm:text-sm font-extrabold hover:bg-oly-bg" title="Baixar sacola em PDF">
-                        <i class="fa-solid fa-file-pdf text-oly-blue"></i>
-                        <span>Baixar PDF</span>
-                      </button>
+                      <!-- ── Dropdown Baixar PDF ── -->
+                      <div id="pdfDropdownWrap" style="position:relative;display:inline-flex;">
+                        <button id="btnExportPdf" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-3 py-3 text-xs sm:text-sm font-extrabold hover:bg-oly-bg" title="Baixar catálogo em PDF">
+                          <i class="fa-solid fa-file-pdf text-oly-blue"></i>
+                          <span>Baixar PDF</span>
+                          <i id="pdfDropIcon" class="fa-solid fa-chevron-down text-oly-blue" style="font-size:10px;transition:transform .2s;"></i>
+                        </button>
+                        <div id="pdfDropMenu" style="display:none;position:absolute;bottom:calc(100% + 6px);right:0;min-width:190px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.10);overflow:hidden;z-index:200;">
+                          <button id="btnPdfGrade" style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:#111827;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa-solid fa-table-cells text-oly-blue" style="font-size:13px;width:16px;"></i>
+                            Exibir grade completa
+                          </button>
+                          <div style="height:1px;background:#f3f4f6;margin:0 10px;"></div>
+                          <button id="btnPdfQtd" style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:#111827;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa-solid fa-hashtag text-oly-blue" style="font-size:13px;width:16px;"></i>
+                            Apenas total de pares
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4846,7 +4861,7 @@ $("orderExportBackdrop")?.addEventListener("click", closeOrderExportModal);
 $("btnConfirmOrderExport")?.addEventListener("click", exportOrderXlsxFromModal);
 
 
-/** Export PDF: grid compacto + imagem preservando proporção */
+/** Export PDF — Catálogo paisagem, 2 produtos por página */
 async function loadImgForPdf(src){
   return new Promise((resolve)=>{
     const img = new Image();
@@ -4875,163 +4890,223 @@ function fitRect(imgW, imgH, boxW, boxH){
   return { x, y, w, h };
 }
 
-
-async function exportOrderPdf(){
+async function exportOrderPdf(showGrade = true){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
+  saveCustomerToStorage();
 
   const { jsPDF } = window.jspdf;
+  // Paisagem A4
   const doc = new jsPDF({ unit:"pt", format:"a4", orientation:"landscape" });
 
+  const now = new Date();
+  const pad = (n)=>String(n).padStart(2,"0");
+  const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
   const items = Array.from(state.cart.values());
-
-  const BASE = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
-
+  // A4 paisagem: 842 × 595 pt
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
+  const margin = 28;
+  const contentW = pageW - margin * 2;
 
-  const margin = 30;
-  const blockH = (pageH - margin * 2) / 2;
+  // ── Cores e helpers ──────────────────────────────────────────
+  const C = {
+    blue:   [40, 54, 212],
+    text:   [17, 24, 39],
+    muted:  [107, 114, 128],
+    border: [229, 231, 235],
+    bg:     [246, 247, 251],
+    white:  [255, 255, 255],
+  };
+  const setColor = (rgb, type="text") => {
+    if(type==="fill") doc.setFillColor(...rgb);
+    else if(type==="draw") doc.setDrawColor(...rgb);
+    else doc.setTextColor(...rgb);
+  };
 
-  function resolveImage(item){
-    let src = item.img || item.image || item.foto || item?.variant?.image || "";
-    if(!src) return "";
-    if(src.startsWith("http")) return src;
-    return BASE + src.replace(/^\.\//, "");
+  // ── Cabeçalho da página (paisagem) ───────────────────────────
+  const headerH = 38;
+  function drawPageHeader(){
+    setColor(C.blue,"fill");
+    doc.rect(0, 0, pageW, headerH, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(13);
+    doc.setTextColor(255,255,255);
+    doc.text("Catálogo Olympikus", margin, 24);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.setTextColor(187, 197, 255);
+    doc.text(dateStr, pageW - margin, 24, { align:"right" });
+    setColor(C.text);
   }
 
-  async function loadImg(src){
-    return new Promise((resolve)=>{
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = ()=>{
-        try{
-          const c = document.createElement("canvas");
-          c.width = img.naturalWidth;
-          c.height = img.naturalHeight;
-          const ctx = c.getContext("2d");
-          ctx.drawImage(img,0,0);
-          resolve({ data: c.toDataURL("image/jpeg",0.9), w: img.naturalWidth, h: img.naturalHeight });
-        }catch{ resolve(null); }
-      };
-      img.onerror = ()=> resolve(null);
-      img.src = src;
-    });
-  }
+  // ── Desenha um produto (card paisagem) ───────────────────────
+  // Layout: imagem à esquerda (480pt), info à direita (~282pt)
+  const imgAreaW = 480;
+  const infoAreaX = margin + imgAreaW + 14;
+  const infoAreaW = contentW - imgAreaW - 14;
 
-  function fit(imgW, imgH, boxW, boxH){
-    const scale = Math.min(boxW / imgW, boxH / imgH);
-    return {
-      w: imgW * scale,
-      h: imgH * scale,
-      x: (boxW - (imgW * scale)) / 2,
-      y: (boxH - (imgH * scale)) / 2
-    };
-  }
+  async function drawCard(it, cardY, cardH){
+    const cardX = margin;
 
-  function mapItem(item){
-    return {
-      nome: item.nome || item.title || item.produto || "",
-      cor: item.cor || "",
-      codigo: item.referencia || item.codigo || "",
-      grade: item.tamanhos || item.grade || {},
-      total: item.total || item.qtdTotal || 0,
-      imagem: resolveImage(item)
-    };
-  }
+    // Fundo do card
+    setColor(C.border,"draw"); doc.setLineWidth(0.4);
+    setColor(C.bg,"fill");
+    doc.roundedRect(cardX, cardY, contentW, cardH, 6, 6, "FD");
 
-  async function drawItem(rawItem, yOffset){
-    const item = mapItem(rawItem);
+    // Área da imagem
+    const imgPad = 10;
+    const imgBoxX = cardX + imgPad;
+    const imgBoxY = cardY + imgPad;
+    const imgBoxW = imgAreaW - imgPad * 2;
+    const imgBoxH = cardH - imgPad * 2;
 
-    const imgBoxW = pageW * 0.65;
-    const infoX = imgBoxW + 40;
+    setColor(C.white,"fill"); setColor(C.border,"draw");
+    doc.roundedRect(imgBoxX, imgBoxY, imgBoxW, imgBoxH, 4, 4, "FD");
 
-    // Image
-    const img = await loadImg(item.imagem);
-    if(img){
-      const f = fit(img.w, img.h, imgBoxW - 40, blockH - 40);
-      doc.addImage(img.data, "JPEG", margin + f.x, yOffset + f.y, f.w, f.h);
+    const img = it.imgSrc ? await loadImgForPdf(it.imgSrc) : null;
+    if(img?.dataUrl){
+      const fit = fitRect(img.w, img.h, imgBoxW - 12, imgBoxH - 12);
+      doc.addImage(img.dataUrl, "PNG",
+        imgBoxX + 6 + fit.x, imgBoxY + 6 + fit.y,
+        fit.w, fit.h, undefined, "FAST");
     }
 
-    let y = yOffset + 40;
+    // ── Informações à direita ────────────────────────────────
+    let ty = cardY + 18;
+    const tx = infoAreaX;
 
-    // Categoria fixa (opcional futura)
-    doc.setFontSize(10);
-    doc.setTextColor(80);
+    // Badge categoria
+    const catLabel = (categoryLabel(it.categoria) || it.categoria || "Produto").toUpperCase();
+    const badgeW = Math.min(doc.getTextWidth(catLabel) * (7.5/10) + 14, infoAreaW);
+    setColor(C.blue,"fill");
+    doc.roundedRect(tx, ty - 8, badgeW, 13, 2, 2, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7);
+    doc.setTextColor(255,255,255);
+    doc.text(catLabel, tx + 6, ty);
+    ty += 14;
 
-    // Nome
-    doc.setFontSize(18);
-    doc.setTextColor(0);
-    doc.text(item.nome || "-", infoX, y);
-
-    y += 25;
+    // Nome do produto
+    setColor(C.text);
+    doc.setFont("helvetica","bold"); doc.setFontSize(12);
+    const prodName = String(it.produto || "Produto");
+    const prodLines = doc.splitTextToSize(prodName, infoAreaW - 4);
+    doc.text(prodLines.slice(0,2), tx, ty);
+    ty += prodLines.slice(0,2).length * 14 + 6;
 
     // Código
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text("Código:", infoX, y);
-    doc.setTextColor(0);
-    doc.text(String(item.codigo || "-"), infoX + 60, y);
-
-    y += 18;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    setColor(C.muted); doc.text("Código:", tx, ty);
+    setColor(C.text); doc.text(String(it.codigo || "-"), tx + 40, ty);
+    ty += 13;
 
     // Cor
-    doc.setTextColor(100);
-    doc.text("Cor:", infoX, y);
-    doc.setTextColor(0);
-    doc.text(String(item.cor || "-"), infoX + 60, y);
+    setColor(C.muted); doc.text("Cor:", tx, ty);
+    setColor(C.text);
+    const corTxt = `${it.cor||"-"}${it.corCodigo ? " ("+it.corCodigo+")" : ""}`;
+    doc.text(corTxt.slice(0, 36), tx + 24, ty);
+    ty += 16;
 
-    y += 22;
+    // ── Grade ou total ────────────────────────────────────────
+    if(showGrade && it.grade && Object.keys(it.grade).length > 0){
+      // Label
+      setColor(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+      doc.text("GRADE", tx, ty);
+      ty += 10;
 
-    // Grade título
-    doc.setTextColor(100);
-    doc.text("Grade:", infoX, y);
+      const cellW = 34, cellH = 24, cellGap = 4;
+      const cellsPerRow = Math.floor((infoAreaW) / (cellW + cellGap));
+      let cx = tx, col = 0;
 
-    y += 10;
+      for(const [tam, qty] of Object.entries(it.grade)){
+        if(col >= cellsPerRow){ col = 0; cx = tx; ty += cellH + cellGap; }
+        setColor(C.border,"draw"); setColor(C.white,"fill");
+        doc.roundedRect(cx, ty, cellW, cellH, 3, 3, "FD");
+        // tamanho
+        doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        setColor(C.muted);
+        const tStr = String(tam);
+        doc.text(tStr, cx + (cellW - doc.getTextWidth(tStr))/2, ty + 9);
+        // qtd
+        doc.setFontSize(9.5); setColor(C.blue);
+        const qStr = String(qty);
+        doc.text(qStr, cx + (cellW - doc.getTextWidth(qStr))/2, ty + 20);
+        cx += cellW + cellGap; col++;
+      }
+      ty += cellH + 10;
 
-    // Grade boxes
-    let x = infoX;
-    const boxW = 42;
-    const boxH = 28;
-    const gap = 8;
+      // Total
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      setColor(C.muted); doc.text("Total:", tx, ty);
+      setColor(C.text); doc.text(`${it.qty} pares`, tx + 32, ty);
 
-    Object.entries(item.grade || {}).forEach(([size, qty])=>{
-      doc.setDrawColor(200);
-      doc.rect(x, y, boxW, boxH);
-
-      doc.setFontSize(8);
-      doc.setTextColor(120);
-      doc.text(size, x + 5, y + 10);
-
-      doc.setFontSize(11);
-      doc.setTextColor(40,54,212);
-      doc.text(String(qty), x + 5, y + 22);
-
-      x += boxW + gap;
-    });
-
-    y += 45;
-
-    // Total
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text("Total:", infoX, y);
-    doc.setTextColor(0);
-    doc.text(String(item.total) + " pares", infoX + 50, y);
-  }
-
-  for(let i = 0; i < items.length; i++){
-    if(i > 0 && i % 2 === 0){
-      doc.addPage();
+    } else {
+      // Apenas total de pares
+      doc.setFont("helvetica","bold"); doc.setFontSize(28);
+      setColor(C.blue);
+      doc.text(String(it.qty), tx, ty + 22);
+      doc.setFont("helvetica","normal"); doc.setFontSize(11);
+      setColor(C.muted);
+      doc.text("pares", tx + doc.getTextWidth(String(it.qty)) + 6, ty + 22);
     }
 
-    const yOffset = (i % 2 === 0) ? margin : margin + blockH;
-    await drawItem(items[i], yOffset);
+    // Obs (se houver)
+    if(it.obs){
+      const obsY = cardY + cardH - 14;
+      doc.setFont("helvetica","normal"); doc.setFontSize(8);
+      setColor(C.muted); doc.text("Obs:", tx, obsY);
+      setColor(C.text); doc.text(String(it.obs).slice(0,60), tx + 22, obsY);
+    }
   }
 
-  doc.save("Catalogo.pdf");
+  // ── Renderização principal — 2 produtos por página ───────────
+  const bodyY = headerH + 10;
+  const bodyH = pageH - bodyY - 10;
+  const cardH = Math.floor((bodyH - 8) / 2);  // gap de 8pt entre os 2 cards
+
+  let pageIndex = 0;
+  for(let i = 0; i < items.length; i += 2){
+    if(i > 0){ doc.addPage(); }
+    drawPageHeader();
+
+    const it1 = items[i];
+    const it2 = items[i + 1] || null;
+
+    await drawCard(it1, bodyY, cardH);
+    if(it2) await drawCard(it2, bodyY + cardH + 8, cardH);
+
+    pageIndex++;
+  }
+
+  doc.save(`catalogo_olympikus_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.pdf`);
+  toast("PDF gerado ✅");
 }
 
-$("btnExportPdf").addEventListener("click", exportOrderPdf);
+// ── Dropdown do botão Baixar PDF ─────────────────────────────
+(function setupPdfDropdown(){
+  const btn   = $("btnExportPdf");
+  const menu  = $("pdfDropMenu");
+  const icon  = $("pdfDropIcon");
+  if(!btn || !menu) return;
+
+  function openMenu(){
+    menu.style.display = "block";
+    icon.style.transform = "rotate(180deg)";
+  }
+  function closeMenu(){
+    menu.style.display = "none";
+    icon.style.transform = "rotate(0deg)";
+  }
+
+  btn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    menu.style.display === "none" ? openMenu() : closeMenu();
+  });
+
+  document.addEventListener("click", ()=> closeMenu());
+  menu.addEventListener("click", (e)=> e.stopPropagation());
+
+  $("btnPdfGrade").addEventListener("click", ()=>{ closeMenu(); exportOrderPdf(true);  });
+  $("btnPdfQtd").addEventListener("click",   ()=>{ closeMenu(); exportOrderPdf(false); });
+})();
 
 /** Image viewer */
 // viewerState.mode = 'colors' | 'angles'
