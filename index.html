@@ -4646,12 +4646,12 @@ const ORDER_PAYMENT_OPTIONS = [
 ];
 
 const ORDER_EXPORT_HEADERS = [
-  "Nº", "Comissionista", "Loja", "Cliente", "Pedido do Cliente", "Observação da NF", "Observação do Pedido", "Tabela de Preço", "Prazo Médio", "Número de Parcelas", "Condição de Pagamento", "Campanha", "Desconto Global", "Forma de Embalar", "Tipo de Entrega", "Data Firme", "Pedido Mãe", "Aceita Antecipação?", "Data Desejada", "Data de Faturamento", "Data Início da Agenda", "Horário Início da Agenda", "Horário Fim da Agenda", "Data da Liberação do Faturamento", "Artigo", "Descrição", "Cor", "Quantidade de Caixas", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "33/34", "35/36", "37/38", "39/40", "41/42", "43/44", "PP", "P", "M", "G", "GG", "U", "33/38", "39/44", "Total"
+  "Nº", "Comissionista", "Loja", "Cliente", "Pedido do Cliente", "Observação da NF", "Observação do Pedido", "Tabela de Preço", "Prazo Médio", "Número de Parcelas", "Condição de Pagamento", "Campanha", "Desconto Global", "Forma de Embalar", "Tipo de Entrega", "Data Firme", "Pedido Mãe", "Aceita Antecipação?", "Data Desejada", "Data de Faturamento", "Data Início da Agenda", "Horário Início da Agenda", "Horário Fim da Agenda", "Data da Liberação do Faturamento", "Artigo", "Descrição", "Cor", "Quantidade de Caixas", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "33/34", "35/36", "37/38", "39/40", "41/42", "43/44", "PP", "P", "M", "G", "GG", "U", "33/38", "39/44", "Total"
 ];
 
 const ORDER_EXPORT_COLS = [
   { wch:8 }, { wch:15 }, { wch:10 }, { wch:12 }, { wch:15 }, { wch:16 }, { wch:18 }, { wch:12 }, { wch:10 }, { wch:12 }, { wch:16 }, { wch:12 }, { wch:12 }, { wch:12 }, { wch:13 }, { wch:10 }, { wch:11 }, { wch:15 }, { wch:13 }, { wch:15 }, { wch:15 }, { wch:12 }, { wch:12 }, { wch:18 }, { wch:14 }, { wch:30 }, { wch:12 }, { wch:12 },
-  { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }
+  { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:8 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:6 }, { wch:8 }, { wch:8 }, { wch:8 }
 ];
 
 const ORDER_EXPORT_DEFAULTS = {
@@ -4783,7 +4783,12 @@ function detectSockColumn(it){
 }
 function calcQtdCaixas(it, totalQty){
   if(!isFootwearCategory(it?.categoria)) return "";
-  return totalQty > 0 ? (totalQty % 6 === 0 ? totalQty : "") : "";
+  if(totalQty <= 0) return "";
+  // Detecta o tamanho do lote: se a soma da grade é múltiplo de 12, usa 12 por caixa; senão usa 6
+  // Lógica: 12 pares = 1 cx (lote 12), 24 pares = 2 cx | 6 pares = 1 cx (lote 6), 12 pares = 2 cx
+  const loteSize = (totalQty % 12 === 0) ? 12 : 6;
+  if(totalQty % loteSize !== 0) return ""; // não fecha caixa exata
+  return totalQty / loteSize;
 }
 function buildOrderExportRows(cfg){
   const headers = ORDER_EXPORT_HEADERS.slice();
@@ -4810,7 +4815,13 @@ function buildOrderExportRows(cfg){
     row[idx["Data Firme"]] = extractLeadingToken(cfg.dataFirme);
     row[idx["Pedido Mãe"]] = extractLeadingToken(cfg.pedidoMae);
     row[idx["Aceita Antecipação?"]] = extractLeadingToken(cfg.antecipacao);
-    if(cfg.dataDesejada && idx["Data Desejada"] !== undefined) row[idx["Data Desejada"]] = cfg.dataDesejada;
+    if(cfg.dataDesejada && idx["Data Desejada"] !== undefined){
+      // Converte de YYYY-MM-DD (input date) para DD/MM/YYYY
+      const [dy, dm, dd] = cfg.dataDesejada.split("-");
+      const dataFmt = (dy && dm && dd) ? `${dd}/${dm}/${dy}` : cfg.dataDesejada;
+      row[idx["Data Desejada"]] = dataFmt;
+      if(idx["Data de Faturamento"] !== undefined) row[idx["Data de Faturamento"]] = dataFmt;
+    }
     if(cfg.pedidoCliente && idx["Pedido do Cliente"] !== undefined) row[idx["Pedido do Cliente"]] = cfg.pedidoCliente;
 
     row[idx["Artigo"]] = String(it.codigo || "").trim();
