@@ -881,6 +881,46 @@
     .home-cat-img.loaded + .home-cat-placeholder { display:none !important; }
     .home-cat-arrow { font-size:12px; color:var(--muted,#9CA3AF); margin-left:4px; flex-shrink:0; }
 
+    /* ── SELETOR DE COLEÇÃO ── */
+    .colecao-selector { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+    .colecao-selector-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted, #6B7280);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding-left: 4px;
+    }
+    .colecao-selector-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .colecao-card {
+      background: var(--card-bg, #fff);
+      border: 1.5px solid var(--border, #E5E7EB);
+      border-radius: 18px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+      color: var(--primary, #2836D4);
+      user-select: none;
+    }
+    .colecao-card:active { transform: scale(.97); }
+    .colecao-card:hover { border-color: var(--primary, #2836D4); }
+    .colecao-card-name { font-size: 22px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
+    .colecao-card-sub { font-size: 10px; font-weight: 700; margin-top: 5px; letter-spacing: 0.3px; opacity: .7; }
+    .colecao-card.active {
+      background: var(--primary, #2836D4);
+      border-color: var(--primary, #2836D4);
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(40,54,212,.22);
+    }
+    .colecao-card.active .colecao-card-sub { opacity: .9; }
+    .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #6578FF; }
+    .dark-mode .colecao-card.active { background: #6578FF; border-color: #6578FF; color: #fff; box-shadow: 0 6px 14px rgba(101,120,255,.3); }
+
     /* ── BOTÃO VOLTAR ── */
     #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(40,54,212,0.07); border:1px solid rgba(40,54,212,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
     #btnBackToHome:hover { background:rgba(40,54,212,0.13); }
@@ -978,6 +1018,21 @@
       </div>
     </div>
     <div class="flex-1 mx-auto w-full max-w-lg px-4 py-4 flex flex-col gap-3">
+      <!-- ═══════════ SELETOR DE COLEÇÃO ═══════════ -->
+      <div class="colecao-selector">
+        <div class="colecao-selector-label">Coleção</div>
+        <div class="colecao-selector-grid">
+          <button type="button" class="colecao-card focus-ring" data-colecao="1S26">
+            <div class="colecao-card-name">1S26</div>
+            <div class="colecao-card-sub">Outono / Inverno</div>
+          </button>
+          <button type="button" class="colecao-card focus-ring" data-colecao="2S26">
+            <div class="colecao-card-name">2S26</div>
+            <div class="colecao-card-sub">Primavera / Verão</div>
+          </button>
+        </div>
+      </div>
+
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
           <div class="home-cat-icon" style="background:#EFF6FF"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#2836D4" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#2836D4" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#2836D4" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/></svg></div>
@@ -1899,7 +1954,7 @@ const state = {
   groupColors: false,
   viewMode: "all", // all | favs
   cardLayout: "duo", // duo | list | grid
-  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity },
+  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"" },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
   productModal: { open:false, item:null, group:null, qty:1, fromCart:false, editKey:null, editing:false },
@@ -2308,6 +2363,7 @@ async function loadCatalog({ cacheBust=false } = {}){
       isNewColor: isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
       isNew:      isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? "") ||
                   isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
+      colecao:    String(r["Coleção"] ?? r["Colecao"] ?? r["COLEÇÃO"] ?? r["COLECAO"] ?? r["colecao"] ?? "").trim().toUpperCase(),
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
@@ -2438,6 +2494,7 @@ function clearAllFilters(){
   state.filters.sort = "default";
   state.filters.q = "";
   state.filters.priceMax = Infinity;
+  state.filters.colecao = "";
   const _sl = $("sliderPrice"); if(_sl){ _sl.value=_sl.max; if(typeof updateSliderLabel==="function") updateSliderLabel(); }
   // reset cat chips
   document.querySelectorAll(".cat-chip").forEach(b=>b.classList.toggle("active", b.dataset.cat===""));
@@ -2456,7 +2513,24 @@ function clearAllFilters(){
 $("btnClear").addEventListener("click", ()=>{
   clearAllFilters();
   state.cardLayout = "duo"; updateLayoutBtn();
+  if(typeof syncColecaoCards === "function") syncColecaoCards();
   refreshView(true);
+});
+
+// ═══════════ SELETOR DE COLEÇÃO ═══════════
+function syncColecaoCards(){
+  document.querySelectorAll(".colecao-card").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.colecao === state.filters.colecao);
+  });
+}
+document.querySelectorAll(".colecao-card").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const sel = btn.dataset.colecao;
+    if(state.filters.colecao === sel) return; // Caso B
+    state.filters.colecao = sel;
+    syncColecaoCards();
+    if(typeof toast === "function") toast(`Coleção ${sel} selecionada`);
+  });
 });
 
 // ===== Layout toggle (cards → list → grid) =====
@@ -2717,6 +2791,7 @@ function refreshView(resetPaging){
   if(state.filters.category) list = list.filter(p => p.categoria === state.filters.category);
   if(state.filters.segment) list = list.filter(p => p.segmento === state.filters.segment);
   if(state.filters.gender) list = list.filter(p => p.genero === state.filters.gender);
+  if(state.filters.colecao) list = list.filter(p => p.colecao === state.filters.colecao);
   if(state.filters.priceMax !== Infinity){
     list = list.filter(p => costFromPrice(toNumberBR(p.precoRaw)) <= state.filters.priceMax);
   }
