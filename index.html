@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title"            content="Catálogo Olympikus">
   <meta name="application-name"                      content="Catálogo Olympikus">
-  <meta name="theme-color"                           content="#2836D4">
+  <meta name="theme-color"                           content="#7c3aed">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Catálogo Olympikus</title>
 
@@ -27,7 +27,7 @@
           fontFamily: { inter: ["Inter", "ui-sans-serif", "system-ui"] },
           colors: {
             oly: {
-              blue: "#2836D4",
+              blue: "#7c3aed",
               bg: "#F6F7FB",
               text: "#111827",
               muted: "#6B7280",
@@ -58,10 +58,10 @@
       --text:#111827;
       --muted:#6B7280;
       --border:#E5E7EB;
-      --primary:#2836D4;
-      --ring: rgba(40,54,212,.35);
+      --primary:#7c3aed;
+      --ring: rgba(124,58,237,.35);
       --success: #16a34a;
-      --ready: rgba(40,54,212,.12);
+      --ready: rgba(124,58,237,.12);
       --card-bg:#ffffff;
       --input-bg:#ffffff;
     }
@@ -71,10 +71,10 @@
       --text:#F0F2F8;
       --muted:#9BA3BC;
       --border:#2E3245;
-      --primary:#6578FF;
-      --ring:rgba(101,120,255,.4);
+      --primary:#a78bfa;
+      --ring:rgba(167,139,250,.4);
       --success:#22c55e;
-      --ready:rgba(101,120,255,.18);
+      --ready:rgba(167,139,250,.18);
       --card-bg:#181B27;
       --card-chip:#1F2333;
       --input-bg:#1F2333;
@@ -152,7 +152,7 @@
     /* ── Botões de ação ── */
     .dark-mode .btn-add-status.is-idle         { background:var(--primary)!important; }
     .dark-mode .bg-green-500                   { background-color:#16a34a!important; }
-    .dark-mode .bg-oly-blue\/10               { background-color:rgba(101,120,255,.2)!important; }
+    .dark-mode .bg-oly-blue\/10               { background-color:rgba(167,139,250,.2)!important; }
 
     /* ── Grade modal: células de tamanho ── */
     .dark-mode .grade-size-cell                { background:var(--card-chip)!important; border-color:var(--border)!important; color:var(--text)!important; }
@@ -195,7 +195,7 @@
       padding: 9px 16px;
       border-radius: 14px;
       border: 1.5px solid var(--primary);
-      background: rgba(101,120,255,.10);
+      background: rgba(167,139,250,.10);
       color: var(--primary);
       font-size: 12px;
       font-weight: 800;
@@ -211,10 +211,10 @@
       display: block;
       line-height: 1;
     }
-    #btnBulkGrade:hover { background: rgba(101,120,255,.18); }
+    #btnBulkGrade:hover { background: rgba(167,139,250,.18); }
     #btnBulkGrade:active { transform: scale(.97); }
     #btnBulkGrade.hidden { display: none !important; }
-    .dark-mode #btnBulkGrade { background:rgba(101,120,255,.15)!important; }
+    .dark-mode #btnBulkGrade { background:rgba(167,139,250,.15)!important; }
 
     /* ── Bulk grade: seleção de produtos ── */
     #bulkSelectBar.hidden,
@@ -245,12 +245,12 @@
       transition:all .15s ease;
     }
     .cart-bulk-pick.on {
-      border-color:var(--primary); background:rgba(101,120,255,.10); color:var(--primary);
-      box-shadow:0 0 0 3px rgba(101,120,255,.12);
+      border-color:var(--primary); background:rgba(167,139,250,.10); color:var(--primary);
+      box-shadow:0 0 0 3px rgba(167,139,250,.12);
     }
     .cart-bulk-row-on {
-      border-color: rgba(101,120,255,.55) !important;
-      box-shadow: 0 0 0 3px rgba(101,120,255,.10);
+      border-color: rgba(167,139,250,.55) !important;
+      box-shadow: 0 0 0 3px rgba(167,139,250,.10);
     }
     #bulkGradeModeSheet {
       width:min(100%, 420px); border-radius:28px; border:1px solid var(--border);
@@ -263,7 +263,7 @@
     .bulk-grade-mode-btn:hover { background:var(--bg); }
     .bulk-grade-mode-btn .ico {
       width:42px; height:42px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center;
-      background:rgba(101,120,255,.10); color:var(--primary); flex:0 0 auto;
+      background:rgba(167,139,250,.10); color:var(--primary); flex:0 0 auto;
     }
     .dark-mode #bulkSelectBar,
     .dark-mode #bulkGradeModeSheet,
@@ -272,7 +272,7 @@
     .dark-mode .cart-bulk-pick { background:var(--card-bg)!important; border-color:var(--border)!important; color:var(--text)!important; }
     .dark-mode .bulk-select-btn.primary { background:var(--primary)!important; color:#fff!important; border-color:var(--primary)!important; }
     .dark-mode .cart-bulk-pick.on,
-    .dark-mode .bulk-grade-mode-btn .ico { background:rgba(101,120,255,.16)!important; color:var(--primary)!important; }
+    .dark-mode .bulk-grade-mode-btn .ico { background:rgba(167,139,250,.16)!important; color:var(--primary)!important; }
 
     /* ── Product modal swipe-to-close ── */
     #productModalSheet {
@@ -319,8 +319,8 @@
     }
     .cgf-chip svg { display:block; width:22px; height:22px; }
     .cgf-chip:hover { border-color:var(--primary); color:var(--primary); }
-    .cgf-chip.on-all  { background:rgba(101,120,255,.11); border-color:var(--primary); color:var(--primary); }
-    .cgf-chip.on-masc { background:rgba(101,120,255,.11); border-color:var(--primary); color:var(--primary); }
+    .cgf-chip.on-all  { background:rgba(167,139,250,.11); border-color:var(--primary); color:var(--primary); }
+    .cgf-chip.on-masc { background:rgba(167,139,250,.11); border-color:var(--primary); color:var(--primary); }
     .cgf-chip.on-fem  { background:rgba(236,72,153,.10);  border-color:rgba(236,72,153,.55); color:#ec4899; }
     .cgf-chip.on-inf  { background:rgba(234,179,8,.10);   border-color:rgba(234,179,8,.5);  color:#b45309; }
     .cgf-chip.on-uni  { background:rgba(34,197,94,.10);   border-color:rgba(34,197,94,.5);  color:#15803d; }
@@ -333,7 +333,7 @@
 
     /* ── Category chips ── */
     .cat-chip { transition:all .16s; }
-    .cat-chip.active { background:rgba(40,54,212,.1)!important; border-color:var(--primary)!important; }
+    .cat-chip.active { background:rgba(124,58,237,.1)!important; border-color:var(--primary)!important; }
     .cat-chip.active i,.cat-chip.active span   { color:var(--primary)!important; }
     .dark-mode .cat-chip                       { background:var(--card-bg)!important; }
     .dark-mode .cat-chip.active                { background:rgba(80,104,255,.2)!important; }
@@ -381,10 +381,10 @@
       overflow: hidden;
     }
     .home-cat-card:active { transform: scale(0.98); box-shadow: none; }
-    .home-cat-card:hover { border-color: var(--primary, #2836D4); box-shadow: 0 4px 16px rgba(40,54,212,0.1); }
-    .home-cat-all { border-style: dashed; border-color: var(--primary, #2836D4); background: rgba(40,54,212,0.03); }
+    .home-cat-card:hover { border-color: var(--primary, #7c3aed); box-shadow: 0 4px 16px rgba(124,58,237,0.1); }
+    .home-cat-all { border-style: dashed; border-color: var(--primary, #7c3aed); background: rgba(124,58,237,0.03); }
     .dark-mode .home-cat-card { background: #1F2937; border-color: #374151; }
-    .dark-mode .home-cat-all  { background: rgba(40,54,212,0.08); }
+    .dark-mode .home-cat-all  { background: rgba(124,58,237,0.08); }
 
     .home-cat-info { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
     .home-cat-icon {
@@ -412,11 +412,11 @@
     #btnBackToHome {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: 700; color: var(--primary);
-      background: rgba(40,54,212,0.07); border: 1px solid rgba(40,54,212,0.18);
+      background: rgba(124,58,237,0.07); border: 1px solid rgba(124,58,237,0.18);
       border-radius: 999px; padding: 5px 12px 5px 8px;
       cursor: pointer; transition: background 0.15s; white-space: nowrap; flex-shrink: 0;
     }
-    #btnBackToHome:hover { background: rgba(40,54,212,0.13); }
+    #btnBackToHome:hover { background: rgba(124,58,237,0.13); }
 
     /* ══════════════════════════════
        CORREÇÕES DE UX — BOTÕES
@@ -474,7 +474,7 @@
 
     /* Toggle */
     .toggle-track { background: #E8EAF9; }
-    .toggle-track[data-on="true"] { background: rgba(40,54,212,.15); }
+    .toggle-track[data-on="true"] { background: rgba(124,58,237,.15); }
     .toggle-thumb { transition: transform .2s ease; }
     .toggle-track[data-on="true"] .toggle-thumb { transform: translateX(18px); }
 
@@ -515,7 +515,7 @@
 .pm-thumbs{ -ms-overflow-style:none; scrollbar-width:none; }
 #swipeHint > div{ animation: swipeHintAnim 1.4s ease-in-out 2; }
 .pm-thumb{ width:64px; height:64px; border-radius:14px; border:1px solid var(--border); background:#fff; overflow:hidden; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
-.pm-thumb.active{ border-color: var(--primary); box-shadow: 0 0 0 3px rgba(40,54,212,.12); }
+.pm-thumb.active{ border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,.12); }
 .pm-thumb img{ width:100%; height:100%; object-fit:contain; background:#fff; }
 .pm-thumb .pm-thumb-fallback{ font-size:11px; font-weight:800; color: var(--muted); padding:6px; text-align:center; }
   
@@ -724,8 +724,8 @@
 
     /* ✅ Botão de grade pulsante */
     @keyframes grade-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(40,54,212,0.35); }
-      50%       { box-shadow: 0 0 0 6px rgba(40,54,212,0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.35); }
+      50%       { box-shadow: 0 0 0 6px rgba(124,58,237,0); }
     }
     @keyframes grade-fade-in  { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
     @keyframes grade-fade-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-3px); } }
@@ -736,12 +736,12 @@
       gap: 5px;
       padding: 5px 10px 5px 8px;
       border-radius: 999px;
-      border: 1.5px solid rgba(40,54,212,0.35);
-      background: rgba(40,54,212,0.06);
+      border: 1.5px solid rgba(124,58,237,0.35);
+      background: rgba(124,58,237,0.06);
       cursor: pointer;
       font-size: 11px;
       font-weight: 800;
-      color: #2836D4;
+      color: #7c3aed;
       animation: grade-pulse 2s ease-in-out infinite;
       position: relative;
       overflow: hidden;
@@ -749,9 +749,9 @@
       justify-content: center;
     }
     .btn-open-grade:hover {
-      background: rgba(40,54,212,0.12);
+      background: rgba(124,58,237,0.12);
       animation: none;
-      box-shadow: 0 0 0 3px rgba(40,54,212,0.2);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
     }
     .btn-open-grade .grade-label {
       display: inline-flex; align-items: center; gap: 4px;
@@ -864,10 +864,10 @@
 
     .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:14px 16px; cursor:pointer; transition:transform 0.15s ease,box-shadow 0.15s ease,border-color 0.15s ease; text-align:left; box-shadow:0 1px 3px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
     .home-cat-card:active { transform:scale(0.98); box-shadow:none; }
-    .home-cat-card:hover { border-color:var(--primary,#2836D4); box-shadow:0 4px 16px rgba(40,54,212,0.1); }
-    .home-cat-all { border-style:dashed; border-color:var(--primary,#2836D4); background:rgba(40,54,212,0.03); }
+    .home-cat-card:hover { border-color:var(--primary,#7c3aed); box-shadow:0 4px 16px rgba(124,58,237,0.1); }
+    .home-cat-all { border-style:dashed; border-color:var(--primary,#7c3aed); background:rgba(124,58,237,0.03); }
     .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; }
-    .dark-mode .home-cat-all { background:rgba(40,54,212,0.08); }
+    .dark-mode .home-cat-all { background:rgba(124,58,237,0.08); }
     .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
     .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     .home-cat-label { display:flex; flex-direction:column; gap:2px; min-width:0; }
@@ -900,30 +900,28 @@
       background: var(--card-bg, #fff);
       border: 1.5px solid var(--border, #E5E7EB);
       border-radius: 18px;
-      padding: 16px 12px;
+      padding: 18px 12px;
       text-align: center;
       cursor: pointer;
       transition: transform .12s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
-      color: var(--primary, #2836D4);
+      color: var(--primary, #7c3aed);
       user-select: none;
     }
     .colecao-card:active { transform: scale(.97); }
-    .colecao-card:hover { border-color: var(--primary, #2836D4); }
-    .colecao-card-name { font-size: 22px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
-    .colecao-card-sub { font-size: 10px; font-weight: 700; margin-top: 5px; letter-spacing: 0.3px; opacity: .7; }
+    .colecao-card:hover { border-color: var(--primary, #7c3aed); }
+    .colecao-card-name { font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
     .colecao-card.active {
-      background: var(--primary, #2836D4);
-      border-color: var(--primary, #2836D4);
+      background: var(--primary, #7c3aed);
+      border-color: var(--primary, #7c3aed);
       color: #fff;
-      box-shadow: 0 6px 14px rgba(40,54,212,.22);
+      box-shadow: 0 6px 14px rgba(124,58,237,.22);
     }
-    .colecao-card.active .colecao-card-sub { opacity: .9; }
-    .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #6578FF; }
-    .dark-mode .colecao-card.active { background: #6578FF; border-color: #6578FF; color: #fff; box-shadow: 0 6px 14px rgba(101,120,255,.3); }
+    .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #a78bfa; }
+    .dark-mode .colecao-card.active { background: #a78bfa; border-color: #a78bfa; color: #fff; box-shadow: 0 6px 14px rgba(167,139,250,.3); }
 
     /* ── BOTÃO VOLTAR ── */
-    #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(40,54,212,0.07); border:1px solid rgba(40,54,212,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
-    #btnBackToHome:hover { background:rgba(40,54,212,0.13); }
+    #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(124,58,237,0.07); border:1px solid rgba(124,58,237,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
+    #btnBackToHome:hover { background:rgba(124,58,237,0.13); }
 
     /* ── LABELS MOBILE NOS BOTÕES DA ACTION BAR ── */
     .action-btn-wrap { display:inline-flex; flex-direction:column; align-items:center; gap:1px; }
@@ -976,6 +974,19 @@
       outline:none;
     }
     .order-field-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    .req-mark { color:#dc2626; font-weight:800; margin-left:2px; }
+    .order-field-control.invalid {
+      border-color:#dc2626 !important;
+      background:rgba(220,38,38,.04);
+      animation: shake-x .35s ease;
+    }
+    .order-field-control.invalid:focus { box-shadow:0 0 0 4px rgba(220,38,38,.18) !important; }
+    .dark-mode .order-field-control.invalid { background:rgba(220,38,38,.10); }
+    @keyframes shake-x {
+      0%,100% { transform:translateX(0); }
+      25% { transform:translateX(-4px); }
+      75% { transform:translateX(4px); }
+    }
     .order-modal-note {
       border:1px dashed var(--border);
       background: var(--bg, #F9FAFB);
@@ -1024,23 +1035,21 @@
         <div class="colecao-selector-grid">
           <button type="button" class="colecao-card focus-ring" data-colecao="1S26">
             <div class="colecao-card-name">1S26</div>
-            <div class="colecao-card-sub">Outono / Inverno</div>
           </button>
           <button type="button" class="colecao-card focus-ring" data-colecao="2S26">
             <div class="colecao-card-name">2S26</div>
-            <div class="colecao-card-sub">Primavera / Verão</div>
           </button>
         </div>
       </div>
 
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#EFF6FF"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#2836D4" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#2836D4" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#2836D4" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/></svg></div>
+          <div class="home-cat-icon" style="background:#EFF6FF"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Tênis</span><span class="home-cat-sub">Corrida, treino e lifestyle</span></div>
         </div>
         <div class="home-cat-img-wrap">
           <img id="home-cat-img-FTW" alt="Tênis" class="home-cat-img" style="display:none">
-          <div id="home-cat-ph-FTW" class="home-cat-placeholder" style="background:linear-gradient(135deg,#EFF6FF 60%,#BFDBFE)"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#2836D4" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#2836D4" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#2836D4" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#2836D4" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#2836D4" opacity="0.3"/></svg></div>
+          <div id="home-cat-ph-FTW" class="home-cat-placeholder" style="background:linear-gradient(135deg,#EFF6FF 60%,#BFDBFE)"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow"></i>
       </button>
@@ -1090,7 +1099,7 @@
       </button>
       <button class="home-cat-card home-cat-all focus-ring" data-cat="">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#F0F9FF"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22"><rect x="3" y="3" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="20" y="3" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="3" y="20" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/><rect x="20" y="20" width="13" height="13" rx="2" fill="#2836D4" opacity="0.2" stroke="#2836D4" stroke-width="1.8"/></svg></div>
+          <div class="home-cat-icon" style="background:#F0F9FF"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22"><rect x="3" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="3" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name" style="color:var(--primary)">Ver todos os produtos</span><span class="home-cat-sub">Catálogo completo</span></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
@@ -1123,7 +1132,7 @@
             <i class="fa-solid fa-arrow-left" style="font-size:11px"></i>
             Categorias
           </button>
-          <button id="btnBackToHome" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);background:rgba(40,54,212,0.07);border:1px solid rgba(40,54,212,0.18);border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0" title="Voltar à seleção de categorias">
+          <button id="btnBackToHome" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.18);border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0" title="Voltar à seleção de categorias">
             <i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Categorias
           </button>
           <div class="actionbar-wrap" id="actionBarWrap">
@@ -1694,8 +1703,9 @@
 
             <div class="order-modal-grid">
               <div>
-                <label class="order-field-label" for="oxCommission">Comissionista</label>
-                <select id="oxCommission" class="order-field-control">
+                <label class="order-field-label" for="oxCommission">Comissionista <span class="req-mark">*</span></label>
+                <select id="oxCommission" class="order-field-control" data-required="1">
+                  <option value="">— Selecione —</option>
                   <option value="114611">114611 – JORGE</option>
                   <option value="109839">109839 – MARIANA</option>
                   <option value="1333497">1333497 – RAFAEL</option>
@@ -1705,20 +1715,23 @@
                 </select>
               </div>
               <div>
-                <label class="order-field-label" for="oxClientCode">Código Cliente</label>
-                <input id="oxClientCode" class="order-field-control" placeholder="Ex.: 104988" inputmode="numeric" />
+                <label class="order-field-label" for="oxClientCode">Código Cliente <span class="req-mark">*</span></label>
+                <input id="oxClientCode" class="order-field-control" placeholder="Ex.: 104988" inputmode="numeric" data-required="1" />
               </div>
 
               <div>
-                <label class="order-field-label" for="oxPayment">Cond. Pagamento</label>
-                <select id="oxPayment" class="order-field-control"></select>
+                <label class="order-field-label" for="oxPayment">Cond. Pagamento <span class="req-mark">*</span></label>
+                <select id="oxPayment" class="order-field-control" data-required="1">
+                  <option value="">— Selecione —</option>
+                </select>
               </div>
               <div>
-                <label class="order-field-label" for="oxPriceTable">Tab. de Preço</label>
-                <select id="oxPriceTable" class="order-field-control">
-                  <option value="OL025">OL025</option>
-                  <option value="OL024">OL024</option>
-                </select>
+                <label class="order-field-label" for="oxPriceTable">Tab. de Preço <span class="req-mark">*</span></label>
+                <input id="oxPriceTable" class="order-field-control" list="oxPriceTableList" placeholder="Ex.: OL025" data-required="1" autocomplete="off" />
+                <datalist id="oxPriceTableList">
+                  <option value="OL025"></option>
+                  <option value="OL024"></option>
+                </datalist>
               </div>
 
               <div>
@@ -1954,7 +1967,7 @@ const state = {
   groupColors: false,
   viewMode: "all", // all | favs
   cardLayout: "duo", // duo | list | grid
-  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"" },
+  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"2S26" },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
   productModal: { open:false, item:null, group:null, qty:1, fromCart:false, editKey:null, editing:false },
@@ -2494,7 +2507,7 @@ function clearAllFilters(){
   state.filters.sort = "default";
   state.filters.q = "";
   state.filters.priceMax = Infinity;
-  state.filters.colecao = "";
+  state.filters.colecao = "2S26";
   const _sl = $("sliderPrice"); if(_sl){ _sl.value=_sl.max; if(typeof updateSliderLabel==="function") updateSliderLabel(); }
   // reset cat chips
   document.querySelectorAll(".cat-chip").forEach(b=>b.classList.toggle("active", b.dataset.cat===""));
@@ -2532,6 +2545,8 @@ document.querySelectorAll(".colecao-card").forEach(btn => {
     if(typeof toast === "function") toast(`Coleção ${sel} selecionada`);
   });
 });
+// Sincroniza estado visual inicial (2S26 pré-selecionado no boot)
+syncColecaoCards();
 
 // ===== Layout toggle (cards → list → grid) =====
 // ===== Segment icons =====
@@ -4751,9 +4766,9 @@ const ORDER_EXPORT_COLS = [
 ];
 
 const ORDER_EXPORT_DEFAULTS = {
-  commission: "3616654",
+  commission: "",
   clientCode: "",
-  payment: "Z35 - 63/91/119 D",
+  payment: "",
   priceTable: "OL025",
   campaign: "",
   packing: "M: Musical",
@@ -4768,7 +4783,8 @@ const ORDER_EXPORT_DEFAULTS = {
 function populateOrderPaymentSelect(){
   const el = $("oxPayment");
   if(!el || el.dataset.ready === "1") return;
-  el.innerHTML = ORDER_PAYMENT_OPTIONS.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  el.innerHTML = '<option value="">— Selecione —</option>' +
+    ORDER_PAYMENT_OPTIONS.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
   el.dataset.ready = "1";
 }
 
@@ -4787,10 +4803,10 @@ function loadOrderExportConfig(){
 }
 function getOrderExportFormData(){
   return {
-    commission: $("oxCommission")?.value || ORDER_EXPORT_DEFAULTS.commission,
+    commission: $("oxCommission")?.value || "",
     clientCode: $("oxClientCode")?.value?.trim() || "",
-    payment: $("oxPayment")?.value || ORDER_EXPORT_DEFAULTS.payment,
-    priceTable: $("oxPriceTable")?.value || ORDER_EXPORT_DEFAULTS.priceTable,
+    payment: $("oxPayment")?.value || "",
+    priceTable: ($("oxPriceTable")?.value || "").trim(),
     campaign: $("oxCampaign")?.value || ORDER_EXPORT_DEFAULTS.campaign,
     packing: $("oxPacking")?.value || ORDER_EXPORT_DEFAULTS.packing,
     deliveryType: $("oxDeliveryType")?.value || ORDER_EXPORT_DEFAULTS.deliveryType,
@@ -4822,6 +4838,17 @@ function openOrderExportModal(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
   populateOrderPaymentSelect();
   fillOrderExportForm(loadOrderExportConfig());
+  // Limpa estado inválido de aberturas anteriores
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => $(id)?.classList.remove("invalid"));
+  // Listener (idempotente) que remove .invalid assim que o usuário começa a corrigir
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => {
+    const el = $(id);
+    if(!el || el.dataset.invalidListener === "1") return;
+    const clear = () => { if(el.value && el.value.trim()) el.classList.remove("invalid"); };
+    el.addEventListener("input", clear);
+    el.addEventListener("change", clear);
+    el.dataset.invalidListener = "1";
+  });
   const modal = $("orderExportModal");
   if(!modal) return;
   modal.classList.remove("hidden");
@@ -4953,14 +4980,45 @@ function buildOrderExportRows(cfg){
   return { aoa, warnings };
 }
 
+function validateOrderRequiredFields(){
+  const fields = [
+    { id:"oxCommission", label:"Comissionista" },
+    { id:"oxClientCode", label:"Código Cliente" },
+    { id:"oxPayment", label:"Cond. Pagamento" },
+    { id:"oxPriceTable", label:"Tab. de Preço" },
+  ];
+  // Limpa estado anterior
+  fields.forEach(f => $(f.id)?.classList.remove("invalid"));
+  const missing = [];
+  let firstEl = null;
+  fields.forEach(f => {
+    const el = $(f.id);
+    if(!el) return;
+    const val = (el.value || "").trim();
+    if(!val){
+      el.classList.add("invalid");
+      missing.push(f.label);
+      if(!firstEl) firstEl = el;
+    }
+  });
+  return { missing, firstEl };
+}
+
 function exportOrderXlsxFromModal(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
-  const cfg = getOrderExportFormData();
-  if(!cfg.clientCode){
-    toast("Preencha o Código Cliente ✅");
-    $("oxClientCode")?.focus();
+  const { missing, firstEl } = validateOrderRequiredFields();
+  if(missing.length){
+    const msg = missing.length === 1
+      ? `Preencha: ${missing[0]} ⚠️`
+      : `Preencha ${missing.length} campos obrigatórios ⚠️`;
+    toast(msg);
+    if(firstEl){
+      firstEl.scrollIntoView({ behavior:"smooth", block:"center" });
+      setTimeout(()=> firstEl.focus(), 280);
+    }
     return;
   }
+  const cfg = getOrderExportFormData();
   saveOrderExportConfig(cfg);
   const { aoa, warnings } = buildOrderExportRows(cfg);
   const ws = XLSX.utils.aoa_to_sheet(aoa);
