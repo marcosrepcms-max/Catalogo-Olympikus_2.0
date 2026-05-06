@@ -919,6 +919,54 @@
     .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #a78bfa; }
     .dark-mode .colecao-card.active { background: #a78bfa; border-color: #a78bfa; color: #fff; box-shadow: 0 6px 14px rgba(167,139,250,.3); }
 
+    /* ── BAR DE CLASSIFICAÇÃO TIER ── */
+    .tier-bar-wrap { display:none; margin-top:6px; }
+    .tier-bar-wrap.show { display:block; }
+    .tier-bar-label {
+      font-size: 11px; font-weight: 800;
+      color: var(--muted, #6B7280);
+      letter-spacing: 0.5px; text-transform: uppercase;
+      padding-left: 4px; margin-bottom: 6px;
+    }
+    .tier-bar {
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 999px;
+      padding: 5px;
+      display: flex; gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tier-bar::-webkit-scrollbar { display: none; }
+    .tier-pill {
+      flex-shrink: 0;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px; font-weight: 700;
+      border: none; background: transparent;
+      color: var(--muted, #475569);
+      cursor: pointer; white-space: nowrap;
+      transition: all .12s;
+      font-family: inherit;
+    }
+    .tier-pill:hover { background: rgba(124,58,237,.08); color: var(--primary, #7c3aed); }
+    .tier-pill.active { background: var(--primary, #7c3aed); color: #fff; box-shadow: 0 2px 6px rgba(124,58,237,.25); }
+    .tier-pill.fam:hover { background: rgba(22,163,74,.08); color: #16a34a; }
+    .tier-pill.fam.active { background: #16a34a; color: #fff; box-shadow: 0 2px 6px rgba(22,163,74,.25); }
+    .tier-bar-divider {
+      width: 1px;
+      background: var(--border, #E5E7EB);
+      margin: 4px 4px;
+      flex-shrink: 0;
+    }
+    .dark-mode .tier-bar { background: #1F2937; border-color: #374151; }
+    .dark-mode .tier-pill { color: #94a3b8; }
+    .dark-mode .tier-pill:hover { background: rgba(167,139,250,.12); color: #a78bfa; }
+    .dark-mode .tier-pill.active { background: #a78bfa; color: #0f172a; }
+    .dark-mode .tier-pill.fam:hover { background: rgba(34,197,94,.12); color: #22c55e; }
+    .dark-mode .tier-pill.fam.active { background: #22c55e; color: #0f172a; }
+    .dark-mode .tier-bar-divider { background: #374151; }
+
     /* ── BOTÃO VOLTAR ── */
     #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(124,58,237,0.07); border:1px solid rgba(124,58,237,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
     #btnBackToHome:hover { background:rgba(124,58,237,0.13); }
@@ -1135,6 +1183,22 @@
           <button type="button" class="colecao-card focus-ring" data-colecao="2S26">
             <div class="colecao-card-name">2S26</div>
           </button>
+        </div>
+
+        <!-- Bar de classificação por canal/tier (só visível em 2S26) -->
+        <div id="tierBarWrap" class="tier-bar-wrap">
+          <div class="tier-bar-label">Classificação do cliente</div>
+          <div class="tier-bar" id="tierBar">
+            <button type="button" class="tier-pill active" data-tier="">Todos</button>
+            <div class="tier-bar-divider"></div>
+            <button type="button" class="tier-pill" data-tier="sg1" data-tip="Sporting Goods · Tier 1">SG·1</button>
+            <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
+            <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
+            <div class="tier-bar-divider"></div>
+            <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FTW·1</button>
+            <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FTW·2</button>
+            <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FTW·3</button>
+          </div>
         </div>
       </div>
 
@@ -2068,7 +2132,7 @@ const state = {
   groupColors: false,
   viewMode: "all", // all | favs
   cardLayout: "duo", // duo | list | grid
-  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"2S26" },
+  filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"2S26", tier:"" },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
   productModal: { open:false, item:null, group:null, qty:1, fromCart:false, editKey:null, editing:false },
@@ -2478,6 +2542,13 @@ async function loadCatalog({ cacheBust=false } = {}){
       isNew:      isTruthy(r["Lançamento"] ?? r["Lancamento"] ?? r["LANÇAMENTO"] ?? r["lancamento"] ?? r["LANCAMENTO"] ?? "") ||
                   isTruthy(r["Nova Cor"]   ?? r["NOVA COR"]   ?? r["nova cor"]  ?? r["NovaCor"]  ?? ""),
       colecao:    String(r["Coleção"] ?? r["Colecao"] ?? r["COLEÇÃO"] ?? r["COLECAO"] ?? r["colecao"] ?? "").trim().toUpperCase(),
+      // Classificações por canal/tier — strings "SIM" ou "NÃO" ou vazio
+      sg1:        isTruthy(r["SPORTING GOODS - 1"] ?? r["Sporting Goods - 1"] ?? r["sporting goods - 1"] ?? ""),
+      sg2:        isTruthy(r["SPORTING GOODS - 2"] ?? r["Sporting Goods - 2"] ?? r["sporting goods - 2"] ?? ""),
+      sg3:        isTruthy(r["SPORTING GOODS - 3"] ?? r["Sporting Goods - 3"] ?? r["sporting goods - 3"] ?? ""),
+      ftw1:       isTruthy(r["FAMILY FTW - 1"] ?? r["Family FTW - 1"] ?? r["family ftw - 1"] ?? ""),
+      ftw2:       isTruthy(r["FAMILY FTW - 2"] ?? r["Family FTW - 2"] ?? r["family ftw - 2"] ?? ""),
+      ftw3:       isTruthy(r["FAMILY FTW - 3"] ?? r["Family FTW - 3"] ?? r["family ftw - 3"] ?? ""),
     }));
 
     state.productsRaw = rows.filter(x => x.produto || x.codigo || x.categoria || x.imagem);
@@ -2609,6 +2680,7 @@ function clearAllFilters(){
   state.filters.q = "";
   state.filters.priceMax = Infinity;
   state.filters.colecao = "2S26";
+  state.filters.tier = "";
   const _sl = $("sliderPrice"); if(_sl){ _sl.value=_sl.max; if(typeof updateSliderLabel==="function") updateSliderLabel(); }
   // reset cat chips
   document.querySelectorAll(".cat-chip").forEach(b=>b.classList.toggle("active", b.dataset.cat===""));
@@ -2628,6 +2700,7 @@ $("btnClear").addEventListener("click", ()=>{
   clearAllFilters();
   state.cardLayout = "duo"; updateLayoutBtn();
   if(typeof syncColecaoCards === "function") syncColecaoCards();
+  if(typeof syncTierBar === "function") syncTierBar();
   refreshView(true);
 });
 
@@ -2636,18 +2709,55 @@ function syncColecaoCards(){
   document.querySelectorAll(".colecao-card").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.colecao === state.filters.colecao);
   });
+  // Bar de tier só aparece quando 2S26 está ativa
+  const wrap = document.getElementById("tierBarWrap");
+  if(wrap) wrap.classList.toggle("show", state.filters.colecao === "2S26");
 }
 document.querySelectorAll(".colecao-card").forEach(btn => {
   btn.addEventListener("click", () => {
     const sel = btn.dataset.colecao;
     if(state.filters.colecao === sel) return; // Caso B
     state.filters.colecao = sel;
+    // Ao trocar de coleção, limpa o tier (não faz sentido manter em 1S26)
+    if(sel !== "2S26"){
+      state.filters.tier = "";
+      syncTierBar();
+    }
     syncColecaoCards();
     if(typeof toast === "function") toast(`Coleção ${sel} selecionada`);
   });
 });
 // Sincroniza estado visual inicial (2S26 pré-selecionado no boot)
 syncColecaoCards();
+
+// ═══════════ BAR DE CLASSIFICAÇÃO (TIER) ═══════════
+function syncTierBar(){
+  document.querySelectorAll(".tier-pill").forEach(btn => {
+    btn.classList.toggle("active", (btn.dataset.tier || "") === state.filters.tier);
+  });
+}
+const TIER_LABELS = {
+  sg1: "Sporting Goods · Tier 1",
+  sg2: "Sporting Goods · Tier 2",
+  sg3: "Sporting Goods · Tier 3",
+  ftw1: "Family FTW · Tier 1",
+  ftw2: "Family FTW · Tier 2",
+  ftw3: "Family FTW · Tier 3"
+};
+document.querySelectorAll(".tier-pill").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const sel = btn.dataset.tier || "";
+    if(state.filters.tier === sel) return;
+    state.filters.tier = sel;
+    syncTierBar();
+    if(typeof toast === "function"){
+      if(sel) toast(`Filtrando: ${TIER_LABELS[sel] || sel}`);
+      else toast("Mostrando todos");
+    }
+    if(typeof refreshView === "function") refreshView(true);
+  });
+});
+syncTierBar();
 
 // ===== Layout toggle (cards → list → grid) =====
 // ===== Segment icons =====
@@ -2908,6 +3018,7 @@ function refreshView(resetPaging){
   if(state.filters.segment) list = list.filter(p => p.segmento === state.filters.segment);
   if(state.filters.gender) list = list.filter(p => p.genero === state.filters.gender);
   if(state.filters.colecao) list = list.filter(p => p.colecao === state.filters.colecao);
+  if(state.filters.tier) list = list.filter(p => p[state.filters.tier] === true);
   if(state.filters.priceMax !== Infinity){
     list = list.filter(p => costFromPrice(toNumberBR(p.precoRaw)) <= state.filters.priceMax);
   }
