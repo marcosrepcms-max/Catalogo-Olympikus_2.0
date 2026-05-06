@@ -5022,6 +5022,13 @@ function setOrderDateOverrideOpen(open){
   toggle.classList.toggle("open", open);
   const label = toggle.querySelector(".date-override-label");
   if(label) label.textContent = open ? "Datas individualizadas" : "Definir datas diferentes por produto";
+
+  // Quando o override está aberto, a data global deixa de ser obrigatória.
+  // Atualiza o asterisco e remove qualquer estado inválido remanescente.
+  const globalInput = $("oxDataDesejada");
+  const globalLabel = document.querySelector('label[for="oxDataDesejada"] .req-mark');
+  if(globalLabel) globalLabel.style.display = open ? "none" : "";
+  if(open) globalInput?.classList.remove("invalid");
 }
 
 // Toggle handler (registrado uma vez no DOMReady do app)
@@ -5230,15 +5237,23 @@ function buildOrderExportRows(cfg){
 }
 
 function validateOrderRequiredFields(){
+  const overrideOpen = !!(_orderDateOverride && _orderDateOverride.open);
+
+  // Se o vendedor abriu o painel de datas individuais, a data global
+  // deixa de ser obrigatória — cada produto carrega a sua própria data.
   const fields = [
     { id:"oxCommission", label:"Comissionista" },
     { id:"oxClientCode", label:"Código Cliente" },
     { id:"oxPayment", label:"Cond. Pagamento" },
     { id:"oxPriceTable", label:"Tab. de Preço" },
-    { id:"oxDataDesejada", label:"Data Desejada" },
   ];
-  // Limpa estado anterior (inclui overrides)
-  fields.forEach(f => $(f.id)?.classList.remove("invalid"));
+  if(!overrideOpen){
+    fields.push({ id:"oxDataDesejada", label:"Data Desejada" });
+  }
+
+  // Limpa estado anterior (inclui o campo global e os overrides)
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"]
+    .forEach(id => $(id)?.classList.remove("invalid"));
   document.querySelectorAll(".date-override-input.invalid").forEach(el => el.classList.remove("invalid"));
 
   const missing = [];
@@ -5255,7 +5270,7 @@ function validateOrderRequiredFields(){
   });
 
   // Se override está aberto, todas as datas individuais precisam estar preenchidas
-  if(_orderDateOverride && _orderDateOverride.open){
+  if(overrideOpen){
     let overrideMissing = 0;
     let firstOverrideEl = null;
     _orderDateOverride.byKey.forEach((entry, key) => {
