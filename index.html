@@ -975,6 +975,75 @@
     }
     .order-field-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
     .req-mark { color:#dc2626; font-weight:800; margin-left:2px; }
+
+    /* ── Toggle/Lista de override de Data Desejada ── */
+    .date-override-toggle{
+      display:inline-flex; align-items:center; gap:6px;
+      margin-top:8px;
+      background:none; border:none; padding:4px 0; cursor:pointer;
+      font-size:12px; font-weight:700;
+      color: var(--primary);
+      font-family: inherit;
+    }
+    .date-override-toggle:hover{ text-decoration:underline; }
+    .date-override-arrow{ display:inline-block; transition:transform .18s; font-size:10px; }
+    .date-override-toggle.open .date-override-arrow{ transform:rotate(90deg); }
+    .date-override-list{
+      margin-top:10px;
+      padding:10px 0 4px;
+      border-top:1px dashed var(--border);
+    }
+    .date-override-row{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 0;
+      border-top:1px dashed var(--border);
+    }
+    .date-override-row:first-child{ border-top:none; }
+    .date-override-thumb{
+      width:34px; height:34px; flex-shrink:0;
+      background: var(--bg, #F3F4F6);
+      border:1px solid var(--border);
+      border-radius:8px;
+      overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .date-override-thumb img{ width:100%; height:100%; object-fit:contain; }
+    .date-override-info{ flex:1; min-width:0; }
+    .date-override-name{
+      font-size:12px; font-weight:700; color: var(--text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .date-override-meta{
+      font-size:10px; color: var(--muted); font-weight:600; margin-top:1px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .date-override-input{
+      flex-shrink:0;
+      width:140px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:6px 8px;
+      font-size:12px;
+      background: var(--input-bg, #fff);
+      color: var(--text);
+      font-family: inherit;
+    }
+    .date-override-input.touched{
+      border-color: var(--primary);
+      background: rgba(124,58,237,.06);
+      font-weight:600;
+    }
+    .dark-mode .date-override-input.touched{ background: rgba(167,139,250,.10); }
+    .date-override-input:focus{ outline:none; border-color: var(--primary); box-shadow:0 0 0 3px var(--ring); }
+    .date-override-input.invalid{
+      border-color:#dc2626 !important;
+      background:rgba(220,38,38,.06) !important;
+      animation: shake-x .35s ease;
+    }
+    .date-override-hint{
+      font-size:10px; color: var(--muted); font-style:italic;
+      margin-top:8px; padding:0 2px;
+    }
     .order-field-control.invalid {
       border-color:#dc2626 !important;
       background:rgba(220,38,38,.04);
@@ -987,6 +1056,18 @@
       25% { transform:translateX(-4px); }
       75% { transform:translateX(4px); }
     }
+    /* Destaque vermelho temporário em produtos com grade pendente */
+    @keyframes pulse-red {
+      0%   { box-shadow: 0 0 0 0 rgba(220,38,38,.55); border-color:#dc2626 !important; }
+      50%  { box-shadow: 0 0 0 8px rgba(220,38,38,0); border-color:#dc2626 !important; }
+      100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); border-color:#dc2626 !important; }
+    }
+    .cart-row-pending.flash-pending {
+      animation: pulse-red 1.2s ease-in-out 2;
+      border-color: #dc2626 !important;
+      background: rgba(254,226,226,0.35) !important;
+    }
+    .dark-mode .cart-row-pending.flash-pending { background: rgba(220,38,38,.12) !important; }
     .order-modal-note {
       border:1px dashed var(--border);
       background: var(--bg, #F9FAFB);
@@ -1787,6 +1868,11 @@
               <div>
                 <label class="order-field-label" for="oxDataDesejada">Data Desejada <span class="req-mark">*</span></label>
                 <input id="oxDataDesejada" type="date" class="order-field-control" data-required="1" />
+                <button type="button" id="oxDateOverrideToggle" class="date-override-toggle" hidden>
+                  <span class="date-override-arrow">▸</span>
+                  <span class="date-override-label">Definir datas diferentes por produto</span>
+                </button>
+                <div id="oxDateOverrideList" class="date-override-list" hidden></div>
               </div>
 
               <div style="grid-column: 1 / -1;">
@@ -3404,7 +3490,7 @@ function handleMainCardAdd(item, btn){
     setCardAddStatus(key, "added");
     if(btn) updateAddButtonUI(btn, key);
     updateCartBadge();
-    toast("Item adicionado à sacola");
+    toast("Adicionado à sacola ✅");
   }catch(err){
     console.error("addToCart error:", err);
     const reallyAdded = state.cart.has(key);
@@ -4506,7 +4592,8 @@ function renderCartUI(){
     const bulkSelected = state.cartBulkSelected.has(it.key);
 
     const row = document.createElement("div");
-    row.className = "rounded-3xl border border-oly-border bg-white p-4" + (isPending ? " border-amber-300" : "") + (bulkSelected ? " cart-bulk-row-on" : "");
+    row.dataset.cartKey = it.key;
+    row.className = "rounded-3xl border border-oly-border bg-white p-4" + (isPending ? " border-amber-300 cart-row-pending" : "") + (bulkSelected ? " cart-bulk-row-on" : "");
     row.innerHTML = `
       <div class="flex gap-3">
         ${state.cartBulkSelectMode && eligibleForBulk ? `<button class="cart-bulk-pick ${bulkSelected ? "on" : ""}" data-bulk-pick="true" aria-label="${bulkSelected ? "Desmarcar" : "Selecionar"} produto" title="${bulkSelected ? "Desmarcar" : "Selecionar"} produto"><i class="fa-solid ${bulkSelected ? "fa-circle-check" : "fa-circle"}"></i></button>` : ""}
@@ -4839,8 +4926,140 @@ function fillOrderExportForm(cfg){
   if($("oxPedidoCliente")) $("oxPedidoCliente").value = data.pedidoCliente || "";
 }
 
+// ═══════════ OVERRIDE DE DATA DESEJADA POR PRODUTO ═══════════
+// Estado em memória: Map<cartKey, { date:string, touched:boolean }>
+// Resetado a cada abertura do modal de export.
+let _orderDateOverride = { open:false, byKey:new Map() };
+
+function renderOrderDateOverride(){
+  const toggle = $("oxDateOverrideToggle");
+  const list = $("oxDateOverrideList");
+  const globalInput = $("oxDataDesejada");
+  if(!toggle || !list || !globalInput) return;
+
+  const items = [...state.cart.values()];
+  // Toggle só faz sentido se houver 2+ produtos
+  if(items.length < 2){
+    toggle.hidden = true;
+    list.hidden = true;
+    list.innerHTML = "";
+    _orderDateOverride = { open:false, byKey:new Map() };
+    return;
+  }
+  toggle.hidden = false;
+
+  // Reseta estado em cada abertura do modal
+  _orderDateOverride = { open:false, byKey:new Map() };
+  items.forEach(it => {
+    _orderDateOverride.byKey.set(it.key, { date: globalInput.value || "", touched:false });
+  });
+
+  // Render inicial das rows
+  list.innerHTML = items.map(it => {
+    const safeKey = escapeHtml(it.key);
+    const img = it.imgSrc ? `<img loading="lazy" src="${escapeHtml(it.imgSrc)}" alt="">` : `<i class="fa-solid fa-image text-oly-muted"></i>`;
+    const meta = [it.cor, it.genero].filter(Boolean).join(" • ");
+    return `
+      <div class="date-override-row" data-override-key="${safeKey}">
+        <div class="date-override-thumb">${img}</div>
+        <div class="date-override-info">
+          <div class="date-override-name">${escapeHtml(it.produto || "Produto")}</div>
+          <div class="date-override-meta">${escapeHtml(meta)}</div>
+        </div>
+        <input type="date" class="date-override-input" data-override-key-input="${safeKey}" value="${escapeHtml(globalInput.value || "")}" />
+      </div>`;
+  }).join("");
+
+  // Listeners das rows
+  list.querySelectorAll("[data-override-key-input]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const key = inp.dataset.overrideKeyInput;
+      const entry = _orderDateOverride.byKey.get(key);
+      if(!entry) return;
+      entry.date = inp.value || "";
+      entry.touched = true;
+      inp.classList.add("touched");
+    });
+    inp.addEventListener("input", () => inp.classList.add("touched"));
+  });
+
+  // Sync: data global → datas individuais não-tocadas
+  if(!globalInput.dataset.overrideSync){
+    globalInput.addEventListener("change", () => {
+      const v = globalInput.value || "";
+      _orderDateOverride.byKey.forEach((entry, key) => {
+        if(entry.touched) return;
+        entry.date = v;
+        const inp = list.querySelector(`[data-override-key-input="${CSS.escape(key)}"]`);
+        if(inp) inp.value = v;
+      });
+    });
+    globalInput.dataset.overrideSync = "1";
+  }
+}
+
+function setOrderDateOverrideOpen(open){
+  const toggle = $("oxDateOverrideToggle");
+  const list = $("oxDateOverrideList");
+  if(!toggle || !list) return;
+  _orderDateOverride.open = open;
+  list.hidden = !open;
+  toggle.classList.toggle("open", open);
+  const label = toggle.querySelector(".date-override-label");
+  if(label) label.textContent = open ? "Datas individualizadas" : "Definir datas diferentes por produto";
+}
+
+// Toggle handler (registrado uma vez no DOMReady do app)
+$("oxDateOverrideToggle")?.addEventListener("click", () => {
+  setOrderDateOverrideOpen(!_orderDateOverride.open);
+});
+
+// Retorna a data desejada efetiva para um item da sacola (override > global)
+function getEffectiveDesiredDate(cartKey, globalDate){
+  if(_orderDateOverride.open){
+    const entry = _orderDateOverride.byKey.get(cartKey);
+    if(entry && entry.date) return entry.date;
+  }
+  return globalDate || "";
+}
+
+
+function getCartItemsWithPendingGrade(){
+  return [...state.cart.values()].filter(it =>
+    (!it.qty || it.qty === 0) && tamNeedsGrade(it.categoria, it.tam)
+  );
+}
+function flashPendingCartItems(items){
+  setTimeout(() => {
+    let firstEl = null;
+    items.forEach(it => {
+      const row = document.querySelector(`#cartItems [data-cart-key="${CSS.escape(it.key)}"]`);
+      if(!row) return;
+      row.classList.add("flash-pending");
+      if(!firstEl) firstEl = row;
+      setTimeout(() => row.classList.remove("flash-pending"), 2600);
+    });
+    if(firstEl){
+      firstEl.scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+  }, 360); // espera o drawer abrir antes de tentar achar as rows
+}
+
 function openOrderExportModal(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
+
+  // Gate: nenhum produto pode estar sem grade
+  const pending = getCartItemsWithPendingGrade();
+  if(pending.length > 0){
+    const msg = pending.length === 1
+      ? "1 produto sem grade. Preencha antes de exportar ⚠️"
+      : `${pending.length} produtos sem grade. Preencha antes de exportar ⚠️`;
+    toast(msg);
+    openCartModal();
+    flashPendingCartItems(pending);
+    return;
+  }
+
   populateOrderPaymentSelect();
   fillOrderExportForm(loadOrderExportConfig());
   // Limpa estado inválido de aberturas anteriores
@@ -4854,6 +5073,8 @@ function openOrderExportModal(){
     el.addEventListener("change", clear);
     el.dataset.invalidListener = "1";
   });
+  // Renderiza/inicializa o sub-form de datas individuais
+  renderOrderDateOverride();
   const modal = $("orderExportModal");
   if(!modal) return;
   modal.classList.remove("hidden");
@@ -4943,10 +5164,14 @@ function buildOrderExportRows(cfg){
     row[idx["Data Firme"]] = extractLeadingToken(cfg.dataFirme);
     row[idx["Pedido Mãe"]] = extractLeadingToken(cfg.pedidoMae);
     row[idx["Aceita Antecipação?"]] = extractLeadingToken(cfg.antecipacao);
-    if(cfg.dataDesejada && idx["Data Desejada"] !== undefined){
+    // Data Desejada: usa override individual se existir, senão usa a global
+    const effectiveDate = (typeof getEffectiveDesiredDate === "function")
+      ? getEffectiveDesiredDate(it.key, cfg.dataDesejada)
+      : cfg.dataDesejada;
+    if(effectiveDate && idx["Data Desejada"] !== undefined){
       // Converte de YYYY-MM-DD (input date) para DD/MM/YYYY
-      const [dy, dm, dd] = cfg.dataDesejada.split("-");
-      const dataFmt = (dy && dm && dd) ? `${dd}/${dm}/${dy}` : cfg.dataDesejada;
+      const [dy, dm, dd] = effectiveDate.split("-");
+      const dataFmt = (dy && dm && dd) ? `${dd}/${dm}/${dy}` : effectiveDate;
       row[idx["Data Desejada"]] = dataFmt;
       if(idx["Data de Faturamento"] !== undefined) row[idx["Data de Faturamento"]] = dataFmt;
     }
@@ -4993,8 +5218,10 @@ function validateOrderRequiredFields(){
     { id:"oxPriceTable", label:"Tab. de Preço" },
     { id:"oxDataDesejada", label:"Data Desejada" },
   ];
-  // Limpa estado anterior
+  // Limpa estado anterior (inclui overrides)
   fields.forEach(f => $(f.id)?.classList.remove("invalid"));
+  document.querySelectorAll(".date-override-input.invalid").forEach(el => el.classList.remove("invalid"));
+
   const missing = [];
   let firstEl = null;
   fields.forEach(f => {
@@ -5007,6 +5234,25 @@ function validateOrderRequiredFields(){
       if(!firstEl) firstEl = el;
     }
   });
+
+  // Se override está aberto, todas as datas individuais precisam estar preenchidas
+  if(_orderDateOverride && _orderDateOverride.open){
+    let overrideMissing = 0;
+    let firstOverrideEl = null;
+    _orderDateOverride.byKey.forEach((entry, key) => {
+      const inp = document.querySelector(`[data-override-key-input="${CSS.escape(key)}"]`);
+      const val = (inp?.value || entry.date || "").trim();
+      if(!val){
+        if(inp){ inp.classList.add("invalid"); if(!firstOverrideEl) firstOverrideEl = inp; }
+        overrideMissing++;
+      }
+    });
+    if(overrideMissing > 0){
+      missing.push(`${overrideMissing} data(s) por produto`);
+      if(!firstEl) firstEl = firstOverrideEl;
+    }
+  }
+
   return { missing, firstEl };
 }
 
