@@ -1785,8 +1785,8 @@
               </div>
 
               <div>
-                <label class="order-field-label" for="oxDataDesejada">Data Desejada</label>
-                <input id="oxDataDesejada" type="date" class="order-field-control" />
+                <label class="order-field-label" for="oxDataDesejada">Data Desejada <span class="req-mark">*</span></label>
+                <input id="oxDataDesejada" type="date" class="order-field-control" data-required="1" />
               </div>
 
               <div style="grid-column: 1 / -1;">
@@ -3406,10 +3406,17 @@ function handleMainCardAdd(item, btn){
     updateCartBadge();
     toast("Item adicionado à sacola");
   }catch(err){
-    console.error(err);
-    setCardAddStatus(key, state.cart.has(key) ? "added" : "idle");
+    console.error("addToCart error:", err);
+    const reallyAdded = state.cart.has(key);
+    setCardAddStatus(key, reallyAdded ? "added" : "idle");
     if(btn) updateAddButtonUI(btn, key);
-    toast("Não foi possível adicionar o item");
+    // Só alerta o vendedor se o item realmente NÃO entrou na sacola.
+    // Falhas pós-set (renderização) não devem mostrar erro.
+    if(!reallyAdded){
+      toast("Não foi possível adicionar o item");
+    } else {
+      updateCartBadge();
+    }
   }
 }
 
@@ -4370,8 +4377,6 @@ function startBulkGradeBySelection(){
 
 function renderCartUI(){
   syncCardAddStatusFromCart();
-  syncCardAddStatusFromCart();
-  syncCardAddStatusFromCart();
   const { items, cartSize, by, totalCost } = cartTotals();
 
   // ✅ Atualiza resumo (se existir)
@@ -4839,9 +4844,9 @@ function openOrderExportModal(){
   populateOrderPaymentSelect();
   fillOrderExportForm(loadOrderExportConfig());
   // Limpa estado inválido de aberturas anteriores
-  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => $(id)?.classList.remove("invalid"));
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"].forEach(id => $(id)?.classList.remove("invalid"));
   // Listener (idempotente) que remove .invalid assim que o usuário começa a corrigir
-  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => {
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"].forEach(id => {
     const el = $(id);
     if(!el || el.dataset.invalidListener === "1") return;
     const clear = () => { if(el.value && el.value.trim()) el.classList.remove("invalid"); };
@@ -4986,6 +4991,7 @@ function validateOrderRequiredFields(){
     { id:"oxClientCode", label:"Código Cliente" },
     { id:"oxPayment", label:"Cond. Pagamento" },
     { id:"oxPriceTable", label:"Tab. de Preço" },
+    { id:"oxDataDesejada", label:"Data Desejada" },
   ];
   // Limpa estado anterior
   fields.forEach(f => $(f.id)?.classList.remove("invalid"));
