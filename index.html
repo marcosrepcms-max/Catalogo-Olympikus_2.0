@@ -7395,6 +7395,11 @@ function openMeusPedidosModal(){
   $("meusPedidosModal").classList.remove("hidden");
   document.body.style.overflow = "hidden";
 
+  // Garante que se o select está preenchido, MP.filtroComissionista reflita isso
+  if(sel.value && !MP.filtroComissionista){
+    MP.filtroComissionista = sel.value;
+  }
+
   if(MP.filtroComissionista){
     _mpLoad();
   } else {
@@ -7418,33 +7423,39 @@ function closeMeusPedidosModal(){
   document.body.style.overflow = "";
 }
 
-// Listeners
-$("btnMeusPedidos")?.addEventListener("click", openMeusPedidosModal);
-$("btnCloseMeusPedidos")?.addEventListener("click", closeMeusPedidosModal);
-$("mpBackdrop")?.addEventListener("click", closeMeusPedidosModal);
-$("mpComissionista")?.addEventListener("change", e => {
-  MP.filtroComissionista = e.target.value;
-  if(MP.filtroComissionista) _mpLoad();
-  else {
-    $("mpLista").classList.add("hidden");
-    $("mpEmpty").classList.remove("hidden");
-  }
-});
-$("mpBusca")?.addEventListener("input", e => {
-  MP.filtroBusca = e.target.value;
-  renderListaPedidos();
-});
-document.querySelectorAll(".mp-periodo-pill").forEach(p => {
-  p.addEventListener("click", () => {
+// Listeners — usando event delegation pra funcionar mesmo que o modal seja carregado depois
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("#btnMeusPedidos");
+  if(t){ openMeusPedidosModal(); return; }
+  if(e.target.closest("#btnCloseMeusPedidos")){ closeMeusPedidosModal(); return; }
+  if(e.target.id === "mpBackdrop"){ closeMeusPedidosModal(); return; }
+  if(e.target.closest(".mp-periodo-pill")){
+    const p = e.target.closest(".mp-periodo-pill");
     document.querySelectorAll(".mp-periodo-pill").forEach(x => x.classList.remove("active"));
     p.classList.add("active");
     MP.filtroPeriodo = p.dataset.periodo;
-    $("mpCustomDates").classList.toggle("hidden", MP.filtroPeriodo !== "custom");
+    $("mpCustomDates")?.classList.toggle("hidden", MP.filtroPeriodo !== "custom");
     if(MP.filtroComissionista) renderListaPedidos();
-  });
+  }
 });
-$("mpDataDe")?.addEventListener("change", e => { MP.customDe = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); });
-$("mpDataAte")?.addEventListener("change", e => { MP.customAte = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); });
+document.addEventListener("change", (e) => {
+  if(e.target.id === "mpComissionista"){
+    MP.filtroComissionista = e.target.value;
+    if(MP.filtroComissionista) _mpLoad();
+    else {
+      $("mpLista")?.classList.add("hidden");
+      $("mpEmpty")?.classList.remove("hidden");
+    }
+  }
+  if(e.target.id === "mpDataDe"){ MP.customDe = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); }
+  if(e.target.id === "mpDataAte"){ MP.customAte = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); }
+});
+document.addEventListener("input", (e) => {
+  if(e.target.id === "mpBusca"){
+    MP.filtroBusca = e.target.value;
+    renderListaPedidos();
+  }
+});
 
 // ESC fecha
 document.addEventListener("keydown", e => {
