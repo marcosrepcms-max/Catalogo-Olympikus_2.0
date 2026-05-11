@@ -2288,22 +2288,52 @@
           </button>
         </div>
 
-        <!-- Lista de tamanhos -->
-        <div class="overflow-y-auto px-4 sm:px-5 py-2 flex-1 no-scrollbar" id="gradeSizeList" style="background:var(--card-bg,#fff)"></div>
+        <!-- Área rolável -->
+        <div class="overflow-y-auto flex-1 no-scrollbar" style="background:var(--card-bg,#fff)">
+          <!-- Grades já adicionadas (aparece após primeira) -->
+          <div id="gradePreviousList" class="hidden px-4 sm:px-5 pt-3 pb-1"></div>
 
-        <!-- Totais + botão -->
-        <div class="px-5 pb-5 pt-3 border-t border-oly-border shrink-0 space-y-3" style="background:var(--card-bg,#fff)">
+          <!-- Lista de tamanhos da grade ATUAL -->
+          <div class="px-4 sm:px-5 py-2" id="gradeSizeListWrap">
+            <div id="gradeCurrentLabel" class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted mb-2 hidden">
+              Nova grade <span id="gradeCurrentNum" class="text-oly-blue">2</span>
+            </div>
+            <div id="gradeSizeList"></div>
+          </div>
+
+          <!-- Data desejada (obrigatória) -->
+          <div class="px-4 sm:px-5 pb-3 pt-1">
+            <label class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted block mb-1.5">
+              📅 Data desejada <span style="color:#dc2626">*</span>
+            </label>
+            <input id="gradeDataDesejada" type="date" required
+                   class="w-full rounded-xl border border-oly-border px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2"
+                   style="background:var(--card-bg,#fff);color:var(--text)">
+            <div id="gradeDataError" class="hidden text-xs font-bold mt-1.5" style="color:#dc2626">⚠️ Preencha a data desejada antes de adicionar</div>
+          </div>
+        </div>
+
+        <!-- Totais + botões -->
+        <div class="px-5 pb-5 pt-3 border-t border-oly-border shrink-0 space-y-2" style="background:var(--card-bg,#fff)">
           <div class="flex items-center justify-between text-sm">
-            <span class="font-bold text-oly-muted">Total de pares</span>
+            <span class="font-bold text-oly-muted">Total desta grade</span>
             <span id="gradeTotalPares" class="font-extrabold text-lg text-oly-blue">0</span>
           </div>
+          <div id="gradeAccumulatedRow" class="hidden flex items-center justify-between text-xs">
+            <span class="font-bold text-oly-muted">Total acumulado (todas as grades)</span>
+            <span id="gradeTotalAcumulado" class="font-extrabold text-sm" style="color:#7c3aed">0</span>
+          </div>
+          <button id="btnAddAnotherGrade" class="hidden focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-extrabold border-2 border-dashed transition" style="border-color:#C4B5FD;background:rgba(124,58,237,.06);color:#7c3aed">
+            <i class="fa-solid fa-plus"></i>
+            <span>Adicionar à sacola e abrir outra grade</span>
+          </button>
           <button id="btnConfirmGrade" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-5 py-4 text-sm font-extrabold text-white hover:opacity-95">
             <i class="fa-solid fa-bag-shopping"></i>
             <span>Adicionar Grade à Sacola</span>
           </button>
           <button id="btnGradeLater" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-oly-border bg-white px-5 py-3 text-sm font-bold text-oly-muted hover:bg-oly-bg" title="Fechar sem salvar a grade de tamanhos">
             <i class="fa-regular fa-xmark-circle"></i>
-            <span>Cancelar <span class="text-xs font-normal">(não salva a grade)</span></span>
+            <span>Cancelar <span class="text-xs font-normal">(não salva)</span></span>
           </button>
         </div>
       </div>
@@ -3598,8 +3628,19 @@ function setupCardCarousel(cardEl){
 
 
 /** Key for cart item (variant) */
-function cartKeyFor(item){
+// Chave BASE (agrupa visualmente linhas do mesmo produto)
+function cartKeyBaseFor(item){
   return normalizeName([item.codigo || "", item.corCodigo || item.cor || "", item.genero || ""].join("||"));
+}
+// Chave da LINHA (única por entrada na sacola — permite múltiplas grades/datas)
+function cartKeyFor(item){
+  const base = cartKeyBaseFor(item);
+  // Se já tiver linhaId, usa. Se não, é a primeira linha (compat retroativa)
+  return item.linhaId ? `${base}||${item.linhaId}` : base;
+}
+// Gera ID de linha único
+function _genLinhaId(){
+  return "l" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 }
 function getVariantsFor(item){
   // ✅ inclui todos os gêneros do mesmo produto/código (para thumbs/zoom)
@@ -3716,18 +3757,21 @@ function refreshVisibleCardAddButtons(){
   });
 }
 function syncCardAddStatusFromCart(){
-
   // Reconcile card status with current cart contents:
-  // if variant is in cart => 'added'; otherwise => back to 'idle' (normal).
+  // if any variant (qualquer linhaId) is in cart => 'added'; otherwise => back to 'idle'.
+  // Constrói set de bases presentes no carrinho
+  const basesPresentes = new Set();
+  for(const it of state.cart.values()){
+    basesPresentes.add(cartKeyBaseFor(it));
+  }
   for(const [k, st] of state.cardAddStatus.entries()){
-    const inCart = state.cart.has(k);
+    const inCart = basesPresentes.has(k);
     if(inCart){
       if(st !== "added") state.cardAddStatus.set(k, "added");
     } else {
       if(st !== "idle") state.cardAddStatus.set(k, "idle");
     }
   }
-
 }
 /** Card add button status */
 function getCardAddStatus(key){
@@ -4937,6 +4981,21 @@ function renderCartUI(){
     return cartItemMatchesGenderFilter(it, _genFilter);
   }
 
+  // Conta quantas linhas existem por produto base (pra mostrar "Grade 1/N", "Grade 2/N")
+  const linhasPorBase = new Map();
+  for(const _it of state.cart.values()){
+    const base = cartKeyBaseFor(_it);
+    linhasPorBase.set(base, (linhasPorBase.get(base) || 0) + 1);
+  }
+  const ordemNoBase = new Map();
+  const _contagemAtual = new Map();
+  for(const _k of state.cart.keys()){
+    const _it = state.cart.get(_k); if(!_it) continue;
+    const _base = cartKeyBaseFor(_it);
+    _contagemAtual.set(_base, (_contagemAtual.get(_base) || 0) + 1);
+    ordemNoBase.set(_k, _contagemAtual.get(_base));
+  }
+
   for(const it of state.cart.values()){
     if(!_genMatch(it)) continue;
     const needsGrade = tamNeedsGrade(it.categoria, it.tam);
@@ -4968,6 +5027,12 @@ function renderCartUI(){
                   <i class="fa-solid fa-ruler-horizontal" style="font-size:10px"></i>
                   <span>${escapeHtml(it.tam)}</span>
                 </span>` : ""}
+                ${(() => {
+                  const total = linhasPorBase.get(cartKeyBaseFor(it)) || 1;
+                  const idx = ordemNoBase.get(it.key) || 1;
+                  return total > 1 ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold" style="background:#EDE9FE;color:#7c3aed;border:1px solid #C4B5FD"><i class="fa-solid fa-layer-group" style="font-size:10px"></i> Grade ${idx}/${total}</span>` : "";
+                })()}
+                ${it.dataDesejada ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style="background:#EDE9FE;color:#7c3aed;border:1px solid #C4B5FD" title="Data desejada deste pedido"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}</span>` : ""}
                 ${isPending ? `<span class="grade-pending-badge"><i class="fa-solid fa-triangle-exclamation"></i> Grade pendente</span>` : ""}
               </div>
             </div>
@@ -5291,14 +5356,27 @@ function renderOrderDateOverride(){
   const globalInput = $("oxDataDesejada");
   if(!toggle || !list || !globalInput) return;
 
-  const items = [...state.cart.values()];
-  // Toggle só faz sentido se houver 2+ produtos
-  if(items.length < 2){
+  // Painel mostra só itens SEM data desejada própria (pois os outros já têm data)
+  const items = [...state.cart.values()].filter(it => !it.dataDesejada);
+  // Toggle só faz sentido se houver itens sem data
+  if(items.length < 1){
     toggle.hidden = true;
     list.hidden = true;
     list.innerHTML = "";
     _orderDateOverride = { open:false, byKey:new Map() };
     return;
+  }
+  // Mostra contador se há outros já com data
+  const totalCart = state.cart.size;
+  const semData = items.length;
+  const comData = totalCart - semData;
+  const subLabel = toggle.querySelector(".date-override-sublabel");
+  if(subLabel){
+    if(comData > 0){
+      subLabel.textContent = `${comData} item(ns) já têm data própria · ${semData} sem data`;
+    } else {
+      subLabel.textContent = "";
+    }
   }
   toggle.hidden = false;
 
@@ -5376,11 +5454,15 @@ $("oxDateOverrideToggle")?.addEventListener("click", () => {
 });
 
 // Retorna a data desejada efetiva para um item da sacola (override > global)
-function getEffectiveDesiredDate(cartKey, globalDate){
+function getEffectiveDesiredDate(cartKey, globalDate, item){
+  // 1ª prioridade: data do próprio item da sacola (nova feature)
+  if(item && item.dataDesejada) return item.dataDesejada;
+  // 2ª prioridade: override no modal de exportação (painel "datas diferentes")
   if(_orderDateOverride.open){
     const entry = _orderDateOverride.byKey.get(cartKey);
     if(entry && entry.date) return entry.date;
   }
+  // 3ª: data global do formulário
   return globalDate || "";
 }
 
@@ -5534,8 +5616,8 @@ function buildOrderExportRows(cfg, itemsOverride){
     row[idx["Aceita Antecipação?"]] = extractLeadingToken(cfg.antecipacao);
     // Data Desejada: usa override individual se existir, senão usa a global
     const effectiveDate = (typeof getEffectiveDesiredDate === "function")
-      ? getEffectiveDesiredDate(it.key, cfg.dataDesejada)
-      : cfg.dataDesejada;
+      ? getEffectiveDesiredDate(it.key, cfg.dataDesejada, it)
+      : (it.dataDesejada || cfg.dataDesejada);
     if(effectiveDate && idx["Data Desejada"] !== undefined){
       // Converte de YYYY-MM-DD (input date) para DD/MM/YYYY
       const [dy, dm, dd] = effectiveDate.split("-");
@@ -6223,7 +6305,7 @@ function handleTrapKeydown(e){
 /** ✅ Sistema de Grade de Tamanhos */
 
 // gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
-const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null, bulkMode:false, bulkFilter:"", bulkApplyMode:"", bulkSelectedKeys:[] };
+const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null, bulkMode:false, bulkFilter:"", bulkApplyMode:"", bulkSelectedKeys:[], dataDesejada:"", addedGrades:[] };
 
 function openGradeModal(item, opts={}){
   gradeState.item = item;
@@ -6236,15 +6318,28 @@ function openGradeModal(item, opts={}){
     gradeState.bulkApplyMode = "";
     gradeState.bulkSelectedKeys = [];
   }
+  // Reset estado de múltiplas grades (a menos que esteja em modo "+ outra grade")
+  if(!opts.keepGrades){
+    gradeState.addedGrades = [];
+    gradeState.dataDesejada = "";
+    const dataInput = $("gradeDataDesejada");
+    if(dataInput) dataInput.value = "";
+    const errEl = $("gradeDataError");
+    if(errEl) errEl.classList.add("hidden");
+  }
   // Restore confirm button label in case it was changed by bulk mode
   const confirmBtn = document.getElementById("btnConfirmGrade");
   const confirmSpan = confirmBtn?.querySelector("span");
   if(confirmSpan && !opts.keepBulk) confirmSpan.textContent = "Adicionar Grade à Sacola";
 
   const sizes = expandTam(item.tam);
-  // Recupera qtds já salvas na sacola se existir grade
-  const existing = state.cart.get(cartKeyFor(item));
-  const existingGrade = existing?.grade || {};
+  // Modo "outra grade": começa sempre limpo (não recupera grade da sacola)
+  let existingGrade = {};
+  if(!opts.keepGrades){
+    // Recupera qtds já salvas na sacola se existir grade
+    const existing = state.cart.get(cartKeyFor(item));
+    existingGrade = existing?.grade || {};
+  }
 
   gradeState.sizes = sizes.map(tam => ({
     tam,
@@ -6256,6 +6351,8 @@ function openGradeModal(item, opts={}){
   $("gradeCor").textContent = `${item.cor || ""}${item.corCodigo ? " · " + item.corCodigo : ""}`;
 
   renderGradeSizeList();
+  _renderPreviousGradesList();
+  _updateGradeUIVisibility();
 
   // Abre com animação
   const modal = $("gradeModal");
@@ -6264,6 +6361,58 @@ function openGradeModal(item, opts={}){
     requestAnimationFrame(()=>{ modal.classList.add("open"); });
   });
   document.body.style.overflow = "hidden";
+}
+
+// Renderiza no topo do modal a lista de grades já adicionadas nesta sessão
+function _renderPreviousGradesList(){
+  const wrap = $("gradePreviousList");
+  if(!wrap) return;
+  const grades = gradeState.addedGrades || [];
+  if(!grades.length){ wrap.classList.add("hidden"); wrap.innerHTML=""; return; }
+  wrap.classList.remove("hidden");
+  wrap.innerHTML = `
+    <div class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted mb-2">
+      ✅ Grades adicionadas
+    </div>
+    <div class="space-y-1.5">
+      ${grades.map((g, i) => `
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg border" style="background:#F5F3FF;border-color:#C4B5FD;color:#0f172a">
+          <div class="h-6 w-6 rounded-full text-xs font-extrabold text-white flex items-center justify-center shrink-0" style="background:#7c3aed">${i+1}</div>
+          <div class="flex-1 min-w-0 text-xs">
+            <div class="font-bold truncate">${g.gradeResume || "—"}</div>
+            <div class="text-[10px]" style="color:#6B7280">📅 ${_formatDataBR(g.dataDesejada)} · <strong>${g.totalQty}</strong> par${g.totalQty!==1?"es":""}</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function _formatDataBR(iso){
+  if(!iso) return "—";
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+}
+// Mostra/oculta partes do modal baseado em quantas grades já foram adicionadas
+function _updateGradeUIVisibility(){
+  const hasPrevious = (gradeState.addedGrades || []).length > 0;
+  const labelEl = $("gradeCurrentLabel");
+  const numEl = $("gradeCurrentNum");
+  const accRow = $("gradeAccumulatedRow");
+  const addAnotherBtn = $("btnAddAnotherGrade");
+  if(labelEl){
+    if(hasPrevious){ labelEl.classList.remove("hidden"); if(numEl) numEl.textContent = String((gradeState.addedGrades.length) + 1); }
+    else labelEl.classList.add("hidden");
+  }
+  if(addAnotherBtn){
+    // Aparece a partir da 1ª grade montada (após primeira adição já fica visível)
+    addAnotherBtn.classList.toggle("hidden", false); // sempre visível pra o vendedor saber que pode adicionar +
+    if(!hasPrevious) addAnotherBtn.classList.add("hidden"); // mas oculto até ele ter adicionado a 1ª
+  }
+  if(accRow){
+    const total = (gradeState.addedGrades||[]).reduce((a,g)=> a + (g.totalQty||0), 0);
+    if(hasPrevious){ accRow.classList.remove("hidden"); const totEl=$("gradeTotalAcumulado"); if(totEl) totEl.textContent = String(total); }
+    else accRow.classList.add("hidden");
+  }
 }
 
 function closeGradeModal(){
@@ -6365,12 +6514,24 @@ function gradeToCartEntry(){
     .map(([t, q]) => `${t}×${q}`)
     .join(" | ");
 
-  const key = cartKeyFor(item);
   const precoNum = toNumberBR(item.precoRaw ?? 0);
   const precoFmt = moneyBR(precoNum);
 
+  // Gera linhaId único só se já houver outras grades do mesmo produto na sacola
+  // OU se está em modo "outra grade" (gradeState.addedGrades > 0)
+  const baseKey = cartKeyBaseFor(item);
+  const hasOtherLines = (gradeState.addedGrades || []).length > 0 ||
+                        [...state.cart.keys()].some(k => k.startsWith(baseKey + "||"));
+  const linhaId = hasOtherLines ? _genLinhaId() : null;
+  const key = linhaId ? `${baseKey}||${linhaId}` : baseKey;
+
+  // Data desejada (do input no modal)
+  const dataInputVal = $("gradeDataDesejada")?.value || "";
+  const dataDesejada = dataInputVal || gradeState.dataDesejada || "";
+
   return {
     key,
+    linhaId: linhaId || undefined,
     codigo: item.codigo || "",
     produto: item.produto || "",
     cor: item.cor || "",
@@ -6384,6 +6545,7 @@ function gradeToCartEntry(){
     qty: totalQty,
     grade: gradeMap,
     gradeResume,
+    dataDesejada,
     obs: state.cart.get(key)?.obs || "",
     imgSrc: resolveImageSrc(item.imagem),
   };
@@ -6439,15 +6601,50 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
   // ── Modo normal ──────────────────────────────────
   const entry = gradeToCartEntry();
   if(entry.qty === 0){ toast("Adicione ao menos 1 par ✅"); return; }
+  // Valida data desejada obrigatória
+  if(!entry.dataDesejada){
+    $("gradeDataError")?.classList.remove("hidden");
+    $("gradeDataDesejada")?.focus();
+    return;
+  }
   const fromCart = gradeState.fromCart;
   state.cart.set(entry.key, entry);
   saveCartToStorage();
   renderCartUI();
-  setCardAddStatus(entry.key, "added");
+  setCardAddStatus(cartKeyBaseFor(entry), "added");
   refreshVisibleCardAddButtons();
   closeGradeModal();
   toast("Grade adicionada ✅");
   if(fromCart) setTimeout(()=> openCartModal(), 320);
+});
+
+// Botão "Adicionar à sacola e abrir outra grade"
+$("btnAddAnotherGrade")?.addEventListener("click", ()=>{
+  const entry = gradeToCartEntry();
+  if(entry.qty === 0){ toast("Adicione ao menos 1 par antes de continuar ✅"); return; }
+  if(!entry.dataDesejada){
+    $("gradeDataError")?.classList.remove("hidden");
+    $("gradeDataDesejada")?.focus();
+    return;
+  }
+  // Salva a grade atual
+  state.cart.set(entry.key, entry);
+  saveCartToStorage();
+  setCardAddStatus(cartKeyBaseFor(entry), "added");
+  // Adiciona no histórico do modal
+  gradeState.addedGrades.push({
+    grade: entry.grade,
+    gradeResume: entry.gradeResume,
+    totalQty: entry.qty,
+    dataDesejada: entry.dataDesejada
+  });
+  // Reabre limpo, mantendo as grades adicionadas
+  const item = gradeState.item;
+  toast(`Grade ${gradeState.addedGrades.length} adicionada ✅`);
+  // Limpa o input de data pra próxima
+  const dataInput = $("gradeDataDesejada");
+  if(dataInput) dataInput.value = "";
+  openGradeModal(item, { fromCart: gradeState.fromCart, keepGrades: true });
 });
 
 $("btnGradeLater").addEventListener("click", ()=>{
@@ -7403,7 +7600,9 @@ function buildPedidoSnapshot(cfg){
       preco,
       colecao: it.colecao || "",
       imagem: it.imagem || "",
-      imgSrc: it.imgSrc || ""
+      imgSrc: it.imgSrc || "",
+      linhaId: it.linhaId || undefined,
+      dataDesejada: it.dataDesejada || ""
     });
   }
   return {
@@ -7633,7 +7832,9 @@ function _mpPedidoItemToCartItem(it){
     preco: precoFinal,
     precoRaw: precoFinal,
     precoNum: precoFinal,
-    precoFmt: (typeof moneyBR === "function") ? moneyBR(precoFinal) : `R$ ${precoFinal.toFixed(2).replace(".",",")}`
+    precoFmt: (typeof moneyBR === "function") ? moneyBR(precoFinal) : `R$ ${precoFinal.toFixed(2).replace(".",",")}`,
+    linhaId: it.linhaId || undefined,
+    dataDesejada: it.dataDesejada || ""
   };
 }
 
