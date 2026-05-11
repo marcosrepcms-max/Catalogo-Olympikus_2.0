@@ -7382,7 +7382,11 @@ function buildPedidoSnapshot(cfg){
   let valorTotal = 0;
   for(const it of state.cart.values()){
     const totalQty = (typeof getItemTotalQty === "function") ? getItemTotalQty(it) : (Number(it.qty)||0);
-    const preco = Number(it.preco || it.precoRaw || 0);
+    // Sacola guarda precoNum; fallback pra preco/precoRaw (compat). Por último tenta extrair do precoFmt.
+    let preco = Number(it.precoNum) || Number(it.preco) || Number(it.precoRaw) || 0;
+    if(!preco && it.precoFmt && typeof toNumberBR === "function"){
+      preco = Number(toNumberBR(it.precoFmt)) || 0;
+    }
     totalItens += totalQty;
     valorTotal += totalQty * preco;
     items.push({
@@ -7610,6 +7614,11 @@ function _mpPedidoItemToCartItem(it){
   const imgSrcResolved = it.imgSrc
     || (typeof resolveImageSrc === "function" ? resolveImageSrc(imagemBase) : "")
     || "";
+  // Preço: prioriza o do histórico, mas se for 0/inválido cai no preço atual do catálogo
+  const precoFinal = Number(it.preco)
+    || Number(original?.preco)
+    || Number((typeof toNumberBR === "function") ? toNumberBR(original?.precoRaw) : 0)
+    || 0;
   return {
     codigo: it.codigo,
     produto: it.produto,
@@ -7621,10 +7630,10 @@ function _mpPedidoItemToCartItem(it){
     colecao: it.colecao || "",
     imagem: imagemBase,
     imgSrc: imgSrcResolved,
-    preco: it.preco || original?.preco || 0,
-    precoRaw: it.preco || original?.precoRaw || 0,
-    precoNum: Number(it.preco || original?.preco || 0),
-    precoFmt: (typeof moneyBR === "function") ? moneyBR(Number(it.preco || 0)) : `R$ ${Number(it.preco || 0).toFixed(2)}`
+    preco: precoFinal,
+    precoRaw: precoFinal,
+    precoNum: precoFinal,
+    precoFmt: (typeof moneyBR === "function") ? moneyBR(precoFinal) : `R$ ${precoFinal.toFixed(2).replace(".",",")}`
   };
 }
 
