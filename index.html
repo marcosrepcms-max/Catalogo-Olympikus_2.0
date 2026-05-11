@@ -2351,6 +2351,8 @@ const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS",
 const WORKER_URL = "https://repasse-worker-cms.marcosrep-cms.workers.dev";
 // Token de admin para writes protegidas no Worker (igual ao do admin de Disponibilidades)
 const ADMIN_TOKEN = "1b489c97-7bc7-466a-a675-f559e1226371d9bea53d-a920-4059-a31c-6bc0b6d8c4c8";
+// URL base das imagens de categorias (Worker salva no repo Catalogo-Olympikus, não no _2.0)
+const CAT_IMG_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/imagens_olympikus/categorias/";
 
 const state = {
   productsRaw: [],
@@ -7090,7 +7092,8 @@ function injectHomeCategoryImages(){
   };
   var EXTS = [".jpg",".jpeg",".png",".webp"];
   var base = (typeof DATA_CONFIG !== "undefined" && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./imagens_olympikus/";
-  var customBase = base + "categorias/";
+  // Imagens customizadas pelo admin ficam no repo Catalogo-Olympikus (não no _2.0)
+  var customBase = (typeof CAT_IMG_BASE !== "undefined") ? CAT_IMG_BASE : base + "categorias/";
   Object.keys(CAT_IMAGES).forEach(function(htmlId){
     var imgName = CAT_IMAGES[htmlId];
     var imgEl = document.getElementById("home-cat-img-"+htmlId);
@@ -7164,7 +7167,7 @@ function abrirModalImagensCategorias(){
   const list = $("catImgList");
   list.innerHTML = CAT_IMG_CATEGORIES.map(cat => {
     const bust = Date.now();
-    const customSrc = `./imagens_olympikus/categorias/${cat.id}.png?t=${bust}`;
+    const customSrc = `${CAT_IMG_BASE}${cat.id}.png?t=${bust}`;
     return `<div class="ci-row" data-cat-id="${cat.id}">
       <div class="ci-thumb">
         <img src="${customSrc}" alt="${cat.nome}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -7263,7 +7266,7 @@ async function uploadImagemCategoria(catId, file){
 
     // Atualiza visualmente (com cache-buster)
     const bust = Date.now();
-    const newSrc = `./imagens_olympikus/categorias/${catId}.png?t=${bust}`;
+    const newSrc = `${CAT_IMG_BASE}${catId}.png?t=${bust}`;
     const img = row?.querySelector(".ci-thumb img");
     if(img){
       img.src = newSrc;
