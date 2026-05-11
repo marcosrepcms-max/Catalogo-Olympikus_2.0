@@ -2275,6 +2275,8 @@ const STORAGE_KEYS = {
   productsCache: "olympikus_products_cache_v1"
 };
 const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "V&A":"VESTUÁRIO" };
+// URL do Cloudflare Worker (usado pelo histórico Meus Pedidos)
+const WORKER_URL = "https://repasse-worker-cms.marcosrep-cms.workers.dev";
 
 const state = {
   productsRaw: [],
@@ -5568,6 +5570,14 @@ function exportOrderXlsxFromModal(){
     }
     return;
   }
+  // Pergunta antes se deve salvar no histórico
+  abrirModalSalvarHistorico(
+    () => _doExportXlsx(true),   // Sim → exporta + salva
+    () => _doExportXlsx(false)   // Não → só exporta
+  );
+}
+
+function _doExportXlsx(salvarHist){
   const cfg = getOrderExportFormData();
   saveOrderExportConfig(cfg);
   const { aoa, warnings } = buildOrderExportRows(cfg);
@@ -5584,17 +5594,51 @@ function exportOrderXlsxFromModal(){
   XLSX.writeFile(wb, fileName);
   closeOrderExportModal();
 
-  // Salva no histórico (não bloqueia o Excel se falhar)
-  if(typeof salvarPedidoNoHistorico === "function"){
-    salvarPedidoNoHistorico(cfg).catch(err => console.warn("Histórico:", err));
+  // Salva no histórico se o usuário confirmou
+  if(salvarHist && typeof salvarPedidoNoHistorico === "function"){
+    salvarPedidoNoHistorico(cfg)
+      .then(() => toast("Pedido salvo no histórico 📋"))
+      .catch(err => {
+        console.warn("Histórico:", err);
+        toast("Excel gerado, mas falha ao salvar histórico ⚠️");
+      });
   }
 
   if(warnings.length){
     console.warn("Avisos da exportação Excel:", warnings);
     toast(`Excel gerado com ${warnings.length} aviso(s) ✅`);
-  } else {
+  } else if(!salvarHist){
     toast("Excel gerado ✅");
   }
+}
+
+// Modal de confirmação de salvamento no histórico
+function abrirModalSalvarHistorico(onSim, onNao){
+  let modal = $("histSaveModal");
+  if(!modal){
+    modal = document.createElement("div");
+    modal.id = "histSaveModal";
+    modal.className = "hidden fixed inset-0 z-[95]";
+    modal.innerHTML = `
+      <div class="absolute inset-0 bg-black/60"></div>
+      <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="rounded-2xl p-5 max-w-sm w-full" style="background:var(--card-bg, #fff);border:1px solid var(--border)">
+          <div class="text-3xl mb-2">📋</div>
+          <div class="text-lg font-black mb-1" style="color:var(--text)">Salvar este pedido no histórico?</div>
+          <div class="text-sm mb-4" style="color:var(--muted)">O Excel será gerado em qualquer escolha. Se salvar, você pode consultar depois em "Meus pedidos".</div>
+          <div class="flex gap-2">
+            <button id="histSaveBtnNao" class="flex-1 rounded-xl border border-oly-border px-4 py-2.5 font-bold text-sm hover:bg-oly-bg" style="color:var(--text)">Só gerar Excel</button>
+            <button id="histSaveBtnSim" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white" style="background:var(--primary)">Sim, salvar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  const close = () => { modal.classList.add("hidden"); document.body.style.overflow = ""; };
+  $("histSaveBtnSim").onclick = () => { close(); onSim?.(); };
+  $("histSaveBtnNao").onclick = () => { close(); onNao?.(); };
 }
 
 $("btnExportXlsx").addEventListener("click", openOrderExportModal);
