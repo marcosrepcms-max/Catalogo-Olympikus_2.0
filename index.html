@@ -977,6 +977,151 @@
     @media(min-width:640px){ .action-btn-mobile-label { display:none; } }
 
 
+    /* ── Modal Meus Pedidos ── */
+    #meusPedidosModal .mp-sheet {
+      width:min(640px, calc(100vw - 24px));
+      max-height: 92vh;
+      max-height: 92dvh;
+      background: var(--card-bg, #fff);
+      border:1px solid var(--border);
+      border-radius: 28px;
+      overflow:hidden;
+      box-shadow: 0 24px 70px rgba(0,0,0,.22);
+      display:flex;
+      flex-direction:column;
+    }
+    #meusPedidosModal .mp-sheet-header { flex:0 0 auto; }
+    #meusPedidosModal .mp-sheet-filters { flex:0 0 auto; }
+    #meusPedidosModal .mp-sheet-stats { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; background:var(--card-bg); }
+    #meusPedidosModal .mp-sheet-body {
+      flex:1 1 auto;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      min-height:0;
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .mp-filter-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+    .mp-filter-row:last-child { margin-bottom:0; }
+    .mp-filter-label {
+      font-size:11px; font-weight:800;
+      color:var(--muted); letter-spacing:0.4px; text-transform:uppercase;
+      width:90px; flex-shrink:0;
+    }
+    .mp-filter-select {
+      flex:1; min-width:0;
+      background: var(--card-bg, #fff);
+      border:1.5px solid var(--border);
+      border-radius:10px;
+      padding:8px 30px 8px 12px;
+      font-size:12px; font-weight:700; color:var(--text);
+      appearance:none; cursor:pointer; font-family:inherit;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='none' stroke='%236B7280' stroke-width='1.5' d='M1 1l4 4 4-4'/></svg>");
+      background-repeat:no-repeat; background-position:right 12px center;
+    }
+    .mp-filter-search {
+      flex:1; min-width:0;
+      background:var(--card-bg, #fff);
+      border:1.5px solid var(--border);
+      border-radius:10px;
+      padding:8px 12px 8px 32px;
+      font-size:12px; color:var(--text);
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.35-4.35'/></svg>");
+      background-repeat:no-repeat; background-position:10px center;
+      font-family:inherit;
+    }
+    .mp-periodo-pills { display:flex; gap:5px; flex:1; flex-wrap:wrap; }
+    .mp-periodo-pill {
+      border-radius:999px; padding:5px 10px;
+      font-size:11px; font-weight:700;
+      border:1px solid var(--border);
+      background:var(--card-bg, #fff); color:var(--muted);
+      cursor:pointer; transition:all .12s;
+      font-family:inherit;
+    }
+    .mp-periodo-pill:hover { border-color:var(--primary); color:var(--primary); }
+    .mp-periodo-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 2px 6px rgba(124,58,237,.25); }
+    .mp-empty {
+      text-align:center; padding:40px 20px;
+      color:var(--muted); font-size:13px;
+    }
+    .mp-pedido-item {
+      background:var(--card-bg, #fff);
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin: 8px 8px;
+      overflow:hidden;
+      transition:all .15s;
+    }
+    .mp-pedido-item:hover { border-color:var(--primary); }
+    .mp-pedido-head {
+      padding:12px 14px;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .mp-pedido-left { flex:1; min-width:0; }
+    .mp-pedido-cliente { font-size:13px; font-weight:900; color:var(--text); }
+    .mp-pedido-meta {
+      font-size:10px; color:var(--muted);
+      margin-top:3px; display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .mp-pedido-meta-tag {
+      background:var(--bg, #F1F5F9); padding:1px 6px; border-radius:4px; font-weight:700;
+    }
+    .mp-pedido-right { text-align:right; flex-shrink:0; }
+    .mp-pedido-valor { font-size:13px; font-weight:900; color:var(--primary); }
+    .mp-pedido-itens-count { font-size:10px; color:var(--muted); font-weight:700; }
+    .mp-pedido-chev {
+      color:var(--muted); font-size:10px;
+      transition:transform .15s;
+    }
+    .mp-pedido-item.open .mp-pedido-chev { transform:rotate(90deg); }
+    .mp-pedido-body {
+      display:none;
+      background:var(--bg);
+      border-top:1px solid var(--border);
+      padding:10px 14px;
+    }
+    .mp-pedido-item.open .mp-pedido-body { display:block; }
+    .mp-pedido-prod {
+      display:flex; align-items:center; gap:8px;
+      padding:6px 0; border-bottom:1px dashed var(--border);
+      font-size:11px;
+    }
+    .mp-pedido-prod:last-of-type { border-bottom:none; }
+    .mp-pedido-prod-thumb {
+      width:32px; height:32px; border-radius:6px;
+      background:var(--bg, #E2E8F0);
+      flex-shrink:0; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .mp-pedido-prod-thumb img { width:100%; height:100%; object-fit:contain; }
+    .mp-pedido-prod-info { flex:1; min-width:0; }
+    .mp-pedido-prod-name { font-weight:800; color:var(--text); }
+    .mp-pedido-prod-meta { font-size:10px; color:var(--muted); margin-top:1px; }
+    .mp-pedido-prod-qty {
+      background:var(--primary); color:#fff;
+      font-size:10px; font-weight:800;
+      border-radius:6px; padding:2px 8px;
+      flex-shrink:0;
+    }
+    .mp-pedido-actions {
+      display:flex; gap:6px; margin-top:10px;
+      padding-top:8px; border-top:1px solid var(--border);
+    }
+    .mp-pedido-btn {
+      flex:1; border-radius:8px; padding:7px 10px;
+      font-size:11px; font-weight:800;
+      border:1px solid var(--border);
+      background:var(--card-bg, #fff); color:var(--muted);
+      cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; gap:5px;
+      transition:all .12s; font-family:inherit;
+    }
+    .mp-pedido-btn:hover:not(:disabled) { background:var(--bg); }
+    .mp-pedido-btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .mp-pedido-btn.primary:hover:not(:disabled) { opacity:.92; }
+    .mp-pedido-btn:disabled { opacity:.45; cursor:not-allowed; }
+
     /* ── Modal Exportação Pedido Excel ── */
     #orderExportModal .order-sheet {
       width:min(720px, calc(100vw - 24px));
@@ -1320,6 +1465,11 @@
               <span class="action-btn-wrap"><i class="fa-solid fa-bag-shopping text-oly-blue"></i><span class="action-btn-mobile-label">Sacola</span></span>
               <span class="hidden sm:inline">Sacola</span>
               <span id="cartCountBadge" class="hidden rounded-full bg-oly-blue px-2 py-0.5 text-xs font-bold text-white">0</span>
+            </button>
+            <!-- 2.5 Meus Pedidos -->
+            <button id="btnMeusPedidos" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Histórico de pedidos">
+              <span class="action-btn-wrap"><i class="fa-solid fa-clock-rotate-left text-oly-blue"></i><span class="action-btn-mobile-label">Pedidos</span></span>
+              <span class="hidden sm:inline">Meus pedidos</span>
             </button>
             <!-- 3 Layout -->
             <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
@@ -5276,14 +5426,17 @@ function calcQtdCaixas(it, totalQty){
   if(totalQty % loteSize !== 0) return ""; // não fecha caixa exata
   return totalQty / loteSize;
 }
-function buildOrderExportRows(cfg){
+function buildOrderExportRows(cfg, itemsOverride){
   const headers = ORDER_EXPORT_HEADERS.slice();
   const idx = Object.fromEntries(headers.map((h, i)=> [h, i]));
   const aoa = [headers];
   const pay = parsePaymentInfo(cfg.payment);
   const warnings = [];
 
-  for(const it of state.cart.values()){
+  // Aceita itens de uma fonte alternativa (ex: histórico) ou usa a sacola atual
+  const items = itemsOverride && itemsOverride.length ? itemsOverride : [...state.cart.values()];
+
+  for(const it of items){
     const row = new Array(headers.length).fill("");
     const totalQty = getItemTotalQty(it);
     const corPedido = String(it.corCodigo || it.cor || "").trim();
@@ -5430,6 +5583,11 @@ function exportOrderXlsxFromModal(){
   const fileName = `pedido_layout_operacional_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
   XLSX.writeFile(wb, fileName);
   closeOrderExportModal();
+
+  // Salva no histórico (não bloqueia o Excel se falhar)
+  if(typeof salvarPedidoNoHistorico === "function"){
+    salvarPedidoNoHistorico(cfg).catch(err => console.warn("Histórico:", err));
+  }
 
   if(warnings.length){
     console.warn("Avisos da exportação Excel:", warnings);
@@ -6831,6 +6989,474 @@ function injectHomeCategoryImages(){
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// MEUS PEDIDOS — Histórico
+// ═══════════════════════════════════════════════════════════════════
+const MP = {
+  pedidosCache: {}, // { comissionista: [pedidos] }
+  filtroComissionista: "",
+  filtroBusca: "",
+  filtroPeriodo: "mes", // 7d | mes | mes-passado | custom
+  customDe: "",
+  customAte: "",
+};
+
+const COMISSIONISTAS = [
+  { codigo:"114611",  nome:"JORGE" },
+  { codigo:"109839",  nome:"MARIANA" },
+  { codigo:"1333497", nome:"RAFAEL" },
+  { codigo:"25471",   nome:"WILLAME" },
+  { codigo:"25745",   nome:"LEANDRO" },
+  { codigo:"3616654", nome:"MARCOS" },
+];
+
+function getComissionistaNome(codigo){
+  const c = COMISSIONISTAS.find(x => x.codigo === String(codigo));
+  return c ? c.nome : "";
+}
+
+function _mpEscape(s){ return String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
+
+// Calcula valor total de um item baseado na grade (ou qty)
+function _mpCalcValorItem(it){
+  const qty = (it.grade && Object.keys(it.grade).length)
+    ? Object.values(it.grade).reduce((a,n)=> a + (Number(n)||0), 0)
+    : (Number(it.qty) || 0);
+  const preco = Number(it.preco || it.precoRaw || 0);
+  return qty * preco;
+}
+
+// Cria um snapshot do pedido pra salvar no histórico
+function buildPedidoSnapshot(cfg){
+  const items = [];
+  let totalItens = 0;
+  let valorTotal = 0;
+  for(const it of state.cart.values()){
+    const totalQty = (typeof getItemTotalQty === "function") ? getItemTotalQty(it) : (Number(it.qty)||0);
+    const preco = Number(it.preco || it.precoRaw || 0);
+    totalItens += totalQty;
+    valorTotal += totalQty * preco;
+    items.push({
+      codigo: it.codigo || "",
+      produto: it.produto || "",
+      cor: it.cor || "",
+      corCodigo: it.corCodigo || "",
+      genero: it.genero || "",
+      tam: it.tam || "",
+      categoria: it.categoria || "",
+      grade: it.grade ? { ...it.grade } : null,
+      qty: Number(it.qty) || 0,
+      totalQty,
+      preco,
+      colecao: it.colecao || "",
+      imagem: it.imagem || ""
+    });
+  }
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    createdAt: new Date().toISOString(),
+    comissionista: String(cfg.commission || ""),
+    comissionistaNome: getComissionistaNome(cfg.commission),
+    clientCode: String(cfg.clientCode || ""),
+    payment: cfg.payment || "",
+    priceTable: cfg.priceTable || "",
+    campaign: cfg.campaign || "",
+    dataDesejada: cfg.dataDesejada || "",
+    pedidoCliente: cfg.pedidoCliente || "",
+    items,
+    totalItens,
+    valorTotal: Number(valorTotal.toFixed(2))
+  };
+}
+
+// Salva o pedido no histórico via Worker
+async function salvarPedidoNoHistorico(cfg){
+  const com = String(cfg.commission || "").trim();
+  if(!com) return;
+  const pedido = buildPedidoSnapshot(cfg);
+  try{
+    const res = await fetch(`${WORKER_URL || ""}`, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"savePedidoHistorico", comissionista:com, pedido })
+    });
+    if(res.ok){
+      // Invalida cache para forçar refetch
+      delete MP.pedidosCache[com];
+    }
+  }catch(err){
+    console.warn("Falha ao salvar histórico:", err);
+  }
+}
+
+// Carrega histórico de um comissionista (com cache)
+async function carregarHistorico(comissionista){
+  if(!comissionista) return [];
+  if(MP.pedidosCache[comissionista]) return MP.pedidosCache[comissionista];
+  try{
+    const res = await fetch(`${WORKER_URL || ""}`, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"getPedidoHistorico", comissionista })
+    });
+    const data = await res.json();
+    const lista = Array.isArray(data) ? data : [];
+    MP.pedidosCache[comissionista] = lista;
+    return lista;
+  }catch(err){
+    console.error("Erro ao carregar histórico:", err);
+    return [];
+  }
+}
+
+// Determina o range de datas baseado no preset
+function _mpGetDateRange(){
+  const now = new Date();
+  let de, ate;
+  if(MP.filtroPeriodo === "7d"){
+    ate = now;
+    de = new Date(now); de.setDate(de.getDate() - 7);
+  } else if(MP.filtroPeriodo === "mes"){
+    de = new Date(now.getFullYear(), now.getMonth(), 1);
+    ate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  } else if(MP.filtroPeriodo === "mes-passado"){
+    de = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    ate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  } else if(MP.filtroPeriodo === "custom"){
+    de = MP.customDe ? new Date(MP.customDe + "T00:00:00") : null;
+    ate = MP.customAte ? new Date(MP.customAte + "T23:59:59") : null;
+  }
+  return { de, ate };
+}
+
+function _mpFormatBR(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,"0");
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function _mpFormatMoney(v){
+  return Number(v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+
+// Filtra a lista de pedidos baseado nos filtros ativos
+function _mpFiltrarPedidos(lista){
+  const { de, ate } = _mpGetDateRange();
+  const q = MP.filtroBusca.toLowerCase().trim();
+  return lista.filter(p => {
+    // Período
+    if(de || ate){
+      const created = new Date(p.createdAt);
+      if(de && created < de) return false;
+      if(ate && created > ate) return false;
+    }
+    // Busca
+    if(q){
+      const hay = [
+        p.clientCode, p.pedidoCliente, p.id,
+        ...(p.items||[]).map(i => `${i.codigo} ${i.produto} ${i.cor}`)
+      ].join(" ").toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderListaPedidos(){
+  const lista = MP.pedidosCache[MP.filtroComissionista] || [];
+  const filtrados = _mpFiltrarPedidos(lista);
+  const ul = $("mpLista");
+  const empty = $("mpEmpty");
+  const loading = $("mpLoading");
+  loading.classList.add("hidden");
+
+  if(!filtrados.length){
+    ul.classList.add("hidden");
+    empty.classList.remove("hidden");
+    $("mpStatsTxt").textContent = "0 pedidos";
+    $("mpStatsTotal").textContent = "";
+    return;
+  }
+
+  empty.classList.add("hidden");
+  ul.classList.remove("hidden");
+
+  // Stats
+  const totItens = filtrados.reduce((a, p) => a + (p.totalItens||0), 0);
+  const totValor = filtrados.reduce((a, p) => a + (p.valorTotal||0), 0);
+  $("mpStatsTxt").textContent = `${filtrados.length} pedido${filtrados.length!==1?"s":""} · ${totItens} iten${totItens!==1?"s":""}`;
+  $("mpStatsTotal").textContent = _mpFormatMoney(totValor);
+
+  // Sacola vazia? (controla disponibilidade do PDF)
+  const sacolaVazia = state.cart.size === 0;
+
+  ul.innerHTML = filtrados.map(p => {
+    const cliente = p.clientCode ? `Cliente ${_mpEscape(p.clientCode)}` : "Cliente —";
+    const ped = p.pedidoCliente ? _mpEscape(p.pedidoCliente) : "SEM-REF";
+    const data = _mpFormatBR(p.createdAt);
+    const valor = _mpFormatMoney(p.valorTotal);
+    const itens = (p.items||[]).map(i => {
+      const meta = [i.cor, i.genero].filter(Boolean).join(" · ");
+      const imgUrl = i.imagem ? `./imagens_olympikus/${i.imagem}.png` : "";
+      return `<div class="mp-pedido-prod">
+        <div class="mp-pedido-prod-thumb">${imgUrl ? `<img src="${_mpEscape(imgUrl)}" alt="" onerror="this.style.display='none'">` : ''}</div>
+        <div class="mp-pedido-prod-info">
+          <div class="mp-pedido-prod-name">${_mpEscape(i.produto || i.codigo)}</div>
+          <div class="mp-pedido-prod-meta">${_mpEscape(meta)}${i.colecao ? ` · ${_mpEscape(i.colecao)}` : ""}</div>
+        </div>
+        <div class="mp-pedido-prod-qty">${i.totalQty || 0}</div>
+      </div>`;
+    }).join("");
+
+    return `<div class="mp-pedido-item" data-pedido-id="${_mpEscape(p.id)}">
+      <div class="mp-pedido-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="mp-pedido-left">
+          <div class="mp-pedido-cliente">${cliente}</div>
+          <div class="mp-pedido-meta">
+            <span>${data}</span>
+            <span class="mp-pedido-meta-tag">${ped}</span>
+          </div>
+        </div>
+        <div class="mp-pedido-right">
+          <div class="mp-pedido-valor">${valor}</div>
+          <div class="mp-pedido-itens-count">${p.totalItens} iten${p.totalItens!==1?"s":""}</div>
+        </div>
+        <span class="mp-pedido-chev">▶</span>
+      </div>
+      <div class="mp-pedido-body">
+        ${itens}
+        <div class="mp-pedido-actions">
+          <button class="mp-pedido-btn" onclick="mpReordenar('${_mpEscape(p.id)}')"><i class="fa-solid fa-rotate-left"></i> Reordenar</button>
+          <button class="mp-pedido-btn primary" onclick="mpBaixarExcel('${_mpEscape(p.id)}')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+          <button class="mp-pedido-btn" onclick="mpBaixarPDF('${_mpEscape(p.id)}')" ${sacolaVazia ? "" : "disabled title=\"Esvazie a sacola pra gerar PDF\""}><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// Localiza pedido por id em todos os caches
+function _mpFindPedidoById(id){
+  for(const com of Object.keys(MP.pedidosCache)){
+    const p = MP.pedidosCache[com].find(x => x.id === id);
+    if(p) return p;
+  }
+  return null;
+}
+
+// Converte item do histórico de volta pra item da sacola
+function _mpPedidoItemToCartItem(it){
+  return {
+    codigo: it.codigo,
+    produto: it.produto,
+    cor: it.cor,
+    corCodigo: it.corCodigo || it.cor,
+    genero: it.genero || "",
+    tam: it.tam || "",
+    categoria: it.categoria || "",
+    colecao: it.colecao || "",
+    imagem: it.imagem || "",
+    preco: it.preco || 0,
+    precoRaw: it.preco || 0
+  };
+}
+
+// Reordenar: pergunta antes de substituir sacola
+function mpReordenar(id){
+  const pedido = _mpFindPedidoById(id);
+  if(!pedido) return;
+  const sacolaAtual = state.cart.size;
+  const fazReordenar = () => {
+    state.cart.clear();
+    for(const it of (pedido.items||[])){
+      const base = _mpPedidoItemToCartItem(it);
+      const key = cartKeyFor(base);
+      state.cart.set(key, {
+        ...base,
+        key,
+        qty: it.qty || 0,
+        grade: it.grade ? { ...it.grade } : null,
+      });
+    }
+    if(typeof saveCartToStorage === "function") saveCartToStorage();
+    if(typeof updateCartBadge === "function") updateCartBadge();
+    if(typeof renderCartUI === "function") renderCartUI();
+    if(typeof syncCardAddStatusFromCart === "function") syncCardAddStatusFromCart();
+    if(typeof refreshView === "function") refreshView();
+    closeMeusPedidosModal();
+    toast(`${pedido.items.length} item(ns) carregado(s) na sacola ✅`);
+  };
+  if(sacolaAtual > 0){
+    $("mpConfirmMsg").textContent = `Sua sacola atual tem ${sacolaAtual} item(ns). Eles serão substituídos pelos ${pedido.items.length} item(ns) deste pedido.`;
+    $("mpConfirmModal").classList.remove("hidden");
+    $("mpConfirmCancel").onclick = () => $("mpConfirmModal").classList.add("hidden");
+    $("mpConfirmOk").onclick = () => {
+      $("mpConfirmModal").classList.add("hidden");
+      fazReordenar();
+    };
+  } else {
+    fazReordenar();
+  }
+}
+
+// Baixar Excel direto do histórico
+function mpBaixarExcel(id){
+  const pedido = _mpFindPedidoById(id);
+  if(!pedido) return;
+  // Reconstrói cfg a partir do pedido salvo
+  const cfg = {
+    commission: pedido.comissionista,
+    clientCode: pedido.clientCode,
+    payment: pedido.payment,
+    priceTable: pedido.priceTable,
+    campaign: pedido.campaign,
+    packing: "M: Musical",
+    deliveryType: "3: Total Artigo/Cor",
+    dataFirme: "S: Sim",
+    pedidoMae: "N: Não",
+    antecipacao: "N: Não",
+    dataDesejada: pedido.dataDesejada,
+    pedidoCliente: pedido.pedidoCliente
+  };
+  const items = (pedido.items||[]).map(it => ({
+    ..._mpPedidoItemToCartItem(it),
+    key: cartKeyFor(_mpPedidoItemToCartItem(it)),
+    qty: it.qty || 0,
+    grade: it.grade ? { ...it.grade } : null
+  }));
+  const { aoa, warnings } = buildOrderExportRows(cfg, items);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = ORDER_EXPORT_COLS;
+  ws["!autofilter"] = { ref: `A1:BG${aoa.length}` };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pedido");
+  const d = new Date(pedido.createdAt);
+  const pad = n => String(n).padStart(2,"0");
+  const fileName = `pedido_${pedido.clientCode||"sem-cliente"}_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+  toast("Excel gerado do histórico ✅");
+}
+
+// Baixar PDF: usa "Reordenar silencioso" + chama o PDF da sacola
+function mpBaixarPDF(id){
+  if(state.cart.size !== 0){
+    toast("Esvazie a sacola antes de gerar PDF do histórico");
+    return;
+  }
+  const pedido = _mpFindPedidoById(id);
+  if(!pedido) return;
+  // Carrega itens na sacola temporariamente
+  for(const it of (pedido.items||[])){
+    const base = _mpPedidoItemToCartItem(it);
+    const key = cartKeyFor(base);
+    state.cart.set(key, {
+      ...base, key,
+      qty: it.qty || 0,
+      grade: it.grade ? { ...it.grade } : null
+    });
+  }
+  // Aciona o PDF da sacola (deve existir uma função no app)
+  const btnPdf = document.querySelector("[data-action='export-pdf'], #btnExportPdf, #btnSacolaPdf");
+  closeMeusPedidosModal();
+  setTimeout(() => {
+    if(btnPdf) btnPdf.click();
+    else toast("Função PDF não encontrada — abra a sacola e exporte manualmente");
+  }, 300);
+}
+
+// Abre/fecha modal
+function openMeusPedidosModal(){
+  // Popula select de comissionistas
+  const sel = $("mpComissionista");
+  sel.innerHTML = '<option value="">— Selecione —</option>' +
+    COMISSIONISTAS.map(c => `<option value="${c.codigo}">${c.codigo} - ${c.nome}</option>`).join("");
+
+  // Tenta usar último comissionista salvo no localStorage (do export anterior)
+  let lastCom = "";
+  try{
+    const cfg = JSON.parse(localStorage.getItem("orderExportConfig") || "{}");
+    if(cfg.commission) lastCom = String(cfg.commission);
+  }catch(_){}
+  if(lastCom && COMISSIONISTAS.some(c => c.codigo === lastCom)){
+    sel.value = lastCom;
+    MP.filtroComissionista = lastCom;
+  } else {
+    MP.filtroComissionista = "";
+  }
+
+  // Reset filtros
+  MP.filtroBusca = "";
+  MP.filtroPeriodo = "mes";
+  $("mpBusca").value = "";
+  document.querySelectorAll(".mp-periodo-pill").forEach(p =>
+    p.classList.toggle("active", p.dataset.periodo === "mes"));
+  $("mpCustomDates").classList.add("hidden");
+
+  $("meusPedidosModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  if(MP.filtroComissionista){
+    _mpLoad();
+  } else {
+    $("mpLoading").classList.add("hidden");
+    $("mpLista").classList.add("hidden");
+    $("mpEmpty").classList.remove("hidden");
+    $("mpEmpty").innerHTML = `<div class="text-3xl mb-2">👤</div><div class="font-bold mb-1" style="color:var(--text)">Selecione um comissionista</div><div class="text-xs" style="color:var(--muted)">Escolha acima pra ver os pedidos.</div>`;
+    $("mpStatsTxt").textContent = "—";
+    $("mpStatsTotal").textContent = "";
+  }
+}
+async function _mpLoad(){
+  $("mpLoading").classList.remove("hidden");
+  $("mpLista").classList.add("hidden");
+  $("mpEmpty").classList.add("hidden");
+  await carregarHistorico(MP.filtroComissionista);
+  renderListaPedidos();
+}
+function closeMeusPedidosModal(){
+  $("meusPedidosModal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+// Listeners
+$("btnMeusPedidos")?.addEventListener("click", openMeusPedidosModal);
+$("btnCloseMeusPedidos")?.addEventListener("click", closeMeusPedidosModal);
+$("mpBackdrop")?.addEventListener("click", closeMeusPedidosModal);
+$("mpComissionista")?.addEventListener("change", e => {
+  MP.filtroComissionista = e.target.value;
+  if(MP.filtroComissionista) _mpLoad();
+  else {
+    $("mpLista").classList.add("hidden");
+    $("mpEmpty").classList.remove("hidden");
+  }
+});
+$("mpBusca")?.addEventListener("input", e => {
+  MP.filtroBusca = e.target.value;
+  renderListaPedidos();
+});
+document.querySelectorAll(".mp-periodo-pill").forEach(p => {
+  p.addEventListener("click", () => {
+    document.querySelectorAll(".mp-periodo-pill").forEach(x => x.classList.remove("active"));
+    p.classList.add("active");
+    MP.filtroPeriodo = p.dataset.periodo;
+    $("mpCustomDates").classList.toggle("hidden", MP.filtroPeriodo !== "custom");
+    if(MP.filtroComissionista) renderListaPedidos();
+  });
+});
+$("mpDataDe")?.addEventListener("change", e => { MP.customDe = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); });
+$("mpDataAte")?.addEventListener("change", e => { MP.customAte = e.target.value; if(MP.filtroComissionista) renderListaPedidos(); });
+
+// ESC fecha
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape"){
+    if(!$("mpConfirmModal").classList.contains("hidden")){
+      $("mpConfirmModal").classList.add("hidden");
+    } else if(!$("meusPedidosModal").classList.contains("hidden")){
+      closeMeusPedidosModal();
+    }
+  }
+});
+
 // ════════════════════════════════════════════════════
 // BOOT — loadCatalog chamado AQUI, após _onCatalogReady
 // estar definido pelo initHomeScreen acima
@@ -6838,5 +7464,87 @@ function injectHomeCategoryImages(){
 setHeaderStatus("Carregando\u2026");
 loadCatalog({ cacheBust:false });
 </script>
+<!-- ═══════════ MODAL MEUS PEDIDOS ═══════════ -->
+<div id="meusPedidosModal" class="hidden fixed inset-0 z-[88]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="mpBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="mp-sheet">
+      <!-- Header -->
+      <div class="mp-sheet-header flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
+        <div class="min-w-0">
+          <div class="text-xs font-extrabold uppercase tracking-[0.12em]" style="color:var(--primary)">Histórico</div>
+          <div class="text-lg sm:text-xl font-black text-oly-text">📋 Meus pedidos</div>
+        </div>
+        <button id="btnCloseMeusPedidos" class="focus-ring h-11 w-11 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar histórico">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="mp-sheet-filters px-5 sm:px-6 py-4 border-b border-oly-border" style="background:var(--bg)">
+        <div class="mp-filter-row">
+          <label class="mp-filter-label">Comissionista</label>
+          <select id="mpComissionista" class="mp-filter-select"></select>
+        </div>
+        <div class="mp-filter-row">
+          <label class="mp-filter-label">Buscar</label>
+          <input id="mpBusca" type="search" class="mp-filter-search" placeholder="Cliente, produto, pedido...">
+        </div>
+        <div class="mp-filter-row">
+          <label class="mp-filter-label">Período</label>
+          <div class="mp-periodo-pills">
+            <button class="mp-periodo-pill" data-periodo="7d">7 dias</button>
+            <button class="mp-periodo-pill active" data-periodo="mes">Este mês</button>
+            <button class="mp-periodo-pill" data-periodo="mes-passado">Mês passado</button>
+            <button class="mp-periodo-pill" data-periodo="custom">Personalizado</button>
+          </div>
+        </div>
+        <div id="mpCustomDates" class="mp-filter-row hidden">
+          <label class="mp-filter-label">De/Até</label>
+          <div style="display:flex;gap:6px;flex:1;">
+            <input id="mpDataDe" type="date" class="mp-filter-search" style="flex:1;padding-left:12px;background-image:none;">
+            <input id="mpDataAte" type="date" class="mp-filter-search" style="flex:1;padding-left:12px;background-image:none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="mp-sheet-stats px-5 sm:px-6 py-2 border-b border-oly-border">
+        <span class="text-xs font-bold" id="mpStatsTxt" style="color:var(--muted)">— pedidos</span>
+        <span class="text-xs font-black" id="mpStatsTotal" style="color:var(--primary)"></span>
+      </div>
+
+      <!-- Lista -->
+      <div class="mp-sheet-body" id="mpListaWrap">
+        <div id="mpLoading" class="mp-empty">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2" style="color:var(--primary)"></i>
+          <div>Carregando histórico...</div>
+        </div>
+        <div id="mpLista" class="hidden"></div>
+        <div id="mpEmpty" class="mp-empty hidden">
+          <div class="text-3xl mb-2">📭</div>
+          <div class="font-bold mb-1" style="color:var(--text)">Nenhum pedido encontrado</div>
+          <div class="text-xs" style="color:var(--muted)">Os pedidos aparecem aqui quando você gera o Excel da sacola.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmação de reordenar -->
+<div id="mpConfirmModal" class="hidden fixed inset-0 z-[90]">
+  <div class="absolute inset-0 bg-black/60"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 max-w-sm w-full" style="background:var(--card-bg)">
+      <div class="text-lg font-black mb-2" style="color:var(--text)">Substituir sacola atual?</div>
+      <div class="text-sm mb-4" id="mpConfirmMsg" style="color:var(--muted)">Sua sacola atual será limpa e substituída pelos itens deste pedido.</div>
+      <div class="flex gap-2">
+        <button id="mpConfirmCancel" class="flex-1 rounded-xl border border-oly-border px-4 py-2.5 font-bold text-sm hover:bg-oly-bg">Cancelar</button>
+        <button id="mpConfirmOk" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white" style="background:var(--primary)">Substituir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
