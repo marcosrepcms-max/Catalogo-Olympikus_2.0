@@ -2166,16 +2166,6 @@
                 </select>
               </div>
 
-              <div>
-                <label class="order-field-label" for="oxDataDesejada">Data Desejada <span class="req-mark">*</span></label>
-                <input id="oxDataDesejada" type="date" class="order-field-control" data-required="1" />
-                <button type="button" id="oxDateOverrideToggle" class="date-override-toggle" hidden>
-                  <span class="date-override-arrow">▸</span>
-                  <span class="date-override-label">Definir datas diferentes por produto</span>
-                </button>
-                <div id="oxDateOverrideList" class="date-override-list" hidden></div>
-              </div>
-
               <div style="grid-column: 1 / -1;">
                 <label class="order-field-label" for="oxPedidoCliente">Pedido do Cliente</label>
                 <input id="oxPedidoCliente" type="text" class="order-field-control" placeholder="Número ou referência do pedido do cliente" />
@@ -5324,7 +5314,6 @@ function getOrderExportFormData(){
     dataFirme: $("oxDataFirme")?.value || ORDER_EXPORT_DEFAULTS.dataFirme,
     pedidoMae: $("oxPedidoMae")?.value || ORDER_EXPORT_DEFAULTS.pedidoMae,
     antecipacao: $("oxAntecipacao")?.value || ORDER_EXPORT_DEFAULTS.antecipacao,
-    dataDesejada: $("oxDataDesejada")?.value || "",
     pedidoCliente: $("oxPedidoCliente")?.value?.trim() || "",
   };
 }
@@ -5341,7 +5330,6 @@ function fillOrderExportForm(cfg){
   if($("oxPedidoMae")) $("oxPedidoMae").value = data.pedidoMae;
   if($("oxAntecipacao")) $("oxAntecipacao").value = data.antecipacao;
   if($("oxCampaign")) $("oxCampaign").value = "";  // sempre abre em branco
-  if($("oxDataDesejada")) $("oxDataDesejada").value = "";  // sempre abre em branco
   if($("oxPedidoCliente")) $("oxPedidoCliente").value = data.pedidoCliente || "";
 }
 
@@ -5350,119 +5338,20 @@ function fillOrderExportForm(cfg){
 // Resetado a cada abertura do modal de export.
 let _orderDateOverride = { open:false, byKey:new Map() };
 
+// ═══════════ DATA DESEJADA ═══════════
+// A data desejada agora vive APENAS no item da sacola (preenchida no modal de grade).
+// Mantida a função antiga só por compatibilidade com chamadas existentes.
+let _orderDateOverride = { open:false, byKey:new Map() };
+
 function renderOrderDateOverride(){
-  const toggle = $("oxDateOverrideToggle");
-  const list = $("oxDateOverrideList");
-  const globalInput = $("oxDataDesejada");
-  if(!toggle || !list || !globalInput) return;
-
-  // Painel mostra só itens SEM data desejada própria (pois os outros já têm data)
-  const items = [...state.cart.values()].filter(it => !it.dataDesejada);
-  // Toggle só faz sentido se houver itens sem data
-  if(items.length < 1){
-    toggle.hidden = true;
-    list.hidden = true;
-    list.innerHTML = "";
-    _orderDateOverride = { open:false, byKey:new Map() };
-    return;
-  }
-  // Mostra contador se há outros já com data
-  const totalCart = state.cart.size;
-  const semData = items.length;
-  const comData = totalCart - semData;
-  const subLabel = toggle.querySelector(".date-override-sublabel");
-  if(subLabel){
-    if(comData > 0){
-      subLabel.textContent = `${comData} item(ns) já têm data própria · ${semData} sem data`;
-    } else {
-      subLabel.textContent = "";
-    }
-  }
-  toggle.hidden = false;
-
-  // Reseta estado em cada abertura do modal
-  _orderDateOverride = { open:false, byKey:new Map() };
-  items.forEach(it => {
-    _orderDateOverride.byKey.set(it.key, { date: globalInput.value || "", touched:false });
-  });
-
-  // Render inicial das rows
-  list.innerHTML = items.map(it => {
-    const safeKey = escapeHtml(it.key);
-    const img = it.imgSrc ? `<img loading="lazy" src="${escapeHtml(it.imgSrc)}" alt="">` : `<i class="fa-solid fa-image text-oly-muted"></i>`;
-    const meta = [it.cor, it.genero].filter(Boolean).join(" • ");
-    return `
-      <div class="date-override-row" data-override-key="${safeKey}">
-        <div class="date-override-thumb">${img}</div>
-        <div class="date-override-info">
-          <div class="date-override-name">${escapeHtml(it.produto || "Produto")}</div>
-          <div class="date-override-meta">${escapeHtml(meta)}</div>
-        </div>
-        <input type="date" class="date-override-input" data-override-key-input="${safeKey}" value="${escapeHtml(globalInput.value || "")}" />
-      </div>`;
-  }).join("");
-
-  // Listeners das rows
-  list.querySelectorAll("[data-override-key-input]").forEach(inp => {
-    inp.addEventListener("change", () => {
-      const key = inp.dataset.overrideKeyInput;
-      const entry = _orderDateOverride.byKey.get(key);
-      if(!entry) return;
-      entry.date = inp.value || "";
-      entry.touched = true;
-      inp.classList.add("touched");
-    });
-    inp.addEventListener("input", () => inp.classList.add("touched"));
-  });
-
-  // Sync: data global → datas individuais não-tocadas
-  if(!globalInput.dataset.overrideSync){
-    globalInput.addEventListener("change", () => {
-      const v = globalInput.value || "";
-      _orderDateOverride.byKey.forEach((entry, key) => {
-        if(entry.touched) return;
-        entry.date = v;
-        const inp = list.querySelector(`[data-override-key-input="${CSS.escape(key)}"]`);
-        if(inp) inp.value = v;
-      });
-    });
-    globalInput.dataset.overrideSync = "1";
-  }
+  // Não faz nada — campo de data foi removido do modal de exportação.
+  // Mantida só pra não quebrar chamadas existentes.
 }
+function setOrderDateOverrideOpen(){ /* noop */ }
 
-function setOrderDateOverrideOpen(open){
-  const toggle = $("oxDateOverrideToggle");
-  const list = $("oxDateOverrideList");
-  if(!toggle || !list) return;
-  _orderDateOverride.open = open;
-  list.hidden = !open;
-  toggle.classList.toggle("open", open);
-  const label = toggle.querySelector(".date-override-label");
-  if(label) label.textContent = open ? "Datas individualizadas" : "Definir datas diferentes por produto";
-
-  // Quando o override está aberto, a data global deixa de ser obrigatória.
-  // Atualiza o asterisco e remove qualquer estado inválido remanescente.
-  const globalInput = $("oxDataDesejada");
-  const globalLabel = document.querySelector('label[for="oxDataDesejada"] .req-mark');
-  if(globalLabel) globalLabel.style.display = open ? "none" : "";
-  if(open) globalInput?.classList.remove("invalid");
-}
-
-// Toggle handler (registrado uma vez no DOMReady do app)
-$("oxDateOverrideToggle")?.addEventListener("click", () => {
-  setOrderDateOverrideOpen(!_orderDateOverride.open);
-});
-
-// Retorna a data desejada efetiva para um item da sacola (override > global)
+// Retorna a data desejada do item da sacola
 function getEffectiveDesiredDate(cartKey, globalDate, item){
-  // 1ª prioridade: data do próprio item da sacola (nova feature)
   if(item && item.dataDesejada) return item.dataDesejada;
-  // 2ª prioridade: override no modal de exportação (painel "datas diferentes")
-  if(_orderDateOverride.open){
-    const entry = _orderDateOverride.byKey.get(cartKey);
-    if(entry && entry.date) return entry.date;
-  }
-  // 3ª: data global do formulário
   return globalDate || "";
 }
 
@@ -5510,9 +5399,9 @@ function openOrderExportModal(){
   populateOrderPaymentSelect();
   fillOrderExportForm(loadOrderExportConfig());
   // Limpa estado inválido de aberturas anteriores
-  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"].forEach(id => $(id)?.classList.remove("invalid"));
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => $(id)?.classList.remove("invalid"));
   // Listener (idempotente) que remove .invalid assim que o usuário começa a corrigir
-  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"].forEach(id => {
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"].forEach(id => {
     const el = $(id);
     if(!el || el.dataset.invalidListener === "1") return;
     const clear = () => { if(el.value && el.value.trim()) el.classList.remove("invalid"); };
@@ -5614,10 +5503,8 @@ function buildOrderExportRows(cfg, itemsOverride){
     row[idx["Data Firme"]] = extractLeadingToken(cfg.dataFirme);
     row[idx["Pedido Mãe"]] = extractLeadingToken(cfg.pedidoMae);
     row[idx["Aceita Antecipação?"]] = extractLeadingToken(cfg.antecipacao);
-    // Data Desejada: usa override individual se existir, senão usa a global
-    const effectiveDate = (typeof getEffectiveDesiredDate === "function")
-      ? getEffectiveDesiredDate(it.key, cfg.dataDesejada, it)
-      : (it.dataDesejada || cfg.dataDesejada);
+    // Data Desejada vem do próprio item da sacola
+    const effectiveDate = it.dataDesejada || "";
     if(effectiveDate && idx["Data Desejada"] !== undefined){
       // Converte de YYYY-MM-DD (input date) para DD/MM/YYYY
       const [dy, dm, dd] = effectiveDate.split("-");
@@ -5661,24 +5548,16 @@ function buildOrderExportRows(cfg, itemsOverride){
 }
 
 function validateOrderRequiredFields(){
-  const overrideOpen = !!(_orderDateOverride && _orderDateOverride.open);
-
-  // Se o vendedor abriu o painel de datas individuais, a data global
-  // deixa de ser obrigatória — cada produto carrega a sua própria data.
   const fields = [
     { id:"oxCommission", label:"Comissionista" },
     { id:"oxClientCode", label:"Código Cliente" },
     { id:"oxPayment", label:"Cond. Pagamento" },
     { id:"oxPriceTable", label:"Tab. de Preço" },
   ];
-  if(!overrideOpen){
-    fields.push({ id:"oxDataDesejada", label:"Data Desejada" });
-  }
 
-  // Limpa estado anterior (inclui o campo global e os overrides)
-  ["oxCommission","oxClientCode","oxPayment","oxPriceTable","oxDataDesejada"]
+  // Limpa estado anterior
+  ["oxCommission","oxClientCode","oxPayment","oxPriceTable"]
     .forEach(id => $(id)?.classList.remove("invalid"));
-  document.querySelectorAll(".date-override-input.invalid").forEach(el => el.classList.remove("invalid"));
 
   const missing = [];
   let firstEl = null;
@@ -5693,22 +5572,13 @@ function validateOrderRequiredFields(){
     }
   });
 
-  // Se override está aberto, todas as datas individuais precisam estar preenchidas
-  if(overrideOpen){
-    let overrideMissing = 0;
-    let firstOverrideEl = null;
-    _orderDateOverride.byKey.forEach((entry, key) => {
-      const inp = document.querySelector(`[data-override-key-input="${CSS.escape(key)}"]`);
-      const val = (inp?.value || entry.date || "").trim();
-      if(!val){
-        if(inp){ inp.classList.add("invalid"); if(!firstOverrideEl) firstOverrideEl = inp; }
-        overrideMissing++;
-      }
-    });
-    if(overrideMissing > 0){
-      missing.push(`${overrideMissing} data(s) por produto`);
-      if(!firstEl) firstEl = firstOverrideEl;
-    }
+  // Cada item da sacola precisa ter dataDesejada
+  let itensSemData = 0;
+  for(const it of state.cart.values()){
+    if(!it.dataDesejada) itensSemData++;
+  }
+  if(itensSemData > 0){
+    missing.push(`Data desejada em ${itensSemData} item(ns) da sacola`);
   }
 
   return { missing, firstEl };
