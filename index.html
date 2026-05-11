@@ -977,6 +977,73 @@
     @media(min-width:640px){ .action-btn-mobile-label { display:none; } }
 
 
+    /* ── Modal Imagens Categorias ── */
+    #catImgModal .ci-sheet {
+      width:min(560px, calc(100vw - 24px));
+      max-height: 92vh;
+      max-height: 92dvh;
+      background: var(--card-bg, #fff);
+      border:1px solid var(--border);
+      border-radius: 24px;
+      overflow:hidden;
+      box-shadow: 0 24px 70px rgba(0,0,0,.22);
+      display:flex;
+      flex-direction:column;
+    }
+    #catImgModal .ci-body {
+      flex:1 1 auto;
+      overflow-y:auto;
+      padding: 12px 14px;
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .ci-row {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .ci-row:last-child { margin-bottom: 0; }
+    .ci-thumb {
+      width:54px; height:54px;
+      border-radius:10px;
+      background: var(--bg, #F3F4F6);
+      border:1px solid var(--border);
+      overflow:hidden;
+      flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+    }
+    .ci-thumb img { width:100%; height:100%; object-fit:cover; }
+    .ci-thumb-icon { font-size:20px; color:var(--muted); }
+    .ci-thumb.loading::after {
+      content:''; position:absolute; inset:0;
+      background:rgba(0,0,0,.4);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:18px;
+    }
+    .ci-info { flex:1; min-width:0; }
+    .ci-name { font-size:13px; font-weight:800; color:var(--text); }
+    .ci-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+    .ci-btn {
+      border-radius:10px;
+      padding:8px 12px;
+      font-size:11px; font-weight:800;
+      border:1px solid var(--border);
+      background: var(--card-bg, #fff);
+      color: var(--primary);
+      cursor:pointer;
+      display:inline-flex; align-items:center; gap:5px;
+      transition: all .12s;
+      font-family:inherit;
+      flex-shrink:0;
+    }
+    .ci-btn:hover:not(:disabled) { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .ci-btn:disabled { opacity:.5; cursor:not-allowed; }
+
     /* ── Modal Meus Pedidos ── */
     #meusPedidosModal .mp-sheet {
       width:min(640px, calc(100vw - 24px));
@@ -1303,6 +1370,11 @@
           <div class="text-[10px] font-bold text-oly-muted leading-none">Catálogo Digital</div>
           <div class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
         </div>
+        <div class="ml-auto">
+          <button id="btnCatImagesConfig" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Configurar imagens das categorias" aria-label="Configurações de imagens">
+            <i class="fa-solid fa-gear text-oly-muted text-sm"></i>
+          </button>
+        </div>
       </div>
     </header>
     <div class="home-hero">
@@ -1340,9 +1412,9 @@
             <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
             <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
             <div class="tier-bar-divider"></div>
-            <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FF·1</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FF·2</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FF·3</button>
+            <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FTW·1</button>
+            <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FTW·2</button>
+            <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FTW·3</button>
           </div>
         </div>
       </div>
@@ -2277,6 +2349,8 @@ const STORAGE_KEYS = {
 const CATEGORY_LABELS = { "FTW":"TÊNIS", "ACC":"ACESSÓRIOS", "CHI":"CHINELOS", "MEIA":"MEIAS", "V&A":"VESTUÁRIO" };
 // URL do Cloudflare Worker (usado pelo histórico Meus Pedidos)
 const WORKER_URL = "https://repasse-worker-cms.marcosrep-cms.workers.dev";
+// Token de admin para writes protegidas no Worker (igual ao do admin de Disponibilidades)
+const ADMIN_TOKEN = "1b489c97-7bc7-466a-a675-f559e1226371d9bea53d-a920-4059-a31c-6bc0b6d8c4c8";
 
 const state = {
   productsRaw: [],
@@ -7005,7 +7079,7 @@ function injectHomeCategoryImages(){
   }catch(e){}
 })();
 
-// Imagens fixas por categoria
+// Imagens fixas por categoria (com prioridade pra custom enviada pelo admin)
 function injectHomeCategoryImages(){
   var CAT_IMAGES = {
     "FTW":  "43777397_ARENML__02",
@@ -7016,22 +7090,230 @@ function injectHomeCategoryImages(){
   };
   var EXTS = [".jpg",".jpeg",".png",".webp"];
   var base = (typeof DATA_CONFIG !== "undefined" && DATA_CONFIG.imagesBasePath) ? DATA_CONFIG.imagesBasePath : "./imagens_olympikus/";
+  var customBase = base + "categorias/";
   Object.keys(CAT_IMAGES).forEach(function(htmlId){
     var imgName = CAT_IMAGES[htmlId];
     var imgEl = document.getElementById("home-cat-img-"+htmlId);
     var phEl  = document.getElementById("home-cat-ph-"+htmlId);
     if(!imgEl) return;
-    var extIdx = 0;
-    function tryNext(){
-      if(extIdx >= EXTS.length) return;
-      var src = base + imgName + EXTS[extIdx]; extIdx++;
-      imgEl.src = src;
-      imgEl.onload = function(){ imgEl.classList.add("loaded"); if(phEl) phEl.style.display="none"; };
-      imgEl.onerror = tryNext;
-    }
-    tryNext();
+
+    // 1ª tentativa: imagem custom uploadada pelo admin (com cache-buster)
+    var bust = "?t=" + Date.now();
+    var customSrc = customBase + htmlId + ".png" + bust;
+    var tryCustomImg = new Image();
+    tryCustomImg.onload = function(){
+      imgEl.src = customSrc;
+      imgEl.classList.add("loaded");
+      if(phEl) phEl.style.display = "none";
+    };
+    tryCustomImg.onerror = function(){
+      // 2ª tentativa: imagem hardcoded (fallback)
+      var extIdx = 0;
+      function tryNext(){
+        if(extIdx >= EXTS.length) return;
+        var src = base + imgName + EXTS[extIdx]; extIdx++;
+        imgEl.src = src;
+        imgEl.onload = function(){ imgEl.classList.add("loaded"); if(phEl) phEl.style.display="none"; };
+        imgEl.onerror = tryNext;
+      }
+      tryNext();
+    };
+    tryCustomImg.src = customSrc;
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// CONFIGURAÇÃO DE IMAGENS DAS CATEGORIAS (admin)
+// ═══════════════════════════════════════════════════════════════════
+const CAT_IMG_PWD = "cmsrepasse"; // senha simples (igual ao admin antigo)
+const CAT_IMG_CATEGORIES = [
+  { id: "FTW",  nome: "Tênis",        icone: "👟", sub: "Corrida, treino e lifestyle" },
+  { id: "CHI",  nome: "Chinelos",     icone: "👡", sub: "Conforto pra o dia a dia" },
+  { id: "VA",   nome: "Vestuário",    icone: "👕", sub: "Roupas e acessórios esportivos" },
+  { id: "ACC",  nome: "Acessórios",   icone: "🎒", sub: "Mochilas, bonés e mais" },
+  { id: "MEIA", nome: "Meias",        icone: "🧦", sub: "Performance e casual" },
+];
+
+function abrirSenhaCategorias(){
+  const m = $("catImgPwdModal");
+  if(!m) return;
+  m.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => $("catImgPwdInput")?.focus(), 50);
+  $("catImgPwdInput").value = "";
+  $("catImgPwdError").classList.add("hidden");
+}
+function fecharSenhaCategorias(){
+  $("catImgPwdModal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+function validarSenhaCategorias(){
+  const v = $("catImgPwdInput").value.trim();
+  if(v === CAT_IMG_PWD){
+    fecharSenhaCategorias();
+    abrirModalImagensCategorias();
+  } else {
+    $("catImgPwdError").classList.remove("hidden");
+    $("catImgPwdInput").value = "";
+    $("catImgPwdInput").focus();
+  }
+}
+
+function abrirModalImagensCategorias(){
+  // Popula a lista
+  const list = $("catImgList");
+  list.innerHTML = CAT_IMG_CATEGORIES.map(cat => {
+    const bust = Date.now();
+    const customSrc = `./imagens_olympikus/categorias/${cat.id}.png?t=${bust}`;
+    return `<div class="ci-row" data-cat-id="${cat.id}">
+      <div class="ci-thumb">
+        <img src="${customSrc}" alt="${cat.nome}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ci-thumb-icon" style="display:none">${cat.icone}</div>
+      </div>
+      <div class="ci-info">
+        <div class="ci-name">${cat.nome}</div>
+        <div class="ci-meta">${cat.sub}</div>
+      </div>
+      <input type="file" accept="image/*" class="hidden" data-cat-input="${cat.id}">
+      <button class="ci-btn" data-cat-trocar="${cat.id}">
+        <i class="fa-solid fa-upload"></i> Trocar
+      </button>
+    </div>`;
+  }).join("");
+  $("catImgModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function fecharModalImagensCategorias(){
+  $("catImgModal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+// Comprime e converte arquivo de imagem pra base64 (max 800x800)
+function _comprimirImagemBase64(file, maxDim = 800){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Imagem inválida"));
+      img.onload = () => {
+        let { width, height } = img;
+        // Redimensiona mantendo proporção
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; // fundo branco pra PNGs transparentes
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        // Sempre PNG (qualidade boa pra logos/produtos)
+        const dataUrl = canvas.toDataURL("image/png");
+        const b64 = dataUrl.split(",")[1];
+        resolve(b64);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImagemCategoria(catId, file){
+  const row = document.querySelector(`.ci-row[data-cat-id="${catId}"]`);
+  const btn = row?.querySelector(`[data-cat-trocar="${catId}"]`);
+  const thumb = row?.querySelector(".ci-thumb");
+  if(!file){ return; }
+  if(!file.type.startsWith("image/")){
+    toast("Arquivo precisa ser uma imagem ⚠️");
+    return;
+  }
+  if(btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; }
+  if(thumb) thumb.classList.add("loading");
+
+  try{
+    const base64 = await _comprimirImagemBase64(file, 800);
+    const res = await fetch(WORKER_URL, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Token": (typeof ADMIN_TOKEN !== "undefined" ? ADMIN_TOKEN : "")
+      },
+      body: JSON.stringify({ action: "saveCategoryImage", categoria: catId, base64 })
+    });
+    if(!res.ok){
+      const errTxt = await res.text();
+      throw new Error(`Worker falhou: ${res.status} ${errTxt.slice(0,80)}`);
+    }
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error || "Falha desconhecida");
+
+    // Atualiza visualmente (com cache-buster)
+    const bust = Date.now();
+    const newSrc = `./imagens_olympikus/categorias/${catId}.png?t=${bust}`;
+    const img = row?.querySelector(".ci-thumb img");
+    if(img){
+      img.src = newSrc;
+      img.style.display = "block";
+      const icon = row.querySelector(".ci-thumb-icon");
+      if(icon) icon.style.display = "none";
+    }
+    // Atualiza também na home (se já estiver renderizada)
+    const homeImg = document.getElementById(`home-cat-img-${catId}`);
+    if(homeImg){
+      homeImg.src = newSrc;
+      homeImg.classList.add("loaded");
+      const ph = document.getElementById(`home-cat-ph-${catId}`);
+      if(ph) ph.style.display = "none";
+    }
+    toast(`Imagem de ${CAT_IMG_CATEGORIES.find(c=>c.id===catId)?.nome} atualizada ✅`);
+  }catch(err){
+    console.error("Upload categoria:", err);
+    toast(`Falha ao enviar: ${err.message || "tente novamente"} ⚠️`);
+  }finally{
+    if(btn){ btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Trocar'; }
+    if(thumb) thumb.classList.remove("loading");
+  }
+}
+
+// Event delegation (modal pode não estar no DOM ainda quando JS carrega)
+document.addEventListener("click", (e) => {
+  // Engrenagem
+  if(e.target.closest("#btnCatImagesConfig")){ abrirSenhaCategorias(); return; }
+  // Modal senha
+  if(e.target.closest("#catImgPwdOk")){ validarSenhaCategorias(); return; }
+  if(e.target.closest("#catImgPwdCancel")){ fecharSenhaCategorias(); return; }
+  // Modal categorias
+  if(e.target.closest("#btnCloseCatImg")){ fecharModalImagensCategorias(); return; }
+  if(e.target.id === "catImgBackdrop"){ fecharModalImagensCategorias(); return; }
+  // Botão "Trocar" → dispara o input file da row
+  const btnTrocar = e.target.closest("[data-cat-trocar]");
+  if(btnTrocar){
+    const catId = btnTrocar.dataset.catTrocar;
+    const input = btnTrocar.parentElement.querySelector(`[data-cat-input="${catId}"]`);
+    if(input) input.click();
+    return;
+  }
+});
+document.addEventListener("change", (e) => {
+  if(e.target.dataset && e.target.dataset.catInput){
+    const catId = e.target.dataset.catInput;
+    const file = e.target.files[0];
+    if(file) uploadImagemCategoria(catId, file);
+    e.target.value = ""; // permite re-upload do mesmo arquivo
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Enter" && !$("catImgPwdModal")?.classList.contains("hidden")){
+    e.preventDefault();
+    validarSenhaCategorias();
+  }
+  if(e.key === "Escape"){
+    if(!$("catImgPwdModal")?.classList.contains("hidden")){ fecharSenhaCategorias(); return; }
+    if(!$("catImgModal")?.classList.contains("hidden")){ fecharModalImagensCategorias(); return; }
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════════
 // MEUS PEDIDOS — Histórico
@@ -7596,6 +7878,50 @@ loadCatalog({ cacheBust:false });
       <div class="flex gap-2">
         <button id="mpConfirmCancel" class="flex-1 rounded-xl border border-oly-border px-4 py-2.5 font-bold text-sm hover:bg-oly-bg">Cancelar</button>
         <button id="mpConfirmOk" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white" style="background:var(--primary)">Substituir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL SENHA (configuração de imagens) ═══════════ -->
+<div id="catImgPwdModal" class="hidden fixed inset-0 z-[92]">
+  <div class="absolute inset-0 bg-black/60"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="rounded-2xl p-5 max-w-sm w-full" style="background:var(--card-bg, #fff);border:1px solid var(--border)">
+      <div class="text-3xl mb-2">🔒</div>
+      <div class="text-lg font-black mb-1" style="color:var(--text)">Acesso protegido</div>
+      <div class="text-sm mb-4" style="color:var(--muted)">Digite a senha de administrador para configurar as imagens das categorias.</div>
+      <input id="catImgPwdInput" type="password" placeholder="Senha" autocomplete="current-password"
+             class="w-full rounded-xl border border-oly-border px-4 py-2.5 text-sm font-bold mb-3 focus:outline-none focus:ring-2"
+             style="background:var(--input-bg, #fff);color:var(--text);">
+      <div id="catImgPwdError" class="hidden text-xs font-bold mb-3" style="color:#dc2626">Senha incorreta</div>
+      <div class="flex gap-2">
+        <button id="catImgPwdCancel" class="flex-1 rounded-xl border border-oly-border px-4 py-2.5 font-bold text-sm hover:bg-oly-bg" style="color:var(--text)">Cancelar</button>
+        <button id="catImgPwdOk" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white" style="background:var(--primary)">Entrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL UPLOAD IMAGENS CATEGORIAS ═══════════ -->
+<div id="catImgModal" class="hidden fixed inset-0 z-[91]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="catImgBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="ci-sheet">
+      <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
+        <div class="min-w-0">
+          <div class="text-xs font-extrabold uppercase tracking-[0.12em]" style="color:var(--primary)">Personalizar</div>
+          <div class="text-lg sm:text-xl font-black text-oly-text">⚙️ Imagens das Categorias</div>
+        </div>
+        <button id="btnCloseCatImg" class="focus-ring h-11 w-11 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+      <div class="px-5 sm:px-6 py-4 text-xs" style="background:var(--bg);border-bottom:1px solid var(--border);color:var(--muted)">
+        💡 As imagens são salvas no GitHub e ficam visíveis pra todos os vendedores. Formato recomendado: PNG ou JPG quadrado, ~600×600px.
+      </div>
+      <div class="ci-body" id="catImgList">
+        <!-- preenchido por JS -->
       </div>
     </div>
   </div>
