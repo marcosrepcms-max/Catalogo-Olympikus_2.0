@@ -3921,6 +3921,10 @@ function setCardPending(key){
   if(current !== "pending") setCardAddStatus(key, "pending");
 }
 
+/** Atualiza o badge de contagem da sacola (chama renderCartUI) */
+function updateCartBadge(){
+  if(typeof renderCartUI === "function") renderCartUI();
+}
 
 /** Add to cart helper (accumulates) */
 function addToCart(item, qty, { obs="" } = {}){
