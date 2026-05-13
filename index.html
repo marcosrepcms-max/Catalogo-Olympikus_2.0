@@ -2219,8 +2219,8 @@
           </button>
 
           <!-- ✅ Setas simples e sempre visíveis quando houver +1 variante -->
-          <button id="viewerPrev" class="focus-ring absolute left-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 text-white text-xl font-extrabold" aria-label="Cor anterior">←</button>
-          <button id="viewerNext" class="focus-ring absolute right-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 text-white text-xl font-extrabold" aria-label="Próxima cor">→</button>
+          <button id="viewerPrev" class="focus-ring absolute left-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white/85 border border-black/10 hover:bg-white text-black text-xl font-extrabold shadow-md" aria-label="Cor anterior">←</button>
+          <button id="viewerNext" class="focus-ring absolute right-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white/85 border border-black/10 hover:bg-white text-black text-xl font-extrabold shadow-md" aria-label="Próxima cor">→</button>
 
           <div class="absolute left-4 bottom-4 right-4 z-30 flex items-end justify-between gap-3 text-white/90">
             <div class="min-w-0 flex-shrink">
@@ -7752,11 +7752,10 @@ function renderListaPedidos(){
   empty.classList.add("hidden");
   ul.classList.remove("hidden");
 
-  // Stats
+  // Stats (sem valor financeiro — só contagem)
   const totItens = filtrados.reduce((a, p) => a + (p.totalItens||0), 0);
-  const totValor = filtrados.reduce((a, p) => a + (p.valorTotal||0), 0);
   $("mpStatsTxt").textContent = `${filtrados.length} pedido${filtrados.length!==1?"s":""} · ${totItens} iten${totItens!==1?"s":""}`;
-  $("mpStatsTotal").textContent = _mpFormatMoney(totValor);
+  $("mpStatsTotal").textContent = "";
 
   // Sacola vazia? (controla disponibilidade do PDF)
   const sacolaVazia = state.cart.size === 0;
@@ -7765,7 +7764,6 @@ function renderListaPedidos(){
     const cliente = p.clientCode ? `Cliente ${_mpEscape(p.clientCode)}` : "Cliente —";
     const ped = p.pedidoCliente ? _mpEscape(p.pedidoCliente) : "SEM-REF";
     const data = _mpFormatBR(p.createdAt);
-    const valor = _mpFormatMoney(p.valorTotal);
     const itens = (p.items||[]).map(i => {
       const meta = [i.cor, i.genero].filter(Boolean).join(" · ");
       const imgUrl = i.imagem ? `./imagens_olympikus/${i.imagem}.png` : "";
@@ -7789,7 +7787,6 @@ function renderListaPedidos(){
           </div>
         </div>
         <div class="mp-pedido-right">
-          <div class="mp-pedido-valor">${valor}</div>
           <div class="mp-pedido-itens-count">${p.totalItens} iten${p.totalItens!==1?"s":""}</div>
         </div>
         <span class="mp-pedido-chev">▶</span>
