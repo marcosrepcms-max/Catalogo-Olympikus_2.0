@@ -5698,7 +5698,9 @@ function buildOrderExportRows(cfg, itemsOverride){
       row[idx["Data Desejada"]] = dataFmt;
       if(idx["Data de Faturamento"] !== undefined) row[idx["Data de Faturamento"]] = dataFmt;
     }
-    if(cfg.pedidoCliente && idx["Pedido do Cliente"] !== undefined) row[idx["Pedido do Cliente"]] = cfg.pedidoCliente;
+    // Pedido do Cliente: linha tem prioridade sobre o global do export
+    const pedidoEfetivo = (it.pedidoCliente || "").trim() || cfg.pedidoCliente || "";
+    if(pedidoEfetivo && idx["Pedido do Cliente"] !== undefined) row[idx["Pedido do Cliente"]] = pedidoEfetivo;
 
     row[idx["Artigo"]] = String(it.codigo || "").trim();
     row[idx["Descrição"]] = String(it.produto || "").trim();
