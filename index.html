@@ -3952,6 +3952,7 @@ function addToCart(item, qty, { obs="" } = {}){
       tam: item.tam || "",
       precoNum,
       precoFmt,
+      precosPrazo: item.precosPrazo || null,
       qty: qty,
       obs: obs || "",
       imgSrc: resolveImageSrc(item.imagem),
@@ -6010,9 +6011,9 @@ async function exportOrderPdf(showGrade = true){
     doc.text("OLYMPIKUS · UNDER ARMOUR", margin + 58, y + 26);
     // Tag
     setFill(C.purple);
-    doc.roundedRect(margin + 58, y + 32, 100, 11, 5, 5, "F");
+    doc.roundedRect(margin + 58, y + 32, 120, 12, 6, 6, "F");
     setText(C.white); doc.setFont("helvetica","bold"); doc.setFontSize(7);
-    doc.text("REPRESENTANTE AUTORIZADO", margin + 108, y + 40, { align:"center" });
+    doc.text("REPRESENTANTE AUTORIZADO", margin + 118, y + 40, { align:"center" });
 
     // Lateral direita: título doc
     setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(13);
@@ -6067,9 +6068,9 @@ async function exportOrderPdf(showGrade = true){
   }
 
   // ─────────── CARD DE PRODUTO ───────────
-  // Cada card ocupa ~92pt vertical
+  // Cada card ocupa ~110pt vertical (pílulas de grade + data + preço)
   async function drawProductCard(it, yStart){
-    const cardH = 92;
+    const cardH = 110;
     // Linha divisória superior
     setStroke(C.border); doc.setLineWidth(0.4);
     doc.line(margin, yStart, margin + contentW, yStart);
@@ -6093,42 +6094,59 @@ async function exportOrderPdf(showGrade = true){
       }
     }catch(_){}
 
-    // Bloco direito: info + preço (se ON)
+    // Bloco direito
     const infoX = imgX + imgSize + 10;
     const priceColW = showPrices ? 110 : 0;
     const infoW = contentW - imgSize - 10 - priceColW - (priceColW ? 10 : 0);
 
     // Nome + código
     setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(11);
-    doc.text(cut(`${it.produto || "—"} · ${it.codigo || ""}`, 48), infoX, y + 10);
+    doc.text(cut(`${it.produto || "—"} · ${it.codigo || ""}`, 48), infoX, y + 9);
     // Meta (cor, gênero, coleção)
     setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8);
     const meta = [it.cor, it.genero, it.colecao ? `Coleção ${it.colecao}` : null].filter(Boolean).join(" · ");
-    doc.text(cut(meta, 60), infoX, y + 22);
+    doc.text(cut(meta, 60), infoX, y + 20);
 
-    // Grade (se showGrade)
-    if(showGrade && it.grade){
-      const gradeTxt = Object.entries(it.grade).map(([t,q]) => `${t}→${q}`).join(" · ");
-      setFill(C.soft);
-      doc.roundedRect(infoX, y + 28, Math.min(infoW, 290), 14, 4, 4, "F");
-      setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(7);
-      doc.text("Grade: ", infoX + 5, y + 37);
-      setText(C.text); doc.setFont("helvetica","normal"); doc.setFontSize(7);
-      doc.text(cut(gradeTxt, 65), infoX + 28, y + 37);
+    // Grade em pílulas (como na sacola)
+    if(showGrade && it.grade && Object.keys(it.grade).length > 0){
+      const entries = Object.entries(it.grade);
+      const pillW = 26, pillH = 24, gap = 4;
+      const startY = y + 26;
+      let totalQty = 0;
+      entries.forEach(([tam, qty], i) => {
+        const px = infoX + i * (pillW + gap);
+        // Pílula fundo branco com borda
+        setFill(C.white);
+        doc.roundedRect(px, startY, pillW, pillH, 4, 4, "F");
+        setStroke(C.border); doc.setLineWidth(0.5);
+        doc.roundedRect(px, startY, pillW, pillH, 4, 4, "S");
+        // Tamanho em cinza no topo
+        setText(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(6);
+        doc.text(String(tam), px + pillW/2, startY + 9, { align:"center" });
+        // Quantidade em roxo embaixo
+        setText(C.purple); doc.setFont("helvetica","bold"); doc.setFontSize(9);
+        doc.text(String(qty), px + pillW/2, startY + 19, { align:"center" });
+        totalQty += Number(qty) || 0;
+      });
+      // "N pares no total"
+      setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
+      doc.text(`${totalQty} pares no total`, infoX, startY + pillH + 8);
     } else {
+      // Sem grade: só mostra qty
       setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(8);
       doc.text(`${it.qty || 0} pares · ${it.tam || "—"}`, infoX, y + 34);
     }
 
-    // Data desejada (pílula roxa)
+    // Data desejada (pílula roxa) — embaixo da grade
     if(it.dataDesejada){
+      const dyData = y + (showGrade && it.grade ? 78 : 48);
       setFill(C.purpleLight);
-      doc.roundedRect(infoX, y + 48, 105, 13, 6, 6, "F");
+      doc.roundedRect(infoX, dyData, 115, 13, 6, 6, "F");
       setStroke([196,181,253]); doc.setLineWidth(0.4);
-      doc.roundedRect(infoX, y + 48, 105, 13, 6, 6, "S");
+      doc.roundedRect(infoX, dyData, 115, 13, 6, 6, "S");
       setText(C.purple); doc.setFont("helvetica","bold"); doc.setFontSize(7);
       const diasPrazo = dias !== null ? ` · ${dias}d` : "";
-      doc.text(`Faturar: ${fmtDataBR(it.dataDesejada)}${diasPrazo}`, infoX + 5, y + 57);
+      doc.text(`Faturar em ${fmtDataBR(it.dataDesejada)}${diasPrazo}`, infoX + 6, dyData + 9);
     }
 
     // Coluna do preço (direita)
@@ -6136,7 +6154,7 @@ async function exportOrderPdf(showGrade = true){
       const priceX = margin + contentW - priceColW;
       // separador vertical
       setStroke(C.border); doc.setLineWidth(0.3);
-      doc.line(priceX - 6, y + 4, priceX - 6, y + cardH - 8);
+      doc.line(priceX - 6, y + 4, priceX - 6, y + cardH - 14);
       const precoUnit = (typeof getPrecoPorPrazo === "function") ? getPrecoPorPrazo(it, dias) : 0;
       const qty = Number(it.qty) || 0;
       const subtotal = precoUnit * qty;
@@ -6178,7 +6196,7 @@ async function exportOrderPdf(showGrade = true){
     // Se só 1 data, não mostra resumo (regra: só quando 2+)
     if(byDate.size < 2) return yStart;
 
-    let y = drawSectionTitle(yStart + 4, "🗓 Resumo por data de faturamento");
+    let y = drawSectionTitle(yStart + 4, "Resumo por data de faturamento");
 
     // Caixa
     const rows = Array.from(byDate.values()).sort((a,b) => (a.date||"").localeCompare(b.date||""));
@@ -6297,16 +6315,16 @@ async function exportOrderPdf(showGrade = true){
   // ─────────── MONTAGEM ───────────
   let yPos = drawHeader();
   yPos = drawInfoBlock(yPos);
-  yPos = drawSectionTitle(yPos + 2, "📦 Produtos do pedido");
+  yPos = drawSectionTitle(yPos + 2, "Produtos do pedido");
   yPos += 2;
 
   for(let i = 0; i < items.length; i++){
     // Verifica espaço (precisa 92pt do card + buffer 100pt p/ resumo+total+sig)
-    if(yPos + 92 > pageH - 30){
+    if(yPos + 110 > pageH - 30){
       drawFooter();
       doc.addPage();
       yPos = margin + 14;
-      yPos = drawSectionTitle(yPos, "📦 Produtos do pedido (continuação)");
+      yPos = drawSectionTitle(yPos, "Produtos do pedido (continuação)");
       yPos += 2;
     }
     yPos = await drawProductCard(items[i], yPos);
@@ -6922,6 +6940,7 @@ function gradeToCartEntry(){
     tam: item.tam || "",
     precoNum,
     precoFmt,
+    precosPrazo: item.precosPrazo || null,
     qty: totalQty,
     grade: gradeMap,
     gradeResume,
