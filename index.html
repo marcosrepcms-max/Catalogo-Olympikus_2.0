@@ -2350,6 +2350,16 @@
                    style="background:var(--card-bg,#fff);color:var(--text)">
             <div id="gradeDataError" class="hidden text-xs font-bold mt-1.5" style="color:#dc2626">⚠️ Preencha a data desejada antes de adicionar</div>
           </div>
+
+          <!-- Pedido do cliente (opcional, específico desta linha) -->
+          <div class="px-4 sm:px-5 pb-3 pt-1">
+            <label class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted block mb-1.5">
+              📋 Pedido do cliente <span class="text-oly-muted font-normal normal-case tracking-normal">(opcional, só desta grade)</span>
+            </label>
+            <input id="gradePedidoCliente" type="text" maxlength="40" placeholder="Ex.: PED-2026-001"
+                   class="w-full rounded-xl border border-oly-border px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2"
+                   style="background:var(--card-bg,#fff);color:var(--text)">
+          </div>
         </div>
 
         <!-- Totais + botões -->
@@ -6029,13 +6039,7 @@ async function exportOrderPdf(showGrade = true){
 
   // ─────────── BLOCO DE INFO ───────────
   function drawInfoBlock(yStart){
-    // Caixa cinza claro
-    setFill(C.soft);
-    doc.roundedRect(margin, yStart, contentW, 56, 6, 6, "F");
-    setStroke(C.border); doc.setLineWidth(0.5);
-    doc.roundedRect(margin, yStart, contentW, 56, 6, 6, "S");
-
-    // 3 colunas × 2 linhas
+    // Monta a lista de campos
     const labels = [
       ["Cliente",            cfg?.clientCode || "—"],
       ["Comissionista",      (cfg?.commission || "—").toString().split(" - ").join(" · ")],
@@ -6044,9 +6048,25 @@ async function exportOrderPdf(showGrade = true){
       ["Prazo Médio",        dias !== null ? `${dias} dias` : "—"],
       ["Pedido do Cliente",  cfg?.pedidoCliente || "—"],
     ];
-    const colW = contentW / 3;
+    // Campanha entra só se houver e não for vazia/placeholder
+    const camp = (cfg?.campaign || "").trim();
+    if(camp && !/sem\s*campanha/i.test(camp)){
+      labels.push(["Campanha", camp]);
+    }
+    // 3 colunas × N linhas
+    const colCount = 3;
+    const rowCount = Math.ceil(labels.length / colCount);
+    const boxH = rowCount * 22 + 12;
+
+    // Caixa cinza claro
+    setFill(C.soft);
+    doc.roundedRect(margin, yStart, contentW, boxH, 6, 6, "F");
+    setStroke(C.border); doc.setLineWidth(0.5);
+    doc.roundedRect(margin, yStart, contentW, boxH, 6, 6, "S");
+
+    const colW = contentW / colCount;
     labels.forEach((pair, i) => {
-      const col = i % 3, row = Math.floor(i / 3);
+      const col = i % colCount, row = Math.floor(i / colCount);
       const x = margin + col * colW + 8;
       const y = yStart + 12 + row * 22;
       setText(C.muted); doc.setFont("helvetica","bold"); doc.setFontSize(7);
@@ -6054,7 +6074,7 @@ async function exportOrderPdf(showGrade = true){
       setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(9);
       doc.text(cut(pair[1], 30), x, y + 10);
     });
-    return yStart + 56 + 10;
+    return yStart + boxH + 10;
   }
 
   // ─────────── TÍTULO DE SEÇÃO ───────────
@@ -6096,8 +6116,9 @@ async function exportOrderPdf(showGrade = true){
 
     // Bloco direito
     const infoX = imgX + imgSize + 10;
-    const priceColW = showPrices ? 110 : 0;
-    const infoW = contentW - imgSize - 10 - priceColW - (priceColW ? 10 : 0);
+    // Coluna lateral sempre presente: com preço (showPrices ON) ou só PDV (showPrices OFF)
+    const priceColW = 110;
+    const infoW = contentW - imgSize - 10 - priceColW - 10;
 
     // Nome + código
     setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(11);
@@ -6147,31 +6168,59 @@ async function exportOrderPdf(showGrade = true){
       setText(C.purple); doc.setFont("helvetica","bold"); doc.setFontSize(7);
       const diasPrazo = dias !== null ? ` · ${dias}d` : "";
       doc.text(`Faturar em ${fmtDataBR(it.dataDesejada)}${diasPrazo}`, infoX + 6, dyData + 9);
+
+      // Pílula "Pedido do cliente" desta linha (se houver), ao lado da data
+      const pedLinha = (it.pedidoCliente || "").trim();
+      if(pedLinha){
+        const pedTxt = cut(`Ped: ${pedLinha}`, 22);
+        setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        const pedTxtWidth = doc.getTextWidth(pedTxt) + 12;
+        const pedX = infoX + 120; // 115 da pílula + 5 de gap
+        setFill([237,233,254]);
+        doc.roundedRect(pedX, dyData, pedTxtWidth, 13, 6, 6, "F");
+        setStroke([196,181,253]); doc.setLineWidth(0.4);
+        doc.roundedRect(pedX, dyData, pedTxtWidth, 13, 6, 6, "S");
+        setText(C.purpleDk); doc.setFont("helvetica","bold"); doc.setFontSize(7);
+        doc.text(pedTxt, pedX + 6, dyData + 9);
+      }
     }
 
-    // Coluna do preço (direita)
-    if(showPrices){
+    // Coluna do preço (direita) — sempre presente
+    {
       const priceX = margin + contentW - priceColW;
       // separador vertical
       setStroke(C.border); doc.setLineWidth(0.3);
       doc.line(priceX - 6, y + 4, priceX - 6, y + cardH - 14);
-      const precoUnit = (typeof getPrecoPorPrazo === "function") ? getPrecoPorPrazo(it, dias) : 0;
       const qty = Number(it.qty) || 0;
-      const subtotal = precoUnit * qty;
-      setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
-      doc.text("Unitário", priceX, y + 10);
-      setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(10);
-      doc.text(moneyFmt(precoUnit), priceX, y + 22);
-      setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
-      doc.text(`× ${qty} pares`, priceX, y + 32);
-      // Linha tracejada
-      setStroke(C.border); doc.setLineWidth(0.4);
-      doc.setLineDashPattern([2,2], 0);
-      doc.line(priceX, y + 38, priceX + priceColW - 4, y + 38);
-      doc.setLineDashPattern([], 0);
-      // Subtotal verde
-      setText(C.green); doc.setFont("helvetica","bold"); doc.setFontSize(13);
-      doc.text(moneyFmt(subtotal), priceX, y + 54);
+
+      if(showPrices){
+        // MODO COM PREÇOS: unitário pelo prazo + subtotal verde
+        const precoUnit = (typeof getPrecoPorPrazo === "function") ? getPrecoPorPrazo(it, dias) : 0;
+        const subtotal = precoUnit * qty;
+        setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
+        doc.text("Unitário", priceX, y + 10);
+        setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(10);
+        doc.text(moneyFmt(precoUnit), priceX, y + 22);
+        setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
+        doc.text(`× ${qty} pares`, priceX, y + 32);
+        // Linha tracejada
+        setStroke(C.border); doc.setLineWidth(0.4);
+        doc.setLineDashPattern([2,2], 0);
+        doc.line(priceX, y + 38, priceX + priceColW - 4, y + 38);
+        doc.setLineDashPattern([], 0);
+        // Subtotal verde
+        setText(C.green); doc.setFont("helvetica","bold"); doc.setFontSize(13);
+        doc.text(moneyFmt(subtotal), priceX, y + 54);
+      } else {
+        // MODO SEM PREÇOS: mostra apenas o PDV (preço de tabela cheio) + qty
+        const pdv = toNumberBR(it.precoRaw ?? it.precoNum ?? 0);
+        setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
+        doc.text("PDV", priceX, y + 10);
+        setText(C.text); doc.setFont("helvetica","bold"); doc.setFontSize(11);
+        doc.text(moneyFmt(pdv), priceX, y + 24);
+        setText(C.muted); doc.setFont("helvetica","normal"); doc.setFontSize(7);
+        doc.text(`${qty} pares`, priceX, y + 36);
+      }
     }
 
     return yStart + cardH;
@@ -6706,6 +6755,8 @@ function openGradeModal(item, opts={}){
     gradeState.dataDesejada = "";
     const dataInput = $("gradeDataDesejada");
     if(dataInput) dataInput.value = "";
+    const pedInput = $("gradePedidoCliente");
+    if(pedInput) pedInput.value = "";
     const errEl = $("gradeDataError");
     if(errEl) errEl.classList.add("hidden");
   }
@@ -6719,10 +6770,12 @@ function openGradeModal(item, opts={}){
   // Em modo "novo" ou "+ outra grade", começa sempre LIMPO.
   let existingGrade = {};
   let existingDate = "";
+  let existingPedido = "";
   if(opts.cartKey && state.cart.has(opts.cartKey)){
     const existing = state.cart.get(opts.cartKey);
     existingGrade = existing?.grade || {};
     existingDate = existing?.dataDesejada || "";
+    existingPedido = existing?.pedidoCliente || "";
   }
 
   gradeState.sizes = sizes.map(tam => ({
@@ -6730,10 +6783,12 @@ function openGradeModal(item, opts={}){
     qty: Number(existingGrade[tam] || 0)
   }));
 
-  // Preenche o input de data (se houver data salva da edição)
+  // Preenche o input de data e pedido (se houver dados salvos)
   if(!opts.keepGrades){
     const dataInput = $("gradeDataDesejada");
     if(dataInput) dataInput.value = existingDate || "";
+    const pedInput = $("gradePedidoCliente");
+    if(pedInput) pedInput.value = existingPedido || "";
   }
 
   // Header do modal
@@ -6926,6 +6981,8 @@ function gradeToCartEntry(){
   // Data desejada (do input no modal)
   const dataInputVal = $("gradeDataDesejada")?.value || "";
   const dataDesejada = dataInputVal || gradeState.dataDesejada || "";
+  // Pedido do cliente (opcional, da linha)
+  const pedidoClienteLinha = ($("gradePedidoCliente")?.value || "").trim();
 
   return {
     key,
@@ -6945,6 +7002,7 @@ function gradeToCartEntry(){
     grade: gradeMap,
     gradeResume,
     dataDesejada,
+    pedidoCliente: pedidoClienteLinha,
     obs: state.cart.get(key)?.obs || "",
     imgSrc: resolveImageSrc(item.imagem),
   };
@@ -7040,9 +7098,11 @@ $("btnAddAnotherGrade")?.addEventListener("click", ()=>{
   // Reabre limpo, mantendo as grades adicionadas
   const item = gradeState.item;
   toast(`Grade ${gradeState.addedGrades.length} adicionada ✅`);
-  // Limpa o input de data pra próxima
+  // Limpa o input de data e pedido pra próxima
   const dataInput = $("gradeDataDesejada");
   if(dataInput) dataInput.value = "";
+  const pedInput = $("gradePedidoCliente");
+  if(pedInput) pedInput.value = "";
   openGradeModal(item, { fromCart: gradeState.fromCart, keepGrades: true });
 });
 
