@@ -2238,9 +2238,12 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
 
-          <!-- ── Header (topo): produto + cor + gênero ── -->
+          <!-- ── Header (topo): produto + cor + gênero + PDV ── -->
           <div class="absolute left-4 top-4 right-20 z-30 flex flex-col gap-1.5">
-            <div id="viewerTitle" class="truncate font-extrabold text-base sm:text-lg text-white">—</div>
+            <div class="flex items-baseline gap-3 flex-wrap">
+              <div id="viewerTitle" class="truncate font-extrabold text-base sm:text-lg text-white">—</div>
+              <div id="viewerPdv" class="font-extrabold tabular-nums tracking-tight text-xl sm:text-2xl leading-none" style="color:#c4b5fd;text-shadow:0 1px 8px rgba(0,0,0,.4)">—</div>
+            </div>
             <div class="flex flex-wrap items-center gap-1.5">
               <span id="viewerColor" class="inline-flex items-center gap-1.5 rounded-full bg-white/95 border border-white/30 px-2.5 py-1 text-[11px] font-extrabold text-oly-text">
                 <i class="fa-solid fa-palette text-oly-blue" style="font-size:10px"></i>
@@ -6646,6 +6649,14 @@ function renderImageViewer(){
         gWrap?.classList.add("hidden");
       }
     }
+    {
+      // PDV (preço cheio do item)
+      const pdvEl = $("viewerPdv");
+      if(pdvEl){
+        const pdv = item ? toNumberBR(item.precoRaw ?? item.precoNum ?? 0) : 0;
+        pdvEl.textContent = pdv > 0 ? moneyBR(pdv) : "—";
+      }
+    }
     $("viewerIndex").textContent = total > 1 ? `${idx+1}/${total}` : "";
     $("viewerPrev").style.display = total > 1 ? "inline-flex" : "none";
     $("viewerNext").style.display = total > 1 ? "inline-flex" : "none";
@@ -6672,6 +6683,14 @@ function renderImageViewer(){
         gWrap?.classList.remove("hidden");
       } else {
         gWrap?.classList.add("hidden");
+      }
+    }
+    {
+      // PDV (preço cheio do item)
+      const pdvEl = $("viewerPdv");
+      if(pdvEl){
+        const pdv = toNumberBR(it.precoRaw ?? it.precoNum ?? 0);
+        pdvEl.textContent = pdv > 0 ? moneyBR(pdv) : "—";
       }
     }
     $("viewerIndex").textContent = viewerState.variants.length > 1 ? `${viewerState.index+1}/${viewerState.variants.length}` : "";
