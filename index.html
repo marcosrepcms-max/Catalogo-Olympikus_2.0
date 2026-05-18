@@ -2047,6 +2047,11 @@
                        <div id="cartRowAcess" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Acessórios</span><span id="cartQtyAcess" class="font-extrabold">0</span></div>
                        <div id="cartRowVest" class="hidden flex items-center justify-between"><span class="font-bold text-oly-muted">Vestuário</span><span id="cartQtyVest" class="font-extrabold">0</span></div>
                      </div>
+                     <!-- Pares por grade — bloco gerado dinamicamente em renderCartUI -->
+                     <div id="cartGradesSummary" class="hidden mt-4 pt-4" style="border-top:1px dashed var(--border)">
+                       <div class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted mb-2.5">Pares por grade</div>
+                       <div id="cartGradesSummaryList" class="space-y-2"></div>
+                     </div>
                    </div>
                  </div>
 
@@ -5151,6 +5156,78 @@ function startBulkGradeBySelection(){
   openBulkGradeFromTargets(targets, { mode:"selected", filter: state.cartGenderFilter, selectedKeys });
 }
 
+/**
+ * Renderiza o bloco "Pares por grade" no resumo lateral da sacola.
+ * Agrupa itens por grade efetiva (combinação única de tamanhos+qty já com caixas aplicadas).
+ * Itens sem grade entram em um bloco "Sem grade".
+ */
+function _renderCartGradesSummary(){
+  const wrap = $("cartGradesSummary");
+  const listEl = $("cartGradesSummaryList");
+  if(!wrap || !listEl) return;
+  if(state.cart.size === 0){
+    wrap.classList.add("hidden");
+    listEl.innerHTML = "";
+    return;
+  }
+  // Agrupa: chave = JSON da grade efetiva (já com caixas aplicadas)
+  const groups = new Map();   // key -> { grade:{tam:qty}, totalPares }
+  let semGradeTotal = 0;
+  for(const it of state.cart.values()){
+    const hasGrade = it.grade && Object.keys(it.grade).length > 0;
+    if(!hasGrade){
+      semGradeTotal += Number(it.qty) || 0;
+      continue;
+    }
+    // Soma pares dessa linha
+    const linhaTotal = Object.values(it.grade).reduce((a,b) => a + (Number(b)||0), 0);
+    // Chave estável: ordena pelos tamanhos
+    const ordered = Object.keys(it.grade).sort((a,b)=>{
+      const na = parseFloat(a), nb = parseFloat(b);
+      if(!isNaN(na) && !isNaN(nb)) return na - nb;
+      return String(a).localeCompare(String(b));
+    });
+    const key = ordered.map(t => `${t}:${it.grade[t]}`).join("|");
+    if(!groups.has(key)){
+      const g = {};
+      for(const t of ordered) g[t] = Number(it.grade[t]) || 0;
+      groups.set(key, { grade:g, totalPares:0 });
+    }
+    groups.get(key).totalPares += linhaTotal;
+  }
+
+  // Ordena grupos por total de pares (decrescente)
+  const arr = Array.from(groups.values()).sort((a,b) => b.totalPares - a.totalPares);
+  if(arr.length === 0 && semGradeTotal === 0){
+    wrap.classList.add("hidden");
+    listEl.innerHTML = "";
+    return;
+  }
+  // HTML
+  const blocks = arr.map(g => {
+    const pillsHtml = Object.entries(g.grade).map(([tam, qty]) => `
+      <div class="flex flex-col items-center rounded-md border border-oly-border bg-white min-w-[28px] px-1.5 py-1 leading-none">
+        <span class="text-[8.5px] font-bold text-oly-muted">${escapeHtml(tam)}</span>
+        <span class="text-[11px] font-extrabold text-oly-blue mt-0.5">${qty}</span>
+      </div>`).join("");
+    return `
+      <div class="rounded-xl border border-oly-border bg-oly-bg p-2.5">
+        <div class="flex flex-wrap gap-1">${pillsHtml}</div>
+        <div class="mt-2 text-right text-[12px] font-extrabold text-oly-blue">${g.totalPares} pares</div>
+      </div>`;
+  }).join("");
+  let extra = "";
+  if(semGradeTotal > 0){
+    extra = `
+      <div class="rounded-xl border border-oly-border bg-oly-bg p-2.5 flex items-center justify-between">
+        <span class="text-[12px] font-bold text-oly-muted">Sem grade</span>
+        <span class="text-[12px] font-extrabold text-oly-blue">${semGradeTotal} pares</span>
+      </div>`;
+  }
+  listEl.innerHTML = blocks + extra;
+  wrap.classList.remove("hidden");
+}
+
 function renderCartUI(){
   syncCardAddStatusFromCart();
   const { items, cartSize, by, totalCost, totalValue } = cartTotals();
@@ -5185,6 +5262,9 @@ function renderCartUI(){
   setRow("cartRowUni","cartQtyUni",by.uni);
   setRow("cartRowAcess","cartQtyAcess",by.acess);
   setRow("cartRowVest","cartQtyVest",by.vest);
+
+  // Resumo "Pares por grade": agrupa todos os itens por grade efetiva (tamanhos + qty iguais)
+  _renderCartGradesSummary();
 
   const badge = $("cartCountBadge");
   badge.textContent = String(cartSize);
