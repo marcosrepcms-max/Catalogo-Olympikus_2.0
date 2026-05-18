@@ -2355,6 +2355,20 @@
 
         <!-- Área rolável -->
         <div class="overflow-y-auto flex-1 no-scrollbar" style="background:var(--card-bg,#fff)">
+          <!-- Botão "Repetir última grade" — visível só se houver grade salva na sessão -->
+          <div id="gradeRepeatWrap" class="hidden px-4 sm:px-5 pt-3">
+            <button id="btnRepeatGrade" class="focus-ring w-full inline-flex items-center justify-between gap-2 rounded-xl border-2 border-dashed border-oly-blue px-3 py-2.5 text-left hover:bg-oly-bg transition" type="button">
+              <span class="flex items-center gap-2 min-w-0">
+                <i class="fa-solid fa-rotate-left text-oly-blue"></i>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-[11px] font-extrabold uppercase tracking-wider text-oly-blue">Repetir última grade</span>
+                  <span id="gradeRepeatHint" class="text-[11px] font-bold text-oly-muted truncate">—</span>
+                </span>
+              </span>
+              <i class="fa-solid fa-chevron-right text-oly-muted text-xs"></i>
+            </button>
+          </div>
+
           <!-- Grades já adicionadas (aparece após primeira) -->
           <div id="gradePreviousList" class="hidden px-4 sm:px-5 pt-3 pb-1"></div>
 
@@ -2481,6 +2495,8 @@ const state = {
   favsSelected: new Set(), // variant keys
   // Cond. Pagamento guardada após gerar Excel (vale até limpar sacola)
   lastOrderCfg: null,
+  // Última grade adicionada à sacola (pra função "Repetir grade") — vive na sessão
+  lastGradeUsed: null,
 };
 
 const $ = (id)=>document.getElementById(id);
@@ -6970,6 +6986,19 @@ function handleTrapKeydown(e){
 // gradeState: { item, sizes:[{tam, qty}], fromCart, cartKey }
 const gradeState = { item:null, sizes:[], fromCart:false, cartKey:null, bulkMode:false, bulkFilter:"", bulkApplyMode:"", bulkSelectedKeys:[], dataDesejada:"", addedGrades:[] };
 
+/** Salva a grade recém-usada no state pra função "Repetir grade" */
+function _saveLastGradeUsed(entry){
+  if(!entry || !entry.gradeBase) return;
+  state.lastGradeUsed = {
+    grade: { ...entry.gradeBase },
+    totalQty: Object.values(entry.gradeBase).reduce((a,b)=> a + (Number(b)||0), 0),
+    fromProduto: entry.produto || "",
+    fromCodigo: entry.codigo || "",
+    fromGenero: entry.genero || "",
+    when: Date.now(),
+  };
+}
+
 function openGradeModal(item, opts={}){
   gradeState.item = item;
   gradeState.fromCart = !!opts.fromCart;
@@ -7026,6 +7055,21 @@ function openGradeModal(item, opts={}){
   // Header do modal
   $("gradeProduto").textContent = item.produto || "Produto";
   $("gradeCor").textContent = `${item.cor || ""}${item.corCodigo ? " · " + item.corCodigo : ""}`;
+
+  // Botão "Repetir última grade": só aparece se houver grade salva na sessão E não estiver editando uma grade existente
+  {
+    const wrap = $("gradeRepeatWrap");
+    const hint = $("gradeRepeatHint");
+    const lg = state.lastGradeUsed;
+    const isEditing = !!opts.cartKey;
+    if(wrap && lg && lg.grade && !isEditing){
+      const fromTxt = lg.fromProduto ? lg.fromProduto : "última grade";
+      if(hint) hint.textContent = `${fromTxt} · ${lg.totalQty} pares`;
+      wrap.classList.remove("hidden");
+    } else if(wrap){
+      wrap.classList.add("hidden");
+    }
+  }
 
   renderGradeSizeList();
   _renderPreviousGradesList();
@@ -7318,6 +7362,7 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
   }
   const fromCart = gradeState.fromCart;
   state.cart.set(entry.key, entry);
+  _saveLastGradeUsed(entry);
   saveCartToStorage();
   renderCartUI();
   setCardAddStatus(cartKeyBaseFor(entry), "added");
@@ -7338,6 +7383,7 @@ $("btnAddAnotherGrade")?.addEventListener("click", ()=>{
   }
   // Salva a grade atual
   state.cart.set(entry.key, entry);
+  _saveLastGradeUsed(entry);
   saveCartToStorage();
   setCardAddStatus(cartKeyBaseFor(entry), "added");
   // Adiciona no histórico do modal
@@ -7411,6 +7457,37 @@ function closeGradeWithoutAdding(){
 
 $("btnCloseGrade").addEventListener("click", closeGradeWithoutAdding);
 $("gradeBackdrop").addEventListener("click", closeGradeWithoutAdding);
+
+// Botão "Repetir última grade": aplica os tamanhos compatíveis e avisa os incompatíveis
+$("btnRepeatGrade")?.addEventListener("click", ()=>{
+  const lg = state.lastGradeUsed;
+  if(!lg || !lg.grade){ toast("Nenhuma grade anterior ⚠️"); return; }
+  let aplicados = 0;
+  let totalQtyAplic = 0;
+  const incompat = [];
+  // Percorre os tamanhos disponíveis do produto atual e aplica os que batem
+  for(const sz of gradeState.sizes){
+    const q = Number(lg.grade[sz.tam]) || 0;
+    if(q > 0){
+      sz.qty = q;
+      aplicados++;
+      totalQtyAplic += q;
+    }
+  }
+  // Detecta tamanhos da grade anterior que não existem no produto atual
+  const sizesAtuais = new Set(gradeState.sizes.map(s => s.tam));
+  for(const [tam, q] of Object.entries(lg.grade)){
+    if(!sizesAtuais.has(tam) && Number(q) > 0) incompat.push(tam);
+  }
+  renderGradeSizeList();
+  if(aplicados === 0){
+    toast("Nenhum tamanho desta grade existe neste produto ⚠️");
+  } else if(incompat.length){
+    toast(`Aplicada (${totalQtyAplic} pares) — ${incompat.length} tam. incompat. (${incompat.join(", ")}) ⚠️`);
+  } else {
+    toast(`Grade aplicada — ${totalQtyAplic} pares ✅`);
+  }
+});
 
 /** Init */
 loadFavsFromStorage();
