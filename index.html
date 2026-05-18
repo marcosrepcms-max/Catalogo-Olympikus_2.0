@@ -5351,7 +5351,19 @@ function renderCartUI(){
                   <span class="text-sm font-extrabold text-oly-blue leading-none mt-1">${qty}</span>
                 </div>`).join("")}
             </div>
-            <div class="mt-1.5 text-xs font-bold text-oly-muted">${it.qty} pares no total</div>
+            <div class="mt-2 flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-oly-muted">Caixas</span>
+                <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg disabled:opacity-40 disabled:cursor-not-allowed" data-box-minus="true" aria-label="Diminuir caixas" ${(it.boxes||1) <= 1 ? "disabled" : ""}>
+                  <i class="fa-solid fa-minus text-oly-blue" style="font-size:12px"></i>
+                </button>
+                <div class="min-w-[36px] text-center font-extrabold text-sm">${it.boxes || 1}</div>
+                <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-box-plus="true" aria-label="Aumentar caixas">
+                  <i class="fa-solid fa-plus text-oly-blue" style="font-size:12px"></i>
+                </button>
+              </div>
+              <div class="text-xs font-bold text-oly-muted"><span class="font-extrabold text-oly-blue">${it.qty}</span> pares no total</div>
+            </div>
           </div>` : needsGrade ? `
           <div class="mt-2 flex items-center gap-1.5">
             <button class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-minus="true" aria-label="Diminuir quantidade">
@@ -5385,6 +5397,8 @@ function renderCartUI(){
       const rm = e.target?.closest?.("[data-remove='true']");
       const mn = e.target?.closest?.("[data-minus='true']");
       const pl = e.target?.closest?.("[data-plus='true']");
+      const bxm = e.target?.closest?.("[data-box-minus='true']");
+      const bxp = e.target?.closest?.("[data-box-plus='true']");
       const ed = e.target?.closest?.("[data-edit='true']");
       const eg = e.target?.closest?.("[data-edit-grade='true']");
 
@@ -5411,6 +5425,31 @@ function renderCartUI(){
       }
       if(pl){
         it.qty = Math.min(9999, it.qty + 1);
+        state.cart.set(it.key, it);
+        saveCartToStorage();
+        renderCartUI();
+        return;
+      }
+      // Caixas (multiplicador de grade): re-multiplica gradeBase × boxes
+      if(bxm || bxp){
+        if(!it.gradeBase){
+          toast("Item sem grade base ⚠️");
+          return;
+        }
+        const cur = Number(it.boxes) || 1;
+        const next = bxm ? Math.max(1, cur - 1) : Math.min(99, cur + 1);
+        if(next === cur) return;
+        it.boxes = next;
+        // Recalcula grade e qty
+        const novaGrade = {};
+        let total = 0;
+        for(const [tam, q] of Object.entries(it.gradeBase)){
+          const v = (Number(q) || 0) * next;
+          novaGrade[tam] = v;
+          total += v;
+        }
+        it.grade = novaGrade;
+        it.qty = total;
         state.cart.set(it.key, it);
         saveCartToStorage();
         renderCartUI();
@@ -7197,6 +7236,9 @@ function gradeToCartEntry(){
     precosPrazo: item.precosPrazo || null,
     qty: totalQty,
     grade: gradeMap,
+    // Grade BASE imutável + multiplicador "boxes" — usados pelo +/- da sacola
+    gradeBase: { ...gradeMap },
+    boxes: 1,
     gradeResume,
     dataDesejada,
     pedidoCliente: pedidoClienteLinha,
