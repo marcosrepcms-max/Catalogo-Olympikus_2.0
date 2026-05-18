@@ -2049,7 +2049,10 @@
                      </div>
                      <!-- Pares por grade — bloco gerado dinamicamente em renderCartUI -->
                      <div id="cartGradesSummary" class="hidden mt-4 pt-4" style="border-top:1px dashed var(--border)">
-                       <div class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted mb-2.5">Pares por grade</div>
+                       <button id="cartGradesSummaryToggle" type="button" class="w-full flex items-center justify-between gap-2 mb-2.5 focus-ring rounded-md py-0.5">
+                         <span class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted">Pares por grade</span>
+                         <i id="cartGradesSummaryChevron" class="fa-solid fa-chevron-down text-oly-muted text-xs transition-transform" style="transition:transform .2s"></i>
+                       </button>
                        <div id="cartGradesSummaryList" class="space-y-2"></div>
                      </div>
                    </div>
@@ -5173,10 +5176,13 @@ function _renderCartGradesSummary(){
   // Agrupa: chave = JSON da grade efetiva (já com caixas aplicadas)
   const groups = new Map();   // key -> { grade:{tam:qty}, totalPares }
   let semGradeTotal = 0;
+  let totalPedido = 0;
   for(const it of state.cart.values()){
+    const qty = Number(it.qty) || 0;
+    totalPedido += qty;
     const hasGrade = it.grade && Object.keys(it.grade).length > 0;
     if(!hasGrade){
-      semGradeTotal += Number(it.qty) || 0;
+      semGradeTotal += qty;
       continue;
     }
     // Soma pares dessa linha
@@ -5203,6 +5209,10 @@ function _renderCartGradesSummary(){
     listEl.innerHTML = "";
     return;
   }
+  // Calcula percentual sobre total do pedido
+  const pct = (n) => totalPedido > 0
+    ? `${(n / totalPedido * 100).toFixed(1).replace(".", ",")}%`
+    : "0%";
   // HTML
   const blocks = arr.map(g => {
     const pillsHtml = Object.entries(g.grade).map(([tam, qty]) => `
@@ -5213,20 +5223,42 @@ function _renderCartGradesSummary(){
     return `
       <div class="rounded-xl border border-oly-border bg-oly-bg p-2.5">
         <div class="flex flex-wrap gap-1">${pillsHtml}</div>
-        <div class="mt-2 text-right text-[12px] font-extrabold text-oly-blue">${g.totalPares} pares</div>
+        <div class="mt-2 flex items-baseline justify-between gap-2">
+          <span class="text-[10.5px] font-bold text-oly-muted">${pct(g.totalPares)}</span>
+          <span class="text-[12px] font-extrabold text-oly-blue">${g.totalPares} pares</span>
+        </div>
       </div>`;
   }).join("");
   let extra = "";
   if(semGradeTotal > 0){
     extra = `
       <div class="rounded-xl border border-oly-border bg-oly-bg p-2.5 flex items-center justify-between">
-        <span class="text-[12px] font-bold text-oly-muted">Sem grade</span>
+        <span class="text-[12px] font-bold text-oly-muted">Sem grade <span class="text-[10.5px] font-bold ml-1">· ${pct(semGradeTotal)}</span></span>
         <span class="text-[12px] font-extrabold text-oly-blue">${semGradeTotal} pares</span>
       </div>`;
   }
   listEl.innerHTML = blocks + extra;
   wrap.classList.remove("hidden");
+
+  // Aplica estado de colapsado (lê localStorage)
+  const collapsed = lsGet("cart_grades_collapsed") === "1";
+  listEl.style.display = collapsed ? "none" : "";
+  const chevron = $("cartGradesSummaryChevron");
+  if(chevron) chevron.style.transform = collapsed ? "rotate(-90deg)" : "rotate(0deg)";
 }
+
+// Toggle do bloco "Pares por grade"
+document.addEventListener("click", (e) => {
+  const tg = e.target?.closest?.("#cartGradesSummaryToggle");
+  if(!tg) return;
+  const listEl = $("cartGradesSummaryList");
+  const chevron = $("cartGradesSummaryChevron");
+  const isCollapsed = listEl?.style.display === "none";
+  const next = !isCollapsed;
+  if(listEl) listEl.style.display = next ? "none" : "";
+  if(chevron) chevron.style.transform = next ? "rotate(-90deg)" : "rotate(0deg)";
+  lsSet("cart_grades_collapsed", next ? "1" : "0");
+});
 
 function renderCartUI(){
   syncCardAddStatusFromCart();
