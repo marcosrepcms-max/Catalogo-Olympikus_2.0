@@ -1559,6 +1559,9 @@
               </button>
               <input id="searchInput" class="hidden w-full bg-transparent text-sm font-medium placeholder:text-oly-muted/80 focus:outline-none"
                      placeholder="Buscar por produto, código, cor, gênero ou segmento…" />
+              <button id="btnSearchClear" class="hidden focus-ring h-7 w-7 rounded-full hover:bg-oly-bg flex items-center justify-center" title="Limpar busca" aria-label="Limpar busca">
+                <i class="fa-solid fa-circle-xmark text-oly-muted text-sm"></i>
+              </button>
               <button id="btnSearchClose" class="hidden focus-ring h-9 w-9 rounded-full hover:bg-oly-bg" title="Fechar busca">
                 <i class="fa-solid fa-xmark text-oly-blue"></i>
               </button>
@@ -2871,6 +2874,7 @@ function closeSearch({ silent=false } = {}){
   $("searchWrap").classList.remove("open");
   $("searchInput").classList.add("hidden");
   $("btnSearchClose").classList.add("hidden");
+  $("btnSearchClear")?.classList.add("hidden");
   if(!silent){
     $("searchInput").value = "";
     state.filters.q = "";
@@ -2882,7 +2886,21 @@ $("btnSearchToggle").addEventListener("click", ()=>{
   else openSearch();
 });
 $("btnSearchClose").addEventListener("click", ()=> closeSearch());
-$("searchInput").addEventListener("input", (e)=>{ state.filters.q = e.target.value.trim(); refreshView(true); });
+$("searchInput").addEventListener("input", (e)=>{
+  state.filters.q = e.target.value.trim();
+  // Mostra/oculta o botão X conforme tem texto
+  $("btnSearchClear")?.classList.toggle("hidden", !e.target.value);
+  refreshView(true);
+});
+// Botão X: limpa o campo (funciona em PC, tablet e celular)
+$("btnSearchClear")?.addEventListener("click", ()=>{
+  const input = $("searchInput");
+  input.value = "";
+  state.filters.q = "";
+  $("btnSearchClear").classList.add("hidden");
+  refreshView(true);
+  input.focus();
+});
 // Esc: 1ª pressão limpa o texto; se já estiver vazio, fecha o campo de busca
 $("searchInput").addEventListener("keydown", (e)=>{
   if(e.key === "Escape" || e.key === "Esc"){
@@ -2891,6 +2909,7 @@ $("searchInput").addEventListener("keydown", (e)=>{
     if(input.value){
       input.value = "";
       state.filters.q = "";
+      $("btnSearchClear")?.classList.add("hidden");
       refreshView(true);
     } else {
       closeSearch();
