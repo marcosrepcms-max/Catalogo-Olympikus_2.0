@@ -5910,19 +5910,23 @@ function flashPendingCartItems(items){
   }, 360); // espera o drawer abrir antes de tentar achar as rows
 }
 
-function openOrderExportModal(){
+function openOrderExportModal(opts = {}){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
 
-  // Gate: nenhum produto pode estar sem grade
-  const pending = getCartItemsWithPendingGrade();
-  if(pending.length > 0){
-    const msg = pending.length === 1
-      ? "1 produto sem grade. Preencha antes de exportar ⚠️"
-      : `${pending.length} produtos sem grade. Preencha antes de exportar ⚠️`;
-    toast(msg);
-    openCartModal();
-    flashPendingCartItems(pending);
-    return;
+  // Gate de grade: só vale pra FINALIZAR pedido.
+  // Quando aberto para salvar rascunho, não exige grade (rascunho pode ser completado depois).
+  const modoRascunho = !!opts.paraRascunho;
+  if(!modoRascunho){
+    const pending = getCartItemsWithPendingGrade();
+    if(pending.length > 0){
+      const msg = pending.length === 1
+        ? "1 produto sem grade. Preencha antes de exportar ⚠️"
+        : `${pending.length} produtos sem grade. Preencha antes de exportar ⚠️`;
+      toast(msg);
+      openCartModal();
+      flashPendingCartItems(pending);
+      return;
+    }
   }
 
   populateOrderPaymentSelect();
@@ -6117,6 +6121,18 @@ function validateOrderRequiredFields(){
 
 function exportOrderXlsxFromModal(){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
+  // Gate de grade: finalizar exige todos os produtos com grade
+  const pendentes = getCartItemsWithPendingGrade();
+  if(pendentes.length > 0){
+    const msg = pendentes.length === 1
+      ? "1 produto sem grade. Preencha antes de finalizar ⚠️"
+      : `${pendentes.length} produtos sem grade. Preencha antes de finalizar ⚠️`;
+    toast(msg);
+    closeOrderExportModal();
+    openCartModal();
+    flashPendingCartItems(pendentes);
+    return;
+  }
   const { missing, firstEl } = validateOrderRequiredFields();
   if(missing.length){
     const msg = missing.length === 1
@@ -9488,7 +9504,7 @@ async function _onSalvarRascunho(){
   }
   if(!com){
     toast("Preencha os dados do pedido e use \"Salvar rascunho\"");
-    if(typeof openOrderExportModal === "function") openOrderExportModal();
+    if(typeof openOrderExportModal === "function") openOrderExportModal({ paraRascunho:true });
     return;
   }
   const rascunho = buildRascunhoSnapshot({
