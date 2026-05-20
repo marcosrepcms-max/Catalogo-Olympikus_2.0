@@ -499,33 +499,40 @@ async function gerarPDF(){
       }
     }
 
-    // ─── Cabeçalho ───
+    // ─── Cabeçalho (Variação 1: roxo cheio + faixa laranja) ───
     function drawHeader(){
+      const HEAD_H = 86;
+      // fundo roxo
       doc.setFillColor(124,58,237);
-      doc.rect(0,0,PW,6,"F");
-      // logo
-      doc.setFillColor(124,58,237);
-      doc.roundedRect(margin, 22, 42, 42, 8, 8, "F");
+      doc.rect(0,0,PW,HEAD_H,"F");
+      // faixa laranja na base do cabeçalho
+      doc.setFillColor(234,88,12);
+      doc.rect(0,HEAD_H,PW,4,"F");
+      // logo — retângulo claro translúcido simulado com cor
+      doc.setFillColor(141,82,255);
+      doc.roundedRect(margin, 22, 44, 44, 10, 10, "F");
+      doc.setDrawColor(180,150,255);
+      doc.setLineWidth(0.8);
+      doc.roundedRect(margin, 22, 44, 44, 10, 10, "S");
       doc.setTextColor(255,255,255);
-      doc.setFont("helvetica","bold"); doc.setFontSize(13);
-      doc.text("CMS", margin+21, 47, { align:"center" });
-      // textos
-      doc.setTextColor(15,23,42);
-      doc.setFontSize(16);
-      doc.text("CMS Representações", margin+54, 38);
-      doc.setTextColor(100,116,139);
+      doc.setFont("helvetica","bold"); doc.setFontSize(14);
+      doc.text("CMS", margin+22, 48, { align:"center" });
+      // nome
+      const tx = margin + 58;
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold"); doc.setFontSize(17);
+      doc.text("CMS Representações", tx, 38);
+      // subtítulo
+      doc.setTextColor(221,214,254);
       doc.setFont("helvetica","normal"); doc.setFontSize(9);
-      doc.text("OLYMPIKUS · UNDER ARMOUR", margin+54, 51);
+      doc.text("OLYMPIKUS · UNDER ARMOUR", tx, 51);
       // tag
-      doc.setFillColor(124,58,237);
-      doc.roundedRect(margin+54, 56, 116, 13, 6, 6, "F");
+      doc.setFillColor(234,88,12);
+      doc.roundedRect(tx, 57, 122, 13, 6.5, 6.5, "F");
       doc.setTextColor(255,255,255);
-      doc.setFont("helvetica","bold"); doc.setFontSize(7);
-      doc.text("REPRESENTANTE AUTORIZADO", margin+112, 65, { align:"center" });
-      // linha
-      doc.setDrawColor(226,232,240); doc.setLineWidth(0.5);
-      doc.line(margin, 80, margin+contentW, 80);
-      return 96;
+      doc.setFont("helvetica","bold"); doc.setFontSize(6.5);
+      doc.text("REPRESENTANTE AUTORIZADO", tx+61, 65.5, { align:"center" });
+      return HEAD_H + 4;
     }
 
     // ─── Card de produto ───
@@ -534,14 +541,12 @@ async function gerarPDF(){
 
     // Calcula a altura necessária do card conforme o conteúdo
     function calcCardH(c){
-      // bloco de texto: nome(15) + meta(13) + tam(14 ou 4)
-      let texto = 12 + 15 + 13;
-      texto += c.tam ? 14 : 4;
+      // nome(13) + ref(14) + atributos(14)
+      let texto = 13 + 13 + 14 + 14;
       if(!c.temBase) texto += 13;
       texto += c.meses.length * 14;   // cada mês = 14pt
-      texto += 6;                      // respiro final
-      // o card precisa caber o maior entre: imagem, texto, lado direito (~95pt)
-      const conteudo = Math.max(IMG_SZ, texto, 95);
+      texto += 8;                      // respiro final
+      const conteudo = Math.max(IMG_SZ, texto, 100);
       return conteudo + CARD_PAD_Y * 2;
     }
 
@@ -576,68 +581,77 @@ async function gerarPDF(){
 
       // textos
       const tx = margin + IMG_SZ + 16;
-      let ty = cy + 12;
-      doc.setTextColor(15,23,42);
-      doc.setFont("helvetica","bold"); doc.setFontSize(13);
-      doc.text(`${c.produto} · ${c.ref}`, tx, ty);
-      ty += 15;
-      doc.setTextColor(100,116,139);
-      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
-      const meta = [c.cor, c.genero].filter(Boolean).join(" · ") || "—";
-      doc.text(meta, tx, ty);
+      let ty = cy + 13;
+      // nome do produto (bold equilibrado)
+      doc.setTextColor(24,24,27);
+      doc.setFont("helvetica","bold"); doc.setFontSize(14);
+      doc.text(String(c.produto || "—"), tx, ty);
       ty += 13;
-      if(c.tam){
-        doc.setTextColor(71,85,105);
-        doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
-        doc.text(`Tam ${c.tam}`, tx, ty);
-        ty += 14;
-      } else {
-        ty += 4;
-      }
+      // referência (cinza, menor)
+      doc.setTextColor(161,161,170);
+      doc.setFont("helvetica","bold"); doc.setFontSize(9);
+      doc.text(`Ref. ${c.ref}`, tx, ty);
+      ty += 14;
+      // atributos: cor · gênero · tam
+      doc.setTextColor(113,113,122);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+      const attrs = [c.cor, c.genero, c.tam ? `Tam ${c.tam}` : ""].filter(Boolean).join("   ·   ") || "—";
+      doc.text(attrs, tx, ty);
+      ty += 14;
       if(!c.temBase){
         doc.setTextColor(217,119,6);
         doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
         doc.text("Produto não encontrado na base", tx, ty);
         ty += 13;
       }
-      // meses
+      // meses (pílula roxa + qtd)
       doc.setFontSize(9.5);
       for(const m of c.meses){
-        // pílula do mês
         doc.setFont("helvetica","bold");
         const mesW = doc.getTextWidth(m.nome) + 12;
         doc.setFillColor(245,243,255);
         doc.roundedRect(tx, ty-8, mesW, 12, 6, 6, "F");
         doc.setTextColor(124,58,237);
         doc.text(m.nome, tx+6, ty);
-        // qtd
-        doc.setTextColor(71,85,105);
+        doc.setTextColor(113,113,122);
         doc.setFont("helvetica","normal");
         doc.text(`${numBR(m.qtd)} pares`, tx+mesW+8, ty);
         ty += 14;
       }
 
-      // lado direito: PDV + total
+      // ─── lado direito: PDV + total (opção D, PDV vivo) ───
       const rx = margin + contentW;
-      let ry = cy + 12;
-      doc.setTextColor(148,163,184);
+      let ry = cy + 13;
+      // rótulo PDV
+      doc.setTextColor(161,161,170);
       doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
       doc.text("PDV", rx, ry, { align:"right" });
-      ry += 13;
+      ry += 14;
+      // valor PDV — roxo bold, destacado
       doc.setTextColor(124,58,237);
-      doc.setFontSize(13);
+      doc.setFont("helvetica","bold"); doc.setFontSize(15);
       doc.text(c.temBase && c.preco ? moneyBR(c.preco) : "—", rx, ry, { align:"right" });
-      // total (grande, negrito)
-      ry += 26;
-      doc.setDrawColor(241,245,249); doc.setLineWidth(0.5);
-      doc.line(rx-90, ry-14, rx, ry-14);
-      doc.setTextColor(148,163,184);
-      doc.setFontSize(7.5);
+      // total
+      ry += 24;
+      doc.setDrawColor(234,88,12); doc.setLineWidth(0.8);
+      doc.line(rx-86, ry-13, rx, ry-13);
+      doc.setTextColor(161,161,170);
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
       doc.text("TOTAL DE PARES", rx, ry, { align:"right" });
       ry += 17;
-      doc.setTextColor(15,23,42);
-      doc.setFont("helvetica","bold"); doc.setFontSize(20);
-      doc.text(numBR(c.total), rx, ry, { align:"right" });
+      // número total — bold médio + "pares" cinza ao lado
+      doc.setTextColor(24,24,27);
+      doc.setFont("helvetica","bold"); doc.setFontSize(22);
+      const totStr = numBR(c.total);
+      const totW = doc.getTextWidth(totStr);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+      const unitW = doc.getTextWidth(" pares");
+      // desenha total + unidade alinhados à direita
+      doc.setTextColor(161,161,170);
+      doc.text("pares", rx, ry, { align:"right" });
+      doc.setTextColor(24,24,27);
+      doc.setFont("helvetica","bold"); doc.setFontSize(22);
+      doc.text(totStr, rx - unitW - 2, ry, { align:"right" });
 
       return y + cardH;
     }
@@ -656,14 +670,15 @@ async function gerarPDF(){
 
     // ─── Monta páginas ───
     let y = drawHeader();
-    // título seção
+    y += 8;
+    // título seção — texto roxo + linha laranja
     doc.setTextColor(124,58,237);
     doc.setFont("helvetica","bold"); doc.setFontSize(11);
     doc.text("CATÁLOGO DE PRODUTOS", margin, y);
-    doc.setDrawColor(226,232,240); doc.setLineWidth(0.5);
     const tw = doc.getTextWidth("CATÁLOGO DE PRODUTOS");
-    doc.line(margin+tw+8, y-3, margin+contentW, y-3);
-    y += 10;
+    doc.setDrawColor(234,88,12); doc.setLineWidth(2);
+    doc.line(margin+tw+10, y-3, margin+contentW, y-3);
+    y += 12;
 
     for(const c of carteira){
       if(y + calcCardH(c) > PH - 40){
