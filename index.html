@@ -8533,12 +8533,20 @@ async function salvarPedidoNoHistorico(cfg){
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ action:"savePedidoHistorico", comissionista:com, pedido })
     });
-    if(res.ok){
+    let data = null;
+    try{ data = await res.json(); }catch(_){}
+    if(res.ok && data && data.success){
       // Invalida cache para forçar refetch
       delete MP.pedidosCache[com];
+    } else {
+      // Falha no salvamento — avisa o vendedor (não falha silenciosamente)
+      const msg = (data && data.error) ? data.error : "Falha ao salvar no histórico";
+      console.error("savePedidoHistorico falhou:", data || res.status);
+      if(typeof toast === "function") toast("⚠️ " + msg);
     }
   }catch(err){
-    console.warn("Falha ao salvar histórico:", err);
+    console.error("Falha ao salvar histórico:", err);
+    if(typeof toast === "function") toast("⚠️ Sem conexão — pedido não salvo no histórico");
   }
 }
 
@@ -8552,12 +8560,23 @@ async function carregarHistorico(comissionista){
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ action:"getPedidoHistorico", comissionista })
     });
+    if(!res.ok){
+      // Erro do servidor (ex: arquivo grande não pôde ser lido) — NÃO cacheia,
+      // pra próxima tentativa buscar de novo. Avisa o vendedor.
+      console.error("getPedidoHistorico HTTP", res.status);
+      if(typeof toast === "function") toast("⚠️ Não foi possível carregar o histórico — tente de novo");
+      MP._lastLoadError = true;
+      return [];
+    }
     const data = await res.json();
     const lista = Array.isArray(data) ? data : [];
     MP.pedidosCache[comissionista] = lista;
+    MP._lastLoadError = false;
     return lista;
   }catch(err){
     console.error("Erro ao carregar histórico:", err);
+    if(typeof toast === "function") toast("⚠️ Sem conexão — histórico não carregado");
+    MP._lastLoadError = true;
     return [];
   }
 }
