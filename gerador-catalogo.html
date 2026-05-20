@@ -361,8 +361,14 @@ function montarCarteira(linhas){
       total: g.total
     });
   }
-  // Ordena por nome do produto
-  carteira.sort((a,b)=> a.produto.localeCompare(b.produto,"pt-BR"));
+  // Ordena pelo faturamento mais próximo (produto que fatura primeiro vem antes).
+  // Empate no mês → ordena por nome do produto.
+  carteira.sort((a,b)=>{
+    const oa = a.meses.length ? a.meses[0].ordem : Infinity;
+    const ob = b.meses.length ? b.meses[0].ordem : Infinity;
+    if(oa !== ob) return oa - ob;
+    return a.produto.localeCompare(b.produto,"pt-BR");
+  });
   renderPreview(semBase);
 }
 
@@ -411,21 +417,33 @@ function renderPreview(semBase){
 }
 
 // ───────── Passo 4: gerar PDF ─────────
-// Carrega imagem como dataURL pra embutir no PDF
-function carregarImg(url){
+// Extensões testadas (igual ao Catálogo Digital)
+const IMG_EXTS = [".jpg",".jpeg",".png",".webp"];
+
+// Carrega imagem como dataURL, testando várias extensões
+function carregarImg(baseName){
   return new Promise(resolve=>{
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = ()=>{
-      try{
-        const cv = document.createElement("canvas");
-        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-        cv.getContext("2d").drawImage(img,0,0);
-        resolve({ data: cv.toDataURL("image/png"), w:img.naturalWidth, h:img.naturalHeight });
-      }catch(e){ resolve(null); }
-    };
-    img.onerror = ()=> resolve(null);
-    img.src = url;
+    if(!baseName){ resolve(null); return; }
+    const clean = String(baseName).trim().replace(/\.(png|jpg|jpeg|webp)$/i,"");
+    let i = 0;
+    function tentar(){
+      if(i >= IMG_EXTS.length){ resolve(null); return; }
+      const url = `${IMG_BASE}${encodeURI(clean)}${IMG_EXTS[i]}`;
+      i++;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = ()=>{
+        try{
+          const cv = document.createElement("canvas");
+          cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+          cv.getContext("2d").drawImage(img,0,0);
+          resolve({ data: cv.toDataURL("image/jpeg",0.85), w:img.naturalWidth, h:img.naturalHeight });
+        }catch(e){ tentar(); }  // erro de canvas (CORS) → tenta próxima
+      };
+      img.onerror = ()=> tentar();
+      img.src = url;
+    }
+    tentar();
   });
 }
 
@@ -483,14 +501,29 @@ async function gerarPDF(){
     }
 
     // ─── Card de produto ───
-    const CARD_H = 124;
     const IMG_SZ = 104;
+    const CARD_PAD_Y = 10;
+
+    // Calcula a altura necessária do card conforme o conteúdo
+    function calcCardH(c){
+      // bloco de texto: nome(15) + meta(13) + tam(14 ou 4)
+      let texto = 12 + 15 + 13;
+      texto += c.tam ? 14 : 4;
+      if(!c.temBase) texto += 13;
+      texto += c.meses.length * 14;   // cada mês = 14pt
+      texto += 6;                      // respiro final
+      // o card precisa caber o maior entre: imagem, texto, lado direito (~95pt)
+      const conteudo = Math.max(IMG_SZ, texto, 95);
+      return conteudo + CARD_PAD_Y * 2;
+    }
+
     function drawCard(c, y){
+      const cardH = calcCardH(c);
       // divisória
       doc.setDrawColor(241,245,249); doc.setLineWidth(0.5);
       doc.line(margin, y, margin+contentW, y);
 
-      const padY = 10;
+      const padY = CARD_PAD_Y;
       let cy = y + padY;
 
       // imagem
@@ -578,7 +611,7 @@ async function gerarPDF(){
       doc.setFont("helvetica","bold"); doc.setFontSize(20);
       doc.text(numBR(c.total), rx, ry, { align:"right" });
 
-      return y + CARD_H;
+      return y + cardH;
     }
 
     // ─── Rodapé ───
@@ -605,7 +638,7 @@ async function gerarPDF(){
     y += 10;
 
     for(const c of carteira){
-      if(y + CARD_H > PH - 40){
+      if(y + calcCardH(c) > PH - 40){
         drawFooter();
         doc.addPage();
         y = drawHeader();
