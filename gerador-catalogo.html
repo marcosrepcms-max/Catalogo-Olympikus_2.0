@@ -158,7 +158,7 @@
       <div class="top-sub">Ferramenta · em desenvolvimento</div>
       <div class="top-title">Gerador de Catálogo</div>
     </div>
-    <a href="./portal-vendedor.html" class="top-back"><i class="fa-solid fa-arrow-left"></i> Portal</a>
+    <a href="https://marcosrepcms-max.github.io/Catalogo-Olympikus/" class="top-back"><i class="fa-solid fa-arrow-left"></i> Portal</a>
   </div>
 
   <!-- Passo 1: base de produtos -->
@@ -373,6 +373,25 @@ function montarCarteira(linhas){
 }
 
 // ───────── Passo 3: preview ─────────
+// Extensões testadas pra imagem (ordem)
+const EXTS = [".jpg",".png",".jpeg",".webp",".JPG",".PNG"];
+// Monta URL da imagem com a extensão de índice i
+function imgUrl(base, i){
+  const clean = String(base||"").trim().replace(/\.(png|jpg|jpeg|webp)$/i,"");
+  return `${IMG_BASE}${encodeURI(clean)}${EXTS[i] || ".png"}`;
+}
+function escAttr(s){ return String(s||"").replace(/"/g,"&quot;"); }
+// onerror: tenta a próxima extensão; se esgotar, vira placeholder
+function tentarProxExt(img){
+  let ext = parseInt(img.dataset.ext||"0",10) + 1;
+  if(ext >= EXTS.length){
+    img.outerHTML = '<div class="prev-img-ph"><i class="fa-solid fa-image"></i></div>';
+    return;
+  }
+  img.dataset.ext = String(ext);
+  img.src = imgUrl(img.dataset.base, ext);
+}
+
 function renderPreview(semBase){
   const totalProdutos = carteira.length;
   const totalPares = carteira.reduce((a,c)=> a + c.total, 0);
@@ -391,9 +410,9 @@ function renderPreview(semBase){
   `;
 
   // Lista
-  $("previewList").innerHTML = carteira.map(c=>{
+  $("previewList").innerHTML = carteira.map((c, idx)=>{
     const img = c.temBase && c.imagem
-      ? `<img class="prev-img" src="${IMG_BASE}${encodeURIComponent(c.imagem)}.png" onerror="this.outerHTML='<div class=&quot;prev-img-ph&quot;><i class=&quot;fa-solid fa-image&quot;></i></div>'">`
+      ? `<img class="prev-img" id="prevImg${idx}" src="${imgUrl(c.imagem, 0)}" data-base="${escAttr(c.imagem)}" data-ext="0" onerror="tentarProxExt(this)">`
       : `<div class="prev-img-ph"><i class="fa-solid fa-image"></i></div>`;
     const fats = c.meses.map(m=> `<span class="mes">${m.nome}</span>${numBR(m.qtd)}`).join("  ");
     const meta = [c.cor, c.genero].filter(Boolean).join(" · ");
@@ -467,7 +486,7 @@ async function gerarPDF(){
     const imgCache = {};
     for(const c of carteira){
       if(c.temBase && c.imagem && !imgCache[c.imagem]){
-        imgCache[c.imagem] = await carregarImg(`${IMG_BASE}${encodeURIComponent(c.imagem)}.png`);
+        imgCache[c.imagem] = await carregarImg(c.imagem);
       }
     }
 
