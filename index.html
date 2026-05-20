@@ -1081,7 +1081,7 @@
 
     /* ── Modal Meus Pedidos ── */
     #meusPedidosModal .mp-sheet {
-      width:min(640px, calc(100vw - 24px));
+      width:min(1100px, calc(100vw - 24px));
       max-height: 92vh;
       max-height: 92dvh;
       background: var(--card-bg, #fff);
@@ -1091,6 +1091,25 @@
       box-shadow: 0 24px 70px rgba(0,0,0,.22);
       display:flex;
       flex-direction:column;
+    }
+    /* Abas Rascunhos / Finalizados */
+    #meusPedidosModal .mp-aba {
+      display:flex; align-items:center; gap:7px;
+      padding:9px 16px; border-radius:10px;
+      border:1px solid var(--border); background:var(--card-bg);
+      font-size:13px; font-weight:800; color:var(--muted);
+      cursor:pointer; transition:all .12s;
+    }
+    #meusPedidosModal .mp-aba:hover { border-color:var(--primary); }
+    #meusPedidosModal .mp-aba-active {
+      background:var(--primary); color:#fff; border-color:var(--primary);
+    }
+    #meusPedidosModal .mp-aba-count {
+      background:rgba(255,255,255,.25); border-radius:99px;
+      padding:1px 7px; font-size:11px; min-width:20px; text-align:center;
+    }
+    #meusPedidosModal .mp-aba:not(.mp-aba-active) .mp-aba-count {
+      background:var(--bg); color:var(--primary);
     }
     #meusPedidosModal .mp-sheet-header { flex:0 0 auto; }
     #meusPedidosModal .mp-sheet-filters { flex:0 0 auto; }
@@ -2075,6 +2094,11 @@
                     <button id="btnWhatsCheckout" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-4 text-base font-extrabold text-white hover:opacity-95 shadow-sm" title="Enviar pedido completo via WhatsApp">
                       <i class="fa-brands fa-whatsapp text-xl"></i>
                       <span>Enviar pedido via WhatsApp</span>
+                    </button>
+
+                    <button id="btnSalvarRascunho" class="focus-ring inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold hover:opacity-95" style="background:#FEF3C7;color:#92400E;border:1.5px solid #FCD34D" title="Salvar pedido como rascunho para completar depois">
+                      <i class="fa-solid fa-floppy-disk"></i>
+                      <span id="btnSalvarRascunhoLabel">Salvar rascunho</span>
                     </button>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -6101,7 +6125,20 @@ function _doExportXlsx(salvarHist){
   // Salva no histórico se o usuário confirmou
   if(salvarHist && typeof salvarPedidoNoHistorico === "function"){
     salvarPedidoNoHistorico(cfg)
-      .then(() => toast("Pedido salvo no histórico 📋"))
+      .then(async () => {
+        toast("Pedido salvo no histórico 📋");
+        // Se este pedido veio de um RASCUNHO, remove o rascunho (virou finalizado)
+        if(MP.editandoRascunhoId){
+          const rascId = MP.editandoRascunhoId;
+          MP.editandoRascunhoId = null;
+          _atualizarLabelRascunho();
+          const com = String(cfg.commission || "").trim();
+          if(com){
+            const del = await deletarRascunhoNoWorker(com, rascId);
+            if(del.success) console.log("Rascunho finalizado e removido:", rascId);
+          }
+        }
+      })
       .catch(err => {
         console.warn("Histórico:", err);
         toast("Excel gerado, mas falha ao salvar histórico ⚠️");
@@ -8440,11 +8477,14 @@ document.addEventListener("keydown", (e) => {
 // ═══════════════════════════════════════════════════════════════════
 const MP = {
   pedidosCache: {}, // { comissionista: [pedidos] }
+  rascunhosCache: {}, // { comissionista: [rascunhos] }
+  abaAtiva: "rascunhos", // "rascunhos" | "finalizados"
   filtroComissionista: "",
   filtroBusca: "",
   filtroPeriodo: "mes", // 7d | mes | mes-passado | custom
   customDe: "",
   customAte: "",
+  editandoRascunhoId: null, // id do rascunho sendo editado na sacola (null = sacola normal)
 };
 
 const COMISSIONISTAS = [
@@ -8522,6 +8562,60 @@ function buildPedidoSnapshot(cfg){
   };
 }
 
+// Cria snapshot de RASCUNHO a partir da sacola atual.
+// Diferente do pedido finalizado: cfg é opcional, não exige grade.
+function buildRascunhoSnapshot({ id=null, cfg=null } = {}){
+  const items = [];
+  let totalItens = 0;
+  let semGrade = 0;
+  for(const it of state.cart.values()){
+    const hasGrade = it.grade && Object.keys(it.grade).length > 0;
+    if(!hasGrade) semGrade++;
+    const totalQty = (typeof getItemTotalQty === "function") ? getItemTotalQty(it) : (Number(it.qty)||0);
+    totalItens++;
+    items.push({
+      codigo: it.codigo || "",
+      produto: it.produto || "",
+      cor: it.cor || "",
+      corCodigo: it.corCodigo || "",
+      genero: it.genero || "",
+      tam: it.tam || "",
+      categoria: it.categoria || "",
+      grade: it.grade ? { ...it.grade } : null,
+      gradeBase: it.gradeBase ? { ...it.gradeBase } : null,
+      boxes: it.boxes || 1,
+      qty: Number(it.qty) || 0,
+      totalQty,
+      precoNum: Number(it.precoNum) || 0,
+      precoFmt: it.precoFmt || "",
+      precosPrazo: it.precosPrazo || null,
+      colecao: it.colecao || "",
+      imagem: it.imagem || "",
+      imgSrc: it.imgSrc || "",
+      linhaId: it.linhaId || undefined,
+      dataDesejada: it.dataDesejada || "",
+      pedidoCliente: it.pedidoCliente || ""
+    });
+  }
+  const agora = new Date().toISOString();
+  return {
+    id: id || `rasc-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    tipo: "rascunho",
+    createdAt: agora,
+    updatedAt: agora,
+    comissionista: String(cfg?.commission || (state.lastOrderCfg?.commission) || ""),
+    comissionistaNome: getComissionistaNome(cfg?.commission || state.lastOrderCfg?.commission || ""),
+    clientCode: String(cfg?.clientCode || state.lastOrderCfg?.clientCode || ""),
+    payment: cfg?.payment || state.lastOrderCfg?.payment || "",
+    priceTable: cfg?.priceTable || state.lastOrderCfg?.priceTable || "",
+    campaign: cfg?.campaign || state.lastOrderCfg?.campaign || "",
+    pedidoCliente: cfg?.pedidoCliente || state.lastOrderCfg?.pedidoCliente || "",
+    items,
+    totalItens,
+    semGrade
+  };
+}
+
 // Salva o pedido no histórico via Worker
 async function salvarPedidoNoHistorico(cfg){
   const com = String(cfg.commission || "").trim();
@@ -8581,6 +8675,77 @@ async function carregarHistorico(comissionista){
   }
 }
 
+// ── RASCUNHOS ──────────────────────────────────────────────
+// Carrega rascunhos de um comissionista (com cache)
+async function carregarRascunhos(comissionista){
+  if(!comissionista) return [];
+  if(MP.rascunhosCache[comissionista]) return MP.rascunhosCache[comissionista];
+  try{
+    const res = await fetch(`${WORKER_URL || ""}`, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"getRascunhos", comissionista })
+    });
+    if(!res.ok){
+      console.error("getRascunhos HTTP", res.status);
+      if(typeof toast === "function") toast("⚠️ Não foi possível carregar rascunhos");
+      return [];
+    }
+    const data = await res.json();
+    const lista = Array.isArray(data) ? data : [];
+    MP.rascunhosCache[comissionista] = lista;
+    return lista;
+  }catch(err){
+    console.error("Erro ao carregar rascunhos:", err);
+    if(typeof toast === "function") toast("⚠️ Sem conexão — rascunhos não carregados");
+    return [];
+  }
+}
+
+// Salva (cria ou atualiza) um rascunho no Worker
+async function salvarRascunhoNoWorker(comissionista, rascunho){
+  const com = String(comissionista || "").trim();
+  if(!com) return { success:false, error:"Comissionista não informado" };
+  try{
+    const res = await fetch(`${WORKER_URL || ""}`, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"saveRascunho", comissionista:com, rascunho })
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(_){}
+    if(res.ok && data && data.success){
+      delete MP.rascunhosCache[com]; // invalida cache
+      return { success:true };
+    }
+    return { success:false, error:(data && data.error) || "Falha ao salvar rascunho" };
+  }catch(err){
+    return { success:false, error:"Sem conexão" };
+  }
+}
+
+// Remove um rascunho
+async function deletarRascunhoNoWorker(comissionista, id){
+  const com = String(comissionista || "").trim();
+  if(!com || !id) return { success:false };
+  try{
+    const res = await fetch(`${WORKER_URL || ""}`, {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"deleteRascunho", comissionista:com, id })
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(_){}
+    if(res.ok && data && data.success){
+      delete MP.rascunhosCache[com];
+      return { success:true };
+    }
+    return { success:false, error:(data && data.error) || "Falha ao excluir" };
+  }catch(err){
+    return { success:false, error:"Sem conexão" };
+  }
+}
+
 // Determina o range de datas baseado no preset
 function _mpGetDateRange(){
   const now = new Date();
@@ -8635,6 +8800,21 @@ function _mpFiltrarPedidos(lista){
 }
 
 function renderListaPedidos(){
+  // Atualiza contadores das abas
+  const rascCache = MP.rascunhosCache[MP.filtroComissionista] || [];
+  const finCache = MP.pedidosCache[MP.filtroComissionista] || [];
+  const cr = $("mpCountRascunhos"); if(cr) cr.textContent = String(rascCache.length);
+  const cf = $("mpCountFinalizados"); if(cf) cf.textContent = String(finCache.length);
+
+  // Roteia conforme a aba ativa
+  if(MP.abaAtiva === "rascunhos"){
+    _mpRenderRascunhos();
+  } else {
+    _mpRenderFinalizados();
+  }
+}
+
+function _mpRenderFinalizados(){
   const lista = MP.pedidosCache[MP.filtroComissionista] || [];
   const filtrados = _mpFiltrarPedidos(lista);
   const ul = $("mpLista");
@@ -8645,6 +8825,7 @@ function renderListaPedidos(){
   if(!filtrados.length){
     ul.classList.add("hidden");
     empty.classList.remove("hidden");
+    empty.innerHTML = `<div class="text-3xl mb-2">📭</div><div class="font-bold mb-1" style="color:var(--text)">Nenhum pedido finalizado</div><div class="text-xs" style="color:var(--muted)">Pedidos aparecem aqui quando você finaliza a sacola.</div>`;
     $("mpStatsTxt").textContent = "0 pedidos";
     $("mpStatsTotal").textContent = "";
     return;
@@ -8704,6 +8885,86 @@ function renderListaPedidos(){
   }).join("");
 }
 
+// Renderiza a aba de RASCUNHOS
+function _mpRenderRascunhos(){
+  const lista = MP.rascunhosCache[MP.filtroComissionista] || [];
+  // Aplica busca (rascunho não tem filtro de período — sempre mostra todos)
+  const q = (MP.filtroBusca || "").toLowerCase().trim();
+  const filtrados = q ? lista.filter(r => {
+    const hay = [r.clientCode, r.pedidoCliente, r.id,
+      ...(r.items||[]).map(i => `${i.codigo} ${i.produto} ${i.cor}`)].join(" ").toLowerCase();
+    return hay.includes(q);
+  }) : lista;
+
+  const ul = $("mpLista");
+  const empty = $("mpEmpty");
+  const loading = $("mpLoading");
+  loading.classList.add("hidden");
+
+  if(!filtrados.length){
+    ul.classList.add("hidden");
+    empty.classList.remove("hidden");
+    empty.innerHTML = `<div class="text-3xl mb-2">📝</div><div class="font-bold mb-1" style="color:var(--text)">Nenhum rascunho</div><div class="text-xs" style="color:var(--muted)">Monte uma sacola e use "Salvar rascunho" pra guardar um pedido em andamento.</div>`;
+    $("mpStatsTxt").textContent = "0 rascunhos";
+    $("mpStatsTotal").textContent = "";
+    return;
+  }
+
+  empty.classList.add("hidden");
+  ul.classList.remove("hidden");
+  $("mpStatsTxt").textContent = `${filtrados.length} rascunho${filtrados.length!==1?"s":""}`;
+  $("mpStatsTotal").textContent = "";
+
+  ul.innerHTML = filtrados.map(r => {
+    const cliente = r.clientCode ? `Cliente ${_mpEscape(r.clientCode)}` : "Cliente não informado";
+    const data = _mpFormatBR(r.updatedAt || r.createdAt);
+    const semGrade = Number(r.semGrade) || 0;
+    const countTxt = semGrade > 0
+      ? `<span style="color:#d97706;font-weight:800">${semGrade} sem grade</span> · ${r.totalItens} ${r.totalItens===1?"item":"itens"}`
+      : `${r.totalItens} ${r.totalItens===1?"item":"itens"}`;
+    const itens = (r.items||[]).map(i => {
+      const meta = [i.cor, i.genero].filter(Boolean).join(" · ");
+      const hasGrade = i.grade && Object.keys(i.grade).length > 0;
+      const qtyTxt = hasGrade
+        ? `${i.totalQty || 0} pares`
+        : `<span style="color:#d97706;font-weight:800;font-size:10px">SEM GRADE</span>`;
+      const imgUrl = i.imagem ? `./imagens_olympikus/${i.imagem}.png` : "";
+      return `<div class="mp-pedido-prod">
+        <div class="mp-pedido-prod-thumb">${imgUrl ? `<img src="${_mpEscape(imgUrl)}" alt="" onerror="this.style.display='none'">` : ''}</div>
+        <div class="mp-pedido-prod-info">
+          <div class="mp-pedido-prod-name">${_mpEscape(i.produto || i.codigo)}</div>
+          <div class="mp-pedido-prod-meta">${_mpEscape(meta)}</div>
+        </div>
+        <div class="mp-pedido-prod-qty">${qtyTxt}</div>
+      </div>`;
+    }).join("");
+
+    return `<div class="mp-pedido-item" data-rascunho-id="${_mpEscape(r.id)}">
+      <div class="mp-pedido-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="mp-pedido-left">
+          <div class="mp-pedido-cliente">${cliente}</div>
+          <div class="mp-pedido-meta">
+            <span>${data}</span>
+            <span class="mp-pedido-meta-tag" style="background:#FEF3C7;color:#92400E">Rascunho</span>
+          </div>
+        </div>
+        <div class="mp-pedido-right">
+          <div class="mp-pedido-itens-count">${countTxt}</div>
+        </div>
+        <span class="mp-pedido-chev">▶</span>
+      </div>
+      <div class="mp-pedido-body">
+        ${itens}
+        <div class="mp-pedido-actions">
+          <button class="mp-pedido-btn primary" onclick="mpEditarRascunho('${_mpEscape(r.id)}')"><i class="fa-solid fa-pen"></i> Editar</button>
+          <button class="mp-pedido-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="mpFinalizarRascunho('${_mpEscape(r.id)}')"><i class="fa-solid fa-circle-check"></i> Finalizar</button>
+          <button class="mp-pedido-btn" style="color:#dc2626" onclick="mpExcluirRascunho('${_mpEscape(r.id)}')"><i class="fa-solid fa-trash"></i> Excluir</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
 // Localiza pedido por id em todos os caches
 function _mpFindPedidoById(id){
   for(const com of Object.keys(MP.pedidosCache)){
@@ -8711,6 +8972,138 @@ function _mpFindPedidoById(id){
     if(p) return p;
   }
   return null;
+}
+
+// Localiza rascunho por id
+function _mpFindRascunhoById(id){
+  for(const com of Object.keys(MP.rascunhosCache)){
+    const r = (MP.rascunhosCache[com]||[]).find(x => String(x.id) === String(id));
+    if(r) return r;
+  }
+  return null;
+}
+
+// Troca de aba (rascunhos / finalizados)
+function _mpTrocarAba(aba){
+  MP.abaAtiva = aba;
+  document.querySelectorAll(".mp-aba").forEach(b => {
+    b.classList.toggle("mp-aba-active", b.dataset.aba === aba);
+  });
+  // Filtro de período só faz sentido pra finalizados
+  const filtrosPeriodo = document.querySelector(".mp-periodo-pills");
+  if(filtrosPeriodo){
+    filtrosPeriodo.closest(".mp-filter-row").style.display = (aba === "finalizados") ? "" : "none";
+  }
+  $("mpCustomDates")?.classList.add("hidden");
+  renderListaPedidos();
+}
+
+// Carrega item de rascunho de volta pra sacola (reaproveita conversor de pedido)
+function _mpRascunhoItemToCartItem(it){
+  const base = _mpPedidoItemToCartItem(it);
+  return {
+    ...base,
+    grade: it.grade ? { ...it.grade } : null,
+    gradeBase: it.gradeBase ? { ...it.gradeBase } : (it.grade ? { ...it.grade } : null),
+    boxes: it.boxes || 1,
+    qty: it.qty || 0,
+    dataDesejada: it.dataDesejada || "",
+    pedidoCliente: it.pedidoCliente || "",
+    precosPrazo: it.precosPrazo || base.precosPrazo || null,
+  };
+}
+
+// EDITAR rascunho: carrega na sacola pra completar
+function mpEditarRascunho(id){
+  const r = _mpFindRascunhoById(id);
+  if(!r){ toast("Rascunho não encontrado ⚠️"); return; }
+  const carregar = () => {
+    state.cart.clear();
+    state.lastOrderCfg = null;
+    for(const it of (r.items||[])){
+      const base = _mpRascunhoItemToCartItem(it);
+      const key = cartKeyFor(base);
+      state.cart.set(key, { ...base, key });
+    }
+    // Marca que estamos editando este rascunho
+    MP.editandoRascunhoId = r.id;
+    if(typeof saveCartToStorage === "function") saveCartToStorage();
+    if(typeof updateCartBadge === "function") updateCartBadge();
+    if(typeof renderCartUI === "function") renderCartUI();
+    if(typeof syncCardAddStatusFromCart === "function") syncCardAddStatusFromCart();
+    if(typeof refreshView === "function") refreshView();
+    closeMeusPedidosModal();
+    _atualizarLabelRascunho();
+    toast(`Rascunho carregado — ${r.items.length} item(ns) ✏️`);
+  };
+  if(state.cart.size > 0){
+    $("mpConfirmMsg").textContent = `Sua sacola tem ${state.cart.size} item(ns). Eles serão substituídos pelos ${r.items.length} item(ns) deste rascunho.`;
+    $("mpConfirmModal").classList.remove("hidden");
+    $("mpConfirmCancel").onclick = () => $("mpConfirmModal").classList.add("hidden");
+    $("mpConfirmOk").onclick = () => { $("mpConfirmModal").classList.add("hidden"); carregar(); };
+  } else {
+    carregar();
+  }
+}
+
+// EXCLUIR rascunho
+function mpExcluirRascunho(id){
+  const r = _mpFindRascunhoById(id);
+  if(!r) return;
+  $("mpConfirmMsg").textContent = `Excluir o rascunho do cliente ${r.clientCode || "—"}? Esta ação não pode ser desfeita.`;
+  $("mpConfirmModal").classList.remove("hidden");
+  $("mpConfirmCancel").onclick = () => $("mpConfirmModal").classList.add("hidden");
+  $("mpConfirmOk").onclick = async () => {
+    $("mpConfirmModal").classList.add("hidden");
+    const res = await deletarRascunhoNoWorker(r.comissionista, r.id);
+    if(res.success){
+      toast("Rascunho excluído ✅");
+      await _mpLoad();
+    } else {
+      toast("⚠️ " + (res.error || "Falha ao excluir"));
+    }
+  };
+}
+
+// FINALIZAR rascunho: carrega na sacola e abre o fluxo de export (Finalizar/Excel)
+function mpFinalizarRascunho(id){
+  const r = _mpFindRascunhoById(id);
+  if(!r){ toast("Rascunho não encontrado ⚠️"); return; }
+  // Verifica se há itens sem grade
+  const semGrade = (r.items||[]).filter(i => !(i.grade && Object.keys(i.grade).length > 0)).length;
+  const prosseguir = () => {
+    state.cart.clear();
+    state.lastOrderCfg = null;
+    for(const it of (r.items||[])){
+      const base = _mpRascunhoItemToCartItem(it);
+      const key = cartKeyFor(base);
+      state.cart.set(key, { ...base, key });
+    }
+    MP.editandoRascunhoId = r.id; // ao gerar Excel, o rascunho será removido
+    if(typeof saveCartToStorage === "function") saveCartToStorage();
+    if(typeof updateCartBadge === "function") updateCartBadge();
+    if(typeof renderCartUI === "function") renderCartUI();
+    if(typeof syncCardAddStatusFromCart === "function") syncCardAddStatusFromCart();
+    closeMeusPedidosModal();
+    _atualizarLabelRascunho();
+    // Abre o modal de exportação direto
+    if(typeof openOrderExportModal === "function") openOrderExportModal();
+    toast("Rascunho carregado — finalize gerando o Excel");
+  };
+  if(semGrade > 0){
+    $("mpConfirmMsg").textContent = `Este rascunho tem ${semGrade} produto(s) SEM grade. Você pode finalizar mesmo assim, mas o ideal é completar as grades. Deseja continuar?`;
+    $("mpConfirmModal").classList.remove("hidden");
+    $("mpConfirmCancel").onclick = () => $("mpConfirmModal").classList.add("hidden");
+    $("mpConfirmOk").onclick = () => { $("mpConfirmModal").classList.add("hidden"); prosseguir(); };
+  } else {
+    prosseguir();
+  }
+}
+
+// Atualiza o label do botão "Salvar rascunho" conforme estado (novo ou editando)
+function _atualizarLabelRascunho(){
+  const lbl = $("btnSalvarRascunhoLabel");
+  if(lbl) lbl.textContent = MP.editandoRascunhoId ? "Atualizar rascunho" : "Salvar rascunho";
 }
 
 // Converte item do histórico de volta pra item da sacola
@@ -8884,6 +9277,8 @@ function openMeusPedidosModal(){
   document.querySelectorAll(".mp-periodo-pill").forEach(p =>
     p.classList.toggle("active", p.dataset.periodo === "mes"));
   $("mpCustomDates").classList.add("hidden");
+  // Aba padrão: rascunhos
+  _mpTrocarAba("rascunhos");
 
   $("meusPedidosModal").classList.remove("hidden");
   document.body.style.overflow = "hidden";
@@ -8908,7 +9303,11 @@ async function _mpLoad(){
   $("mpLoading").classList.remove("hidden");
   $("mpLista").classList.add("hidden");
   $("mpEmpty").classList.add("hidden");
-  await carregarHistorico(MP.filtroComissionista);
+  // Carrega ambos (rascunhos + finalizados) pra os contadores das abas ficarem certos
+  await Promise.all([
+    carregarHistorico(MP.filtroComissionista),
+    carregarRascunhos(MP.filtroComissionista),
+  ]);
   renderListaPedidos();
 }
 function closeMeusPedidosModal(){
@@ -8922,6 +9321,11 @@ document.addEventListener("click", (e) => {
   if(t){ openMeusPedidosModal(); return; }
   if(e.target.closest("#btnCloseMeusPedidos")){ closeMeusPedidosModal(); return; }
   if(e.target.id === "mpBackdrop"){ closeMeusPedidosModal(); return; }
+  // Troca de aba
+  const aba = e.target.closest(".mp-aba");
+  if(aba){ _mpTrocarAba(aba.dataset.aba); return; }
+  // Botão salvar/atualizar rascunho
+  if(e.target.closest("#btnSalvarRascunho")){ _onSalvarRascunho(); return; }
   if(e.target.closest(".mp-periodo-pill")){
     const p = e.target.closest(".mp-periodo-pill");
     document.querySelectorAll(".mp-periodo-pill").forEach(x => x.classList.remove("active"));
@@ -8931,6 +9335,39 @@ document.addEventListener("click", (e) => {
     if(MP.filtroComissionista) renderListaPedidos();
   }
 });
+
+// Handler do botão "Salvar rascunho" / "Atualizar rascunho"
+async function _onSalvarRascunho(){
+  if(state.cart.size === 0){ toast("Sacola vazia — nada pra salvar ⚠️"); return; }
+  // Precisa do comissionista. Tenta do cfg salvo; senão pede pelo modal de export.
+  let com = state.lastOrderCfg?.commission || "";
+  if(!com){
+    try{
+      const cfg = JSON.parse(localStorage.getItem("orderExportConfig") || "{}");
+      if(cfg.commission) com = String(cfg.commission);
+    }catch(_){}
+  }
+  if(!com){
+    toast("Selecione o comissionista no modal de pedido antes de salvar o rascunho");
+    if(typeof openOrderExportModal === "function") openOrderExportModal();
+    return;
+  }
+  const rascunho = buildRascunhoSnapshot({
+    id: MP.editandoRascunhoId,  // se editando, atualiza o mesmo
+    cfg: { commission: com }
+  });
+  const btn = $("btnSalvarRascunho");
+  if(btn) btn.disabled = true;
+  const res = await salvarRascunhoNoWorker(com, rascunho);
+  if(btn) btn.disabled = false;
+  if(res.success){
+    MP.editandoRascunhoId = rascunho.id;  // garante que próximo save atualiza o mesmo
+    _atualizarLabelRascunho();
+    toast("Rascunho salvo ✅");
+  } else {
+    toast("⚠️ " + (res.error || "Falha ao salvar rascunho"));
+  }
+}
 document.addEventListener("change", (e) => {
   if(e.target.id === "mpComissionista"){
     MP.filtroComissionista = e.target.value;
@@ -9037,6 +9474,20 @@ loadCatalog({ cacheBust:false });
         </div>
         <button id="btnCloseMeusPedidos" class="focus-ring h-11 w-11 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar histórico">
           <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+
+      <!-- Abas -->
+      <div class="flex gap-1.5 px-5 sm:px-6 pt-3 pb-1" style="background:var(--bg)">
+        <button class="mp-aba mp-aba-active" data-aba="rascunhos">
+          <i class="fa-solid fa-pen-ruler"></i>
+          <span>Rascunhos</span>
+          <span class="mp-aba-count" id="mpCountRascunhos">0</span>
+        </button>
+        <button class="mp-aba" data-aba="finalizados">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Finalizados</span>
+          <span class="mp-aba-count" id="mpCountFinalizados">0</span>
         </button>
       </div>
 
