@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de Catálogo — CMS Representações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --primary:#ea580c;
+    --primary-dark:#7c2d12;
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh;
+  }
+  .wrap{ max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
+
+  /* Header */
+  .top{
+    display:flex; align-items:center; gap:14px;
+    padding:16px 0 20px; flex-wrap:wrap;
+  }
+  .top-logo{
+    width:52px; height:52px; border-radius:13px;
+    background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:17px; flex-shrink:0;
+  }
+  .top-titles{ flex:1; min-width:0; }
+  .top-sub{ font-size:11px; font-weight:800; color:var(--primary); letter-spacing:0.5px; text-transform:uppercase; }
+  .top-title{ font-size:20px; font-weight:900; line-height:1.1; }
+  .top-back{
+    display:inline-flex; align-items:center; gap:7px;
+    background:#fff; border:1px solid var(--border); border-radius:10px;
+    padding:9px 14px; font-size:13px; font-weight:800; color:var(--muted);
+    text-decoration:none; cursor:pointer;
+  }
+  .top-back:hover{ border-color:var(--primary); color:var(--primary); }
+
+  /* Cartão */
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:20px; margin-bottom:16px;
+  }
+  .card-title{ font-size:14px; font-weight:900; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .card-desc{ font-size:12.5px; color:var(--muted); line-height:1.5; margin-bottom:14px; }
+
+  .step-num{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--primary); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:900; flex-shrink:0;
+  }
+
+  /* Botões */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:12px; cursor:pointer;
+    font-family:inherit; font-weight:800; font-size:14px;
+    padding:12px 20px; transition:opacity .12s;
+  }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .btn-primary{ background:var(--primary); color:#fff; }
+  .btn-primary:hover:not(:disabled){ opacity:.9; }
+  .btn-ghost{ background:#fff; color:var(--muted); border:1px solid var(--border); }
+  .btn-ghost:hover:not(:disabled){ border-color:var(--primary); color:var(--primary); }
+  .btn-lg{ font-size:15px; padding:14px 24px; }
+
+  /* Status */
+  .status{
+    font-size:13px; font-weight:700; padding:10px 14px;
+    border-radius:10px; margin-top:12px; display:none;
+  }
+  .status.show{ display:block; }
+  .status-ok{ background:#dcfce7; color:#166534; }
+  .status-warn{ background:#fef3c7; color:#92400e; }
+  .status-err{ background:#fee2e2; color:#991b1b; }
+  .status-info{ background:#e0f2fe; color:#075985; }
+
+  /* Dropzone */
+  .drop{
+    border:2px dashed var(--border); border-radius:14px;
+    padding:30px 20px; text-align:center; cursor:pointer;
+    transition:all .15s;
+  }
+  .drop:hover, .drop.drag{ border-color:var(--primary); background:#fff7ed; }
+  .drop i{ font-size:32px; color:var(--primary); margin-bottom:8px; }
+  .drop-txt{ font-size:14px; font-weight:800; }
+  .drop-sub{ font-size:12px; color:var(--muted); margin-top:3px; }
+
+  /* Resumo */
+  .resumo{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-bottom:14px; }
+  .resumo-item{
+    background:#fff7ed; border:1px solid #fed7aa; border-radius:12px;
+    padding:12px; text-align:center;
+  }
+  .resumo-num{ font-size:22px; font-weight:900; color:var(--primary); line-height:1; }
+  .resumo-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:0.3px; }
+
+  /* Preview lista */
+  .preview-list{ display:flex; flex-direction:column; gap:8px; max-height:420px; overflow-y:auto; padding-right:4px; }
+  .prev-item{
+    display:flex; gap:12px; align-items:center;
+    border:1px solid var(--border); border-radius:12px; padding:10px;
+  }
+  .prev-item.missing{ background:#fffbeb; border-color:#fde68a; }
+  .prev-img{
+    width:54px; height:54px; border-radius:9px; object-fit:contain;
+    background:#f3f4f6; flex-shrink:0;
+  }
+  .prev-img-ph{
+    width:54px; height:54px; border-radius:9px; flex-shrink:0;
+    background:#f3f4f6; display:flex; align-items:center; justify-content:center;
+    color:#cbd5e1; font-size:18px;
+  }
+  .prev-info{ flex:1; min-width:0; }
+  .prev-name{ font-size:13px; font-weight:900; }
+  .prev-meta{ font-size:11px; color:var(--muted); margin-top:1px; }
+  .prev-fats{ font-size:11px; color:#475569; margin-top:3px; font-weight:600; }
+  .prev-fats .mes{
+    background:#f5f3ff; color:#7c3aed; border:1px solid #c4b5fd;
+    padding:0 7px; border-radius:99px; font-size:10px; font-weight:800;
+    margin-right:4px; display:inline-block;
+  }
+  .prev-right{ text-align:right; flex-shrink:0; }
+  .prev-pdv{ font-size:13px; font-weight:900; color:var(--primary); }
+  .prev-total{ font-size:15px; font-weight:900; margin-top:2px; }
+  .prev-total small{ font-size:9px; font-weight:700; color:var(--muted); display:block; text-transform:uppercase; }
+  .prev-warn{ font-size:10px; font-weight:800; color:#d97706; }
+
+  .hidden{ display:none !important; }
+  .spin{ animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .foot{ text-align:center; font-size:11px; color:#94a3b8; margin-top:24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="top">
+    <div class="top-logo">CMS</div>
+    <div class="top-titles">
+      <div class="top-sub">Ferramenta · em desenvolvimento</div>
+      <div class="top-title">Gerador de Catálogo</div>
+    </div>
+    <a href="./portal-vendedor.html" class="top-back"><i class="fa-solid fa-arrow-left"></i> Portal</a>
+  </div>
+
+  <!-- Passo 1: base de produtos -->
+  <div class="card">
+    <div class="card-title"><span class="step-num">1</span> Base de produtos</div>
+    <div class="card-desc">A base com imagens, preços e tamanhos é carregada automaticamente do Catálogo Digital.</div>
+    <div id="baseStatus" class="status status-info show">
+      <i class="fa-solid fa-circle-notch spin"></i> Carregando base de produtos…
+    </div>
+  </div>
+
+  <!-- Passo 2: importar carteira -->
+  <div class="card">
+    <div class="card-title"><span class="step-num">2</span> Importar planilha da carteira</div>
+    <div class="card-desc">Selecione o arquivo .xlsx exportado da carteira. Colunas esperadas: REFERENCIA, DESCRICAO, COR, PREV FAT, CART.</div>
+    <div id="drop" class="drop">
+      <i class="fa-solid fa-file-arrow-up"></i>
+      <div class="drop-txt">Clique ou arraste a planilha aqui</div>
+      <div class="drop-sub">Formato .xlsx</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+    <div id="cartStatus" class="status"></div>
+  </div>
+
+  <!-- Passo 3: preview -->
+  <div id="previewCard" class="card hidden">
+    <div class="card-title"><span class="step-num">3</span> Conferência</div>
+    <div class="resumo" id="resumo"></div>
+    <div class="preview-list" id="previewList"></div>
+  </div>
+
+  <!-- Passo 4: gerar -->
+  <div id="genCard" class="card hidden">
+    <div class="card-title"><span class="step-num">4</span> Gerar catálogo</div>
+    <div class="card-desc">O PDF será gerado com os produtos acima, agrupados por referência e cor.</div>
+    <button id="btnGerar" class="btn btn-primary btn-lg">
+      <i class="fa-solid fa-file-pdf"></i> Gerar catálogo em PDF
+    </button>
+    <div id="genStatus" class="status"></div>
+  </div>
+
+  <div class="foot">CMS Representações · Gerador de Catálogo · ferramenta interna</div>
+</div>
+
+<script>
+"use strict";
+
+// ───────── Config ─────────
+const CATALOGO_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus_2.0";
+const XLSX_URL  = `${CATALOGO_BASE}/Produtos.xlsx`;
+const IMG_BASE  = `${CATALOGO_BASE}/imagens_olympikus/`;
+
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+// Estado
+let baseProdutos = [];   // do Produtos.xlsx
+let baseIndex = new Map(); // chave "ref|cor" → produto
+let carteira = [];       // agrupada, pronta pra PDF
+
+const $ = id => document.getElementById(id);
+function setStatus(el, tipo, html){
+  el.className = `status status-${tipo} show`;
+  el.innerHTML = html;
+}
+function norm(s){ return String(s||"").trim().toUpperCase(); }
+function moneyBR(n){
+  return "R$ " + (Number(n)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function numBR(n){ return (Number(n)||0).toLocaleString("pt-BR"); }
+
+// ───────── Passo 1: carrega Produtos.xlsx ─────────
+async function carregarBase(){
+  try{
+    const res = await fetch(`${XLSX_URL}?v=${Date.now()}`, { cache:"no-store" });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.arrayBuffer();
+    const wb = XLSX.read(data, { type:"array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
+
+    baseProdutos = json.map(r => ({
+      imagem:  String(r["Imagem"] ?? r["IMAGEM"] ?? r["imagem"] ?? "").trim(),
+      codigo:  String(r["Código"] ?? r["Codigo"] ?? r["CODIGO"] ?? "").trim(),
+      produto: String(r["Produto"] ?? r["PRODUTO"] ?? "").trim(),
+      cor:     String(r["Cor"] ?? r["COR"] ?? "").trim(),
+      corCodigo: String(r["Cor código"] ?? r["Cor codigo"] ?? r["COR CÓDIGO"] ?? r["COR CODIGO"] ?? "").trim(),
+      genero:  String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
+      tam:     String(r["TAM"] ?? r["Tam"] ?? r["tam"] ?? "").trim(),
+      preco:   Number(r["Preço"] ?? r["Preco"] ?? r["PREÇO"] ?? r["PRECO"] ?? 0) || 0,
+    }));
+
+    // Índice por código+cor (cor pode bater pelo nome OU pelo código de cor)
+    baseIndex.clear();
+    for(const p of baseProdutos){
+      baseIndex.set(`${norm(p.codigo)}|${norm(p.cor)}`, p);
+      if(p.corCodigo) baseIndex.set(`${norm(p.codigo)}|${norm(p.corCodigo)}`, p);
+    }
+    setStatus($("baseStatus"), "ok", `<i class="fa-solid fa-circle-check"></i> Base carregada — ${baseProdutos.length} produtos disponíveis.`);
+  }catch(err){
+    console.error(err);
+    setStatus($("baseStatus"), "err", `<i class="fa-solid fa-triangle-exclamation"></i> Falha ao carregar a base de produtos. Recarregue a página.`);
+  }
+}
+
+// ───────── Passo 2: importar carteira ─────────
+$("drop").addEventListener("click", ()=> $("fileInput").click());
+$("drop").addEventListener("dragover", e=>{ e.preventDefault(); $("drop").classList.add("drag"); });
+$("drop").addEventListener("dragleave", ()=> $("drop").classList.remove("drag"));
+$("drop").addEventListener("drop", e=>{
+  e.preventDefault(); $("drop").classList.remove("drag");
+  if(e.dataTransfer.files[0]) processarArquivo(e.dataTransfer.files[0]);
+});
+$("fileInput").addEventListener("change", e=>{
+  if(e.target.files[0]) processarArquivo(e.target.files[0]);
+});
+
+function excelDateToJS(v){
+  // PREV FAT pode vir como Date, número serial do Excel, ou string
+  if(v instanceof Date) return v;
+  if(typeof v === "number"){
+    // serial Excel → JS Date
+    return new Date(Math.round((v - 25569) * 86400 * 1000));
+  }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+async function processarArquivo(file){
+  setStatus($("cartStatus"), "info", `<i class="fa-solid fa-circle-notch spin"></i> Lendo "${file.name}"…`);
+  try{
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type:"array", cellDates:true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
+    if(!json.length) throw new Error("Planilha vazia");
+
+    // Lê linhas da carteira
+    const linhas = [];
+    for(const r of json){
+      const ref = String(r["REFERENCIA"] ?? r["Referencia"] ?? r["REFERÊNCIA"] ?? r["referencia"] ?? "").trim();
+      const desc = String(r["DESCRICAO"] ?? r["Descricao"] ?? r["DESCRIÇÃO"] ?? r["descricao"] ?? "").trim();
+      const cor = String(r["COR"] ?? r["Cor"] ?? r["cor"] ?? "").trim();
+      const fatRaw = r["PREV FAT"] ?? r["Prev Fat"] ?? r["PREVFAT"] ?? r["prev fat"] ?? "";
+      const cart = Number(r["CART"] ?? r["Cart"] ?? r["cart"] ?? 0) || 0;
+      if(!ref) continue;
+      const fat = excelDateToJS(fatRaw);
+      linhas.push({ ref, desc, cor, fat, cart });
+    }
+    if(!linhas.length) throw new Error("Nenhuma linha válida encontrada");
+
+    montarCarteira(linhas);
+  }catch(err){
+    console.error(err);
+    setStatus($("cartStatus"), "err", `<i class="fa-solid fa-triangle-exclamation"></i> Erro ao ler a planilha: ${err.message}`);
+  }
+}
+
+// Agrupa por ref+cor, soma CART por mês
+function montarCarteira(linhas){
+  const grupos = new Map(); // "ref|cor" → grupo
+  for(const l of linhas){
+    const chave = `${norm(l.ref)}|${norm(l.cor)}`;
+    if(!grupos.has(chave)){
+      grupos.set(chave, {
+        ref:l.ref, cor:l.cor, desc:l.desc,
+        meses:new Map(),  // índiceMes → { nome, qtd }
+        total:0
+      });
+    }
+    const g = grupos.get(chave);
+    g.total += l.cart;
+    if(l.fat){
+      const mi = l.fat.getMonth();
+      if(!g.meses.has(mi)) g.meses.set(mi, { nome:MESES[mi], qtd:0, ordem:l.fat.getTime() });
+      g.meses.get(mi).qtd += l.cart;
+    } else {
+      if(!g.meses.has(-1)) g.meses.set(-1, { nome:"Sem data", qtd:0, ordem:Infinity });
+      g.meses.get(-1).qtd += l.cart;
+    }
+  }
+
+  // Cruza com a base e monta lista final
+  carteira = [];
+  let semBase = 0;
+  for(const g of grupos.values()){
+    const prod = baseIndex.get(`${norm(g.ref)}|${norm(g.cor)}`) || null;
+    if(!prod) semBase++;
+    const meses = Array.from(g.meses.values()).sort((a,b)=> a.ordem - b.ordem);
+    carteira.push({
+      ref:g.ref,
+      cor:g.cor,
+      produto: prod ? prod.produto : g.desc,
+      genero:  prod ? prod.genero : "",
+      tam:     prod ? prod.tam : "",
+      preco:   prod ? prod.preco : 0,
+      imagem:  prod ? prod.imagem : "",
+      temBase: !!prod,
+      meses,
+      total: g.total
+    });
+  }
+  // Ordena por nome do produto
+  carteira.sort((a,b)=> a.produto.localeCompare(b.produto,"pt-BR"));
+  renderPreview(semBase);
+}
+
+// ───────── Passo 3: preview ─────────
+function renderPreview(semBase){
+  const totalProdutos = carteira.length;
+  const totalPares = carteira.reduce((a,c)=> a + c.total, 0);
+
+  setStatus($("cartStatus"), semBase ? "warn" : "ok",
+    semBase
+      ? `<i class="fa-solid fa-triangle-exclamation"></i> ${totalProdutos} produtos carregados — ${semBase} sem imagem/preço (não encontrados na base).`
+      : `<i class="fa-solid fa-circle-check"></i> ${totalProdutos} produtos carregados, todos encontrados na base.`
+  );
+
+  // Resumo
+  $("resumo").innerHTML = `
+    <div class="resumo-item"><div class="resumo-num">${numBR(totalProdutos)}</div><div class="resumo-lbl">Produtos</div></div>
+    <div class="resumo-item"><div class="resumo-num">${numBR(totalPares)}</div><div class="resumo-lbl">Pares</div></div>
+    <div class="resumo-item"><div class="resumo-num">${numBR(semBase)}</div><div class="resumo-lbl">Sem base</div></div>
+  `;
+
+  // Lista
+  $("previewList").innerHTML = carteira.map(c=>{
+    const img = c.temBase && c.imagem
+      ? `<img class="prev-img" src="${IMG_BASE}${encodeURIComponent(c.imagem)}.png" onerror="this.outerHTML='<div class=&quot;prev-img-ph&quot;><i class=&quot;fa-solid fa-image&quot;></i></div>'">`
+      : `<div class="prev-img-ph"><i class="fa-solid fa-image"></i></div>`;
+    const fats = c.meses.map(m=> `<span class="mes">${m.nome}</span>${numBR(m.qtd)}`).join("  ");
+    const meta = [c.cor, c.genero].filter(Boolean).join(" · ");
+    return `<div class="prev-item ${c.temBase?"":"missing"}">
+      ${img}
+      <div class="prev-info">
+        <div class="prev-name">${c.produto} · ${c.ref}</div>
+        <div class="prev-meta">${meta || "—"}${c.tam?` · Tam ${c.tam}`:""}</div>
+        <div class="prev-fats">${fats}</div>
+        ${c.temBase?"":'<div class="prev-warn">Não encontrado na base</div>'}
+      </div>
+      <div class="prev-right">
+        <div class="prev-pdv">${c.temBase && c.preco ? moneyBR(c.preco) : "—"}</div>
+        <div class="prev-total"><small>Total</small>${numBR(c.total)}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  $("previewCard").classList.remove("hidden");
+  $("genCard").classList.remove("hidden");
+}
+
+// ───────── Passo 4: gerar PDF ─────────
+// Carrega imagem como dataURL pra embutir no PDF
+function carregarImg(url){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = ()=>{
+      try{
+        const cv = document.createElement("canvas");
+        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        cv.getContext("2d").drawImage(img,0,0);
+        resolve({ data: cv.toDataURL("image/png"), w:img.naturalWidth, h:img.naturalHeight });
+      }catch(e){ resolve(null); }
+    };
+    img.onerror = ()=> resolve(null);
+    img.src = url;
+  });
+}
+
+$("btnGerar").addEventListener("click", gerarPDF);
+
+async function gerarPDF(){
+  if(!carteira.length){ return; }
+  const btn = $("btnGerar");
+  btn.disabled = true;
+  setStatus($("genStatus"), "info", `<i class="fa-solid fa-circle-notch spin"></i> Gerando PDF…`);
+
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:"pt", format:"a4" });
+    const PW = doc.internal.pageSize.getWidth();
+    const PH = doc.internal.pageSize.getHeight();
+    const margin = 36;
+    const contentW = PW - margin*2;
+
+    // Pré-carrega imagens
+    const imgCache = {};
+    for(const c of carteira){
+      if(c.temBase && c.imagem && !imgCache[c.imagem]){
+        imgCache[c.imagem] = await carregarImg(`${IMG_BASE}${encodeURIComponent(c.imagem)}.png`);
+      }
+    }
+
+    // ─── Cabeçalho ───
+    function drawHeader(){
+      doc.setFillColor(124,58,237);
+      doc.rect(0,0,PW,6,"F");
+      // logo
+      doc.setFillColor(124,58,237);
+      doc.roundedRect(margin, 22, 42, 42, 8, 8, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold"); doc.setFontSize(13);
+      doc.text("CMS", margin+21, 47, { align:"center" });
+      // textos
+      doc.setTextColor(15,23,42);
+      doc.setFontSize(16);
+      doc.text("CMS Representações", margin+54, 38);
+      doc.setTextColor(100,116,139);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9);
+      doc.text("OLYMPIKUS · UNDER ARMOUR", margin+54, 51);
+      // tag
+      doc.setFillColor(124,58,237);
+      doc.roundedRect(margin+54, 56, 116, 13, 6, 6, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold"); doc.setFontSize(7);
+      doc.text("REPRESENTANTE AUTORIZADO", margin+112, 65, { align:"center" });
+      // linha
+      doc.setDrawColor(226,232,240); doc.setLineWidth(0.5);
+      doc.line(margin, 80, margin+contentW, 80);
+      return 96;
+    }
+
+    // ─── Card de produto ───
+    const CARD_H = 124;
+    const IMG_SZ = 104;
+    function drawCard(c, y){
+      // divisória
+      doc.setDrawColor(241,245,249); doc.setLineWidth(0.5);
+      doc.line(margin, y, margin+contentW, y);
+
+      const padY = 10;
+      let cy = y + padY;
+
+      // imagem
+      const im = imgCache[c.imagem];
+      if(im && im.data){
+        // mantém proporção dentro de IMG_SZ
+        let w = IMG_SZ, h = IMG_SZ;
+        if(im.w && im.h){
+          const r = im.w/im.h;
+          if(r>1){ h = IMG_SZ/r; } else { w = IMG_SZ*r; }
+        }
+        doc.setFillColor(243,244,246);
+        doc.roundedRect(margin, cy, IMG_SZ, IMG_SZ, 8, 8, "F");
+        doc.addImage(im.data, "PNG", margin+(IMG_SZ-w)/2, cy+(IMG_SZ-h)/2, w, h);
+      } else {
+        doc.setFillColor(243,244,246);
+        doc.roundedRect(margin, cy, IMG_SZ, IMG_SZ, 8, 8, "F");
+        doc.setTextColor(180,190,200);
+        doc.setFont("helvetica","normal"); doc.setFontSize(8);
+        doc.text("sem imagem", margin+IMG_SZ/2, cy+IMG_SZ/2, { align:"center" });
+      }
+
+      // textos
+      const tx = margin + IMG_SZ + 16;
+      let ty = cy + 12;
+      doc.setTextColor(15,23,42);
+      doc.setFont("helvetica","bold"); doc.setFontSize(13);
+      doc.text(`${c.produto} · ${c.ref}`, tx, ty);
+      ty += 15;
+      doc.setTextColor(100,116,139);
+      doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+      const meta = [c.cor, c.genero].filter(Boolean).join(" · ") || "—";
+      doc.text(meta, tx, ty);
+      ty += 13;
+      if(c.tam){
+        doc.setTextColor(71,85,105);
+        doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
+        doc.text(`Tam ${c.tam}`, tx, ty);
+        ty += 14;
+      } else {
+        ty += 4;
+      }
+      if(!c.temBase){
+        doc.setTextColor(217,119,6);
+        doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
+        doc.text("Produto não encontrado na base", tx, ty);
+        ty += 13;
+      }
+      // meses
+      doc.setFontSize(9.5);
+      for(const m of c.meses){
+        // pílula do mês
+        doc.setFont("helvetica","bold");
+        const mesW = doc.getTextWidth(m.nome) + 12;
+        doc.setFillColor(245,243,255);
+        doc.roundedRect(tx, ty-8, mesW, 12, 6, 6, "F");
+        doc.setTextColor(124,58,237);
+        doc.text(m.nome, tx+6, ty);
+        // qtd
+        doc.setTextColor(71,85,105);
+        doc.setFont("helvetica","normal");
+        doc.text(`${numBR(m.qtd)} pares`, tx+mesW+8, ty);
+        ty += 14;
+      }
+
+      // lado direito: PDV + total
+      const rx = margin + contentW;
+      let ry = cy + 12;
+      doc.setTextColor(148,163,184);
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+      doc.text("PDV", rx, ry, { align:"right" });
+      ry += 13;
+      doc.setTextColor(124,58,237);
+      doc.setFontSize(13);
+      doc.text(c.temBase && c.preco ? moneyBR(c.preco) : "—", rx, ry, { align:"right" });
+      // total (grande, negrito)
+      ry += 26;
+      doc.setDrawColor(241,245,249); doc.setLineWidth(0.5);
+      doc.line(rx-90, ry-14, rx, ry-14);
+      doc.setTextColor(148,163,184);
+      doc.setFontSize(7.5);
+      doc.text("TOTAL DE PARES", rx, ry, { align:"right" });
+      ry += 17;
+      doc.setTextColor(15,23,42);
+      doc.setFont("helvetica","bold"); doc.setFontSize(20);
+      doc.text(numBR(c.total), rx, ry, { align:"right" });
+
+      return y + CARD_H;
+    }
+
+    // ─── Rodapé ───
+    function drawFooter(){
+      doc.setTextColor(148,163,184);
+      doc.setFont("helvetica","normal"); doc.setFontSize(7.5);
+      const d = new Date();
+      const pad = n => String(n).padStart(2,"0");
+      doc.text(
+        `Documento gerado pelo Catálogo Digital Olympikus · CMS Representações · ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`,
+        PW/2, PH-20, { align:"center" }
+      );
+    }
+
+    // ─── Monta páginas ───
+    let y = drawHeader();
+    // título seção
+    doc.setTextColor(124,58,237);
+    doc.setFont("helvetica","bold"); doc.setFontSize(11);
+    doc.text("CATÁLOGO DE PRODUTOS", margin, y);
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.5);
+    const tw = doc.getTextWidth("CATÁLOGO DE PRODUTOS");
+    doc.line(margin+tw+8, y-3, margin+contentW, y-3);
+    y += 10;
+
+    for(const c of carteira){
+      if(y + CARD_H > PH - 40){
+        drawFooter();
+        doc.addPage();
+        y = drawHeader();
+      }
+      y = drawCard(c, y);
+    }
+    drawFooter();
+
+    // salva
+    const d = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    const nome = `catalogo_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pdf`;
+    doc.save(nome);
+
+    setStatus($("genStatus"), "ok", `<i class="fa-solid fa-circle-check"></i> PDF gerado — ${carteira.length} produtos.`);
+
+    // Compartilhar (menu nativo — tablet/celular)
+    try{
+      const blob = doc.output("blob");
+      const file = new File([blob], nome, { type:"application/pdf" });
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file], title:"Catálogo — CMS Representações" }).catch(()=>{});
+      }
+    }catch(_){}
+  }catch(err){
+    console.error(err);
+    setStatus($("genStatus"), "err", `<i class="fa-solid fa-triangle-exclamation"></i> Erro ao gerar PDF: ${err.message}`);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// Init
+carregarBase();
+</script>
+</body>
+</html>
