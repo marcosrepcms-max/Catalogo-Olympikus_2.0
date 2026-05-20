@@ -593,7 +593,7 @@ async function gerarPDF(){
       doc.text(`Ref. ${c.ref}`, tx, ty);
       ty += 14;
       // atributos: cor · gênero · tam
-      doc.setTextColor(113,113,122);
+      doc.setTextColor(24,24,27);
       doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
       const attrs = [c.cor, c.genero, c.tam ? `Tam ${c.tam}` : ""].filter(Boolean).join("   ·   ") || "—";
       doc.text(attrs, tx, ty);
@@ -641,7 +641,7 @@ async function gerarPDF(){
       ry += 17;
       // número total — bold médio + "pares" cinza ao lado
       doc.setTextColor(24,24,27);
-      doc.setFont("helvetica","bold"); doc.setFontSize(22);
+      doc.setFont("helvetica","bold"); doc.setFontSize(18);
       const totStr = numBR(c.total);
       const totW = doc.getTextWidth(totStr);
       doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
@@ -650,7 +650,7 @@ async function gerarPDF(){
       doc.setTextColor(161,161,170);
       doc.text("pares", rx, ry, { align:"right" });
       doc.setTextColor(24,24,27);
-      doc.setFont("helvetica","bold"); doc.setFontSize(22);
+      doc.setFont("helvetica","bold"); doc.setFontSize(18);
       doc.text(totStr, rx - unitW - 2, ry, { align:"right" });
 
       return y + cardH;
@@ -674,10 +674,10 @@ async function gerarPDF(){
     // título seção — texto roxo + linha laranja
     doc.setTextColor(124,58,237);
     doc.setFont("helvetica","bold"); doc.setFontSize(11);
-    doc.text("CATÁLOGO DE PRODUTOS", margin, y);
-    const tw = doc.getTextWidth("CATÁLOGO DE PRODUTOS");
+    doc.text("CATÁLOGO", margin, y);
+    const tw = doc.getTextWidth("CATÁLOGO");
     doc.setDrawColor(234,88,12); doc.setLineWidth(2);
-    doc.line(margin+tw+10, y-3, margin+contentW, y-3);
+    doc.line(margin+tw+22, y-3, margin+contentW, y-3);
     y += 12;
 
     for(const c of carteira){
