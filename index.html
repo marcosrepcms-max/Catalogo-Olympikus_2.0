@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title"            content="Catálogo Olympikus">
   <meta name="application-name"                      content="Catálogo Olympikus">
-  <meta name="theme-color"                           content="#7c3aed">
+  <meta name="theme-color"                           content="var(--primary)">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Catálogo Olympikus</title>
 
@@ -27,7 +27,7 @@
           fontFamily: { inter: ["Inter", "ui-sans-serif", "system-ui"] },
           colors: {
             oly: {
-              blue: "#7c3aed",
+              blue: "var(--primary)",
               bg: "#F6F7FB",
               text: "#111827",
               muted: "#6B7280",
@@ -58,10 +58,11 @@
       --text:#111827;
       --muted:#6B7280;
       --border:#E5E7EB;
-      --primary:#7c3aed;
-      --ring: rgba(124,58,237,.35);
+      --primary:var(--primary);
+      --primary-rgb:124,58,237;
+      --ring: rgba(var(--primary-rgb),.35);
       --success: #16a34a;
-      --ready: rgba(124,58,237,.12);
+      --ready: rgba(var(--primary-rgb),.12);
       --card-bg:#ffffff;
       --input-bg:#ffffff;
     }
@@ -72,6 +73,7 @@
       --muted:#9BA3BC;
       --border:#2E3245;
       --primary:#a78bfa;
+      --primary-rgb:167,139,250;
       --ring:rgba(167,139,250,.4);
       --success:#22c55e;
       --ready:rgba(167,139,250,.18);
@@ -197,7 +199,7 @@
       background:#fff;top:3px;left:3px;transition:left .15s;
       box-shadow:0 1px 3px rgba(0,0,0,.2);
     }
-    .pref-switch.on{ background:#7c3aed; }
+    .pref-switch.on{ background:var(--primary); }
     .pref-switch.on::after{ left:21px; }
     /* Quando a preferência "Exibir preços" está OFF, esconde TUDO marcado como preço */
     body.prefs-hide-prices [data-price-display]{ display:none !important; }
@@ -368,14 +370,14 @@
 
     /* ── Category chips ── */
     .cat-chip { transition:all .16s; }
-    .cat-chip.active { background:rgba(124,58,237,.1)!important; border-color:var(--primary)!important; }
+    .cat-chip.active { background:rgba(var(--primary-rgb),.1)!important; border-color:var(--primary)!important; }
     .cat-chip.active i,.cat-chip.active span   { color:var(--primary)!important; }
     .dark-mode .cat-chip                       { background:var(--card-bg)!important; }
     .dark-mode .cat-chip.active                { background:rgba(80,104,255,.2)!important; }
 
     /* ── Badges de status ── */
     .badge-novo     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
-    .badge-novacor  {display:inline-flex;align-items:center;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    .badge-novacor  {display:inline-flex;align-items:center;background:linear-gradient(135deg,rgba(var(--primary-rgb),.78),var(--primary));color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
     .badge-lanc     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#059669,#0891b2);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
 
     /* ── Spinner ── */
@@ -416,10 +418,10 @@
       overflow: hidden;
     }
     .home-cat-card:active { transform: scale(0.98); box-shadow: none; }
-    .home-cat-card:hover { border-color: var(--primary, #7c3aed); box-shadow: 0 4px 16px rgba(124,58,237,0.1); }
-    .home-cat-all { border-style: dashed; border-color: var(--primary, #7c3aed); background: rgba(124,58,237,0.03); }
+    .home-cat-card:hover { border-color: var(--primary, var(--primary)); box-shadow: 0 4px 16px rgba(var(--primary-rgb),0.1); }
+    .home-cat-all { border-style: dashed; border-color: var(--primary, var(--primary)); background: rgba(var(--primary-rgb),0.03); }
     .dark-mode .home-cat-card { background: #1F2937; border-color: #374151; }
-    .dark-mode .home-cat-all  { background: rgba(124,58,237,0.08); }
+    .dark-mode .home-cat-all  { background: rgba(var(--primary-rgb),0.08); }
 
     .home-cat-info { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
     .home-cat-icon {
@@ -447,11 +449,11 @@
     #btnBackToHome {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: 700; color: var(--primary);
-      background: rgba(124,58,237,0.07); border: 1px solid rgba(124,58,237,0.18);
+      background: rgba(var(--primary-rgb),0.07); border: 1px solid rgba(var(--primary-rgb),0.18);
       border-radius: 999px; padding: 5px 12px 5px 8px;
       cursor: pointer; transition: background 0.15s; white-space: nowrap; flex-shrink: 0;
     }
-    #btnBackToHome:hover { background: rgba(124,58,237,0.13); }
+    #btnBackToHome:hover { background: rgba(var(--primary-rgb),0.13); }
 
     /* ══════════════════════════════
        CORREÇÕES DE UX — BOTÕES
@@ -509,7 +511,7 @@
 
     /* Toggle */
     .toggle-track { background: #E8EAF9; }
-    .toggle-track[data-on="true"] { background: rgba(124,58,237,.15); }
+    .toggle-track[data-on="true"] { background: rgba(var(--primary-rgb),.15); }
     .toggle-thumb { transition: transform .2s ease; }
     .toggle-track[data-on="true"] .toggle-thumb { transform: translateX(18px); }
 
@@ -550,7 +552,7 @@
 .pm-thumbs{ -ms-overflow-style:none; scrollbar-width:none; }
 #swipeHint > div{ animation: swipeHintAnim 1.4s ease-in-out 2; }
 .pm-thumb{ width:64px; height:64px; border-radius:14px; border:1px solid var(--border); background:#fff; overflow:hidden; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
-.pm-thumb.active{ border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,.12); }
+.pm-thumb.active{ border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb),.12); }
 .pm-thumb img{ width:100%; height:100%; object-fit:contain; background:#fff; }
 .pm-thumb .pm-thumb-fallback{ font-size:11px; font-weight:800; color: var(--muted); padding:6px; text-align:center; }
   
@@ -759,8 +761,8 @@
 
     /* ✅ Botão de grade pulsante */
     @keyframes grade-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.35); }
-      50%       { box-shadow: 0 0 0 6px rgba(124,58,237,0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb),0.35); }
+      50%       { box-shadow: 0 0 0 6px rgba(var(--primary-rgb),0); }
     }
     @keyframes grade-fade-in  { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
     @keyframes grade-fade-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-3px); } }
@@ -771,12 +773,12 @@
       gap: 5px;
       padding: 5px 10px 5px 8px;
       border-radius: 999px;
-      border: 1.5px solid rgba(124,58,237,0.35);
-      background: rgba(124,58,237,0.06);
+      border: 1.5px solid rgba(var(--primary-rgb),0.35);
+      background: rgba(var(--primary-rgb),0.06);
       cursor: pointer;
       font-size: 11px;
       font-weight: 800;
-      color: #7c3aed;
+      color: var(--primary);
       animation: grade-pulse 2s ease-in-out infinite;
       position: relative;
       overflow: hidden;
@@ -784,9 +786,9 @@
       justify-content: center;
     }
     .btn-open-grade:hover {
-      background: rgba(124,58,237,0.12);
+      background: rgba(var(--primary-rgb),0.12);
       animation: none;
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb),0.2);
     }
     .btn-open-grade .grade-label {
       display: inline-flex; align-items: center; gap: 4px;
@@ -899,10 +901,10 @@
 
     .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:14px 16px; cursor:pointer; transition:transform 0.15s ease,box-shadow 0.15s ease,border-color 0.15s ease; text-align:left; box-shadow:0 1px 3px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
     .home-cat-card:active { transform:scale(0.98); box-shadow:none; }
-    .home-cat-card:hover { border-color:var(--primary,#7c3aed); box-shadow:0 4px 16px rgba(124,58,237,0.1); }
-    .home-cat-all { border-style:dashed; border-color:var(--primary,#7c3aed); background:rgba(124,58,237,0.03); }
+    .home-cat-card:hover { border-color:var(--primary,var(--primary)); box-shadow:0 4px 16px rgba(var(--primary-rgb),0.1); }
+    .home-cat-all { border-style:dashed; border-color:var(--primary,var(--primary)); background:rgba(var(--primary-rgb),0.03); }
     .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; }
-    .dark-mode .home-cat-all { background:rgba(124,58,237,0.08); }
+    .dark-mode .home-cat-all { background:rgba(var(--primary-rgb),0.08); }
     .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
     .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     .home-cat-label { display:flex; flex-direction:column; gap:2px; min-width:0; }
@@ -939,17 +941,17 @@
       text-align: center;
       cursor: pointer;
       transition: transform .12s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
-      color: var(--primary, #7c3aed);
+      color: var(--primary, var(--primary));
       user-select: none;
     }
     .colecao-card:active { transform: scale(.97); }
-    .colecao-card:hover { border-color: var(--primary, #7c3aed); }
+    .colecao-card:hover { border-color: var(--primary, var(--primary)); }
     .colecao-card-name { font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
     .colecao-card.active {
-      background: var(--primary, #7c3aed);
-      border-color: var(--primary, #7c3aed);
+      background: var(--primary, var(--primary));
+      border-color: var(--primary, var(--primary));
       color: #fff;
-      box-shadow: 0 6px 14px rgba(124,58,237,.22);
+      box-shadow: 0 6px 14px rgba(var(--primary-rgb),.22);
     }
     .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #a78bfa; }
     .dark-mode .colecao-card.active { background: #a78bfa; border-color: #a78bfa; color: #fff; box-shadow: 0 6px 14px rgba(167,139,250,.3); }
@@ -984,8 +986,8 @@
       transition: all .12s;
       font-family: inherit;
     }
-    .tier-pill:hover { background: rgba(124,58,237,.08); color: var(--primary, #7c3aed); }
-    .tier-pill.active { background: var(--primary, #7c3aed); color: #fff; box-shadow: 0 2px 6px rgba(124,58,237,.25); }
+    .tier-pill:hover { background: rgba(var(--primary-rgb),.08); color: var(--primary, var(--primary)); }
+    .tier-pill.active { background: var(--primary, var(--primary)); color: #fff; box-shadow: 0 2px 6px rgba(var(--primary-rgb),.25); }
     .tier-pill.fam:hover { background: rgba(22,163,74,.08); color: #16a34a; }
     .tier-pill.fam.active { background: #16a34a; color: #fff; box-shadow: 0 2px 6px rgba(22,163,74,.25); }
     .tier-bar-divider {
@@ -1003,8 +1005,8 @@
     .dark-mode .tier-bar-divider { background: #374151; }
 
     /* ── BOTÃO VOLTAR ── */
-    #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(124,58,237,0.07); border:1px solid rgba(124,58,237,0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
-    #btnBackToHome:hover { background:rgba(124,58,237,0.13); }
+    #btnBackToHome { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:rgba(var(--primary-rgb),0.07); border:1px solid rgba(var(--primary-rgb),0.18); border-radius:999px; padding:5px 12px 5px 8px; cursor:pointer; transition:background 0.15s; white-space:nowrap; flex-shrink:0; }
+    #btnBackToHome:hover { background:rgba(var(--primary-rgb),0.13); }
 
     /* ── LABELS MOBILE NOS BOTÕES DA ACTION BAR ── */
     .action-btn-wrap { display:inline-flex; flex-direction:column; align-items:center; gap:1px; }
@@ -1113,8 +1115,8 @@
     }
     /* Aba pulsante — chama atenção quando há rascunhos pendentes */
     @keyframes mpAbaPulse {
-      0%, 100% { box-shadow:0 0 0 0 rgba(124,58,237,.45); }
-      50%      { box-shadow:0 0 0 6px rgba(124,58,237,0); }
+      0%, 100% { box-shadow:0 0 0 0 rgba(var(--primary-rgb),.45); }
+      50%      { box-shadow:0 0 0 6px rgba(var(--primary-rgb),0); }
     }
     #meusPedidosModal .mp-aba.mp-aba-pulse {
       animation:mpAbaPulse 1.4s ease-out infinite;
@@ -1169,7 +1171,7 @@
       font-family:inherit;
     }
     .mp-periodo-pill:hover { border-color:var(--primary); color:var(--primary); }
-    .mp-periodo-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 2px 6px rgba(124,58,237,.25); }
+    .mp-periodo-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 2px 6px rgba(var(--primary-rgb),.25); }
     .mp-empty {
       text-align:center; padding:40px 20px;
       color:var(--muted); font-size:13px;
@@ -1368,7 +1370,7 @@
     }
     .date-override-input.touched{
       border-color: var(--primary);
-      background: rgba(124,58,237,.06);
+      background: rgba(var(--primary-rgb),.06);
       font-weight:600;
     }
     .dark-mode .date-override-input.touched{ background: rgba(167,139,250,.10); }
@@ -1431,7 +1433,7 @@
         </div>
         <div>
           <div class="text-[10px] font-bold text-oly-muted leading-none">Catálogo Digital</div>
-          <div class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
+          <div id="brandName" class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
         </div>
         <div class="ml-auto flex items-center gap-2">
           <button id="btnPreferences" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Minhas preferências" aria-label="Preferências do vendedor">
@@ -1575,7 +1577,7 @@
             <i class="fa-solid fa-arrow-left" style="font-size:11px"></i>
             Categorias
           </button>
-          <button id="btnBackToHome" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.18);border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0" title="Voltar à seleção de categorias">
+          <button id="btnBackToHome" style="display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);background:rgba(var(--primary-rgb),0.07);border:1px solid rgba(var(--primary-rgb),0.18);border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0" title="Voltar à seleção de categorias">
             <i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Categorias
           </button>
           <div class="actionbar-wrap" id="actionBarWrap">
@@ -2316,7 +2318,7 @@
               <!-- Miniaturas das cores (só visível no modo cores) -->
               <div id="viewerThumbs" class="hidden flex items-center gap-1.5 overflow-x-auto max-w-[55vw] sm:max-w-md pb-1" style="scrollbar-width:thin"></div>
               <!-- Botão Grade -->
-              <button id="viewerAddGrade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full hover:opacity-90 text-white text-xs sm:text-sm font-extrabold px-3 sm:px-4 py-2 sm:py-2.5 shrink-0 shadow-lg" style="background:#7c3aed" aria-label="Abrir modal de grade">
+              <button id="viewerAddGrade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full hover:opacity-90 text-white text-xs sm:text-sm font-extrabold px-3 sm:px-4 py-2 sm:py-2.5 shrink-0 shadow-lg" style="background:var(--primary)" aria-label="Abrir modal de grade">
                 <i class="fa-solid fa-layer-group"></i>
                 <span class="hidden sm:inline">Grade</span>
               </button>
@@ -2449,9 +2451,9 @@
           </div>
           <div id="gradeAccumulatedRow" class="hidden flex items-center justify-between text-xs">
             <span class="font-bold text-oly-muted">Total acumulado (todas as grades)</span>
-            <span id="gradeTotalAcumulado" class="font-extrabold text-sm" style="color:#7c3aed">0</span>
+            <span id="gradeTotalAcumulado" class="font-extrabold text-sm" style="color:var(--primary)">0</span>
           </div>
-          <button id="btnAddAnotherGrade" class="hidden focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-extrabold border-2 border-dashed transition" style="border-color:#C4B5FD;background:rgba(124,58,237,.06);color:#7c3aed">
+          <button id="btnAddAnotherGrade" class="hidden focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-extrabold border-2 border-dashed transition" style="border-color:#C4B5FD;background:rgba(var(--primary-rgb),.06);color:var(--primary)">
             <i class="fa-solid fa-plus"></i>
             <span>Adicionar à sacola e abrir outra grade</span>
           </button>
@@ -2484,8 +2486,20 @@
 <script>
 // ===== Marca ativa (lida da URL ?marca=oly|ua) =====
 const MARCAS = {
-  oly: { id:"oly", nome:"Olympikus",   xlsx:"./Produtos.xlsx",    logo:"./logo-olympikus.png" },
-  ua:  { id:"ua",  nome:"Under Armour", xlsx:"./produtos_ua.xlsx", logo:"./logo-ua-branca.png" }
+  oly: {
+    id:"oly", nome:"Olympikus", xlsx:"./Produtos.xlsx", logo:"./logo-olympikus.png",
+    tema: {
+      light: { primary:"#7c3aed", rgb:"124,58,237" },
+      dark:  { primary:"#a78bfa", rgb:"167,139,250" }
+    }
+  },
+  ua: {
+    id:"ua", nome:"Under Armour", xlsx:"./produtos_ua.xlsx", logo:"./logo-ua-branca.png",
+    tema: {
+      light: { primary:"#E21D26", rgb:"226,29,38" },
+      dark:  { primary:"#F26A6F", rgb:"242,106,111" }
+    }
+  }
 };
 const MARCA_ATUAL = (function(){
   var p = new URLSearchParams(window.location.search).get("marca");
@@ -2501,11 +2515,37 @@ const DATA_CONFIG = { xlsxPath: MARCA_ATUAL.xlsx, imagesBasePath: "./imagens_oly
     var el = document.getElementById(id);
     if(el){ el.src = MARCA_ATUAL.logo; el.alt = MARCA_ATUAL.nome; el.style.display=""; }
   });
+  var bn = document.getElementById("brandName");
+  if(bn) bn.textContent = MARCA_ATUAL.nome;
+  document.title = "Catálogo " + MARCA_ATUAL.nome;
   var xlsxNome = MARCA_ATUAL.xlsx.replace(/^\.\//,"");
   var hp = document.getElementById("hintXlsxPath");
   if(hp) hp.textContent = "/" + xlsxNome;
   var hn = document.getElementById("hintXlsxName");
   if(hn) hn.textContent = xlsxNome;
+
+  // Identidade visual: injeta as cores da marca (light + dark)
+  var t = MARCA_ATUAL.tema;
+  if(t){
+    var css = ":root{"
+      + "--primary:" + t.light.primary + ";"
+      + "--primary-rgb:" + t.light.rgb + ";"
+      + "--ring:rgba(" + t.light.rgb + ",.35);"
+      + "--ready:rgba(" + t.light.rgb + ",.12);"
+      + "}"
+      + ".dark-mode{"
+      + "--primary:" + t.dark.primary + ";"
+      + "--primary-rgb:" + t.dark.rgb + ";"
+      + "--ring:rgba(" + t.dark.rgb + ",.4);"
+      + "}";
+    var st = document.createElement("style");
+    st.id = "marca-tema";
+    st.textContent = css;
+    document.head.appendChild(st);
+
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if(tc) tc.setAttribute("content", t.light.primary);
+  }
 })();
 
 // ===== Namespacing de LocalStorage por projeto =====
@@ -5537,9 +5577,9 @@ function renderCartUI(){
                 ${(() => {
                   const total = linhasPorBase.get(cartKeyBaseFor(it)) || 1;
                   const idx = ordemNoBase.get(it.key) || 1;
-                  return total > 1 ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold" style="background:#EDE9FE;color:#7c3aed;border:1px solid #C4B5FD"><i class="fa-solid fa-layer-group" style="font-size:10px"></i> Grade ${idx}/${total}</span>` : "";
+                  return total > 1 ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD"><i class="fa-solid fa-layer-group" style="font-size:10px"></i> Grade ${idx}/${total}</span>` : "";
                 })()}
-                ${it.dataDesejada ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style="background:#EDE9FE;color:#7c3aed;border:1px solid #C4B5FD" title="Data desejada deste pedido"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}</span>` : ""}
+                ${it.dataDesejada ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD" title="Data desejada deste pedido"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}</span>` : ""}
                 ${isPending ? `<span class="grade-pending-badge"><i class="fa-solid fa-triangle-exclamation"></i> Grade pendente</span>` : ""}
               </div>
             </div>
@@ -7407,7 +7447,7 @@ function _renderPreviousGradesList(){
     <div class="space-y-1.5">
       ${grades.map((g, i) => `
         <div class="flex items-center gap-2 px-3 py-2 rounded-lg border" style="background:#F5F3FF;border-color:#C4B5FD;color:#0f172a">
-          <div class="h-6 w-6 rounded-full text-xs font-extrabold text-white flex items-center justify-center shrink-0" style="background:#7c3aed">${i+1}</div>
+          <div class="h-6 w-6 rounded-full text-xs font-extrabold text-white flex items-center justify-center shrink-0" style="background:var(--primary)">${i+1}</div>
           <div class="flex-1 min-w-0 text-xs">
             <div class="font-bold truncate">${g.gradeResume || "—"}</div>
             <div class="text-[10px]" style="color:#6B7280">📅 ${_formatDataBR(g.dataDesejada)} · <strong>${g.totalQty}</strong> par${g.totalQty!==1?"es":""}</div>
@@ -9763,7 +9803,7 @@ loadCatalog({ cacheBust:false });
       <div class="text-sm mb-4" style="color:var(--muted)">Deseja compartilhar o pedido agora? Você poderá escolher o WhatsApp ou outro app.</div>
       <div class="flex gap-2">
         <button id="sharePdfCancel" class="flex-1 rounded-xl border border-oly-border px-4 py-2.5 font-bold text-sm hover:bg-oly-bg" style="color:var(--text)">Agora não</button>
-        <button id="sharePdfOk" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white inline-flex items-center justify-center gap-2" style="background:#7c3aed">
+        <button id="sharePdfOk" class="flex-1 rounded-xl px-4 py-2.5 font-extrabold text-sm text-white inline-flex items-center justify-center gap-2" style="background:var(--primary)">
           <i class="fa-solid fa-share-nodes"></i> Compartilhar
         </button>
       </div>
@@ -9798,7 +9838,7 @@ loadCatalog({ cacheBust:false });
     <div class="rounded-3xl bg-white max-w-sm w-full overflow-hidden shadow-lift" style="background:var(--card-bg,#fff)">
       <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-oly-border">
         <div class="min-w-0">
-          <div class="text-[10px] font-extrabold uppercase tracking-wider" style="color:#7c3aed">Personalizar</div>
+          <div class="text-[10px] font-extrabold uppercase tracking-wider" style="color:var(--primary)">Personalizar</div>
           <div class="text-base font-extrabold flex items-center gap-1.5" style="color:var(--text)">
             <i class="fa-solid fa-sliders text-sm"></i> Minhas preferências
           </div>
@@ -9810,7 +9850,7 @@ loadCatalog({ cacheBust:false });
       <div class="px-5 py-4 space-y-1">
         <!-- Toggle Exibir Preços -->
         <div class="flex items-start gap-3 py-3 border-b border-oly-border">
-          <div class="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style="background:#F5F3FF;color:#7c3aed">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style="background:#F5F3FF;color:var(--primary)">
             <i class="fa-solid fa-dollar-sign"></i>
           </div>
           <div class="flex-1 min-w-0">
