@@ -1436,6 +1436,9 @@
           <div id="brandName" class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
         </div>
         <div class="ml-auto flex items-center gap-2">
+          <button id="btnTrocarMarca" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Trocar de marca" aria-label="Trocar de marca">
+            <i class="fa-solid fa-arrow-right-arrow-left text-oly-muted text-sm"></i>
+          </button>
           <button id="btnPreferences" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Minhas preferências" aria-label="Preferências do vendedor">
             <i class="fa-solid fa-sliders text-oly-muted text-sm"></i>
           </button>
@@ -2597,7 +2600,8 @@ const WORKER_URL = "https://repasse-worker-cms.marcosrep-cms.workers.dev";
 // Token de admin para writes protegidas no Worker (igual ao do admin de Disponibilidades)
 const ADMIN_TOKEN = "1b489c97-7bc7-466a-a675-f559e1226371d9bea53d-a920-4059-a31c-6bc0b6d8c4c8";
 // URL base das imagens de categorias (Worker salva no repo Catalogo-Olympikus, não no _2.0)
-const CAT_IMG_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/imagens_olympikus/categorias/";
+const CAT_IMG_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/imagens_olympikus/categorias/"
+  + (MARCA_ATUAL.id === "ua" ? "ua/" : "");
 
 const state = {
   productsRaw: [],
@@ -8610,7 +8614,7 @@ async function uploadImagemCategoria(catId, file){
         "Content-Type": "application/json",
         "X-Admin-Token": (typeof ADMIN_TOKEN !== "undefined" ? ADMIN_TOKEN : "")
       },
-      body: JSON.stringify({ action: "saveCategoryImage", categoria: catId, base64 })
+      body: JSON.stringify({ action: "saveCategoryImage", categoria: catId, base64, marca: MARCA_ATUAL.id })
     });
     console.log(`[CategoryImg] Worker response: ${res.status}`);
     if(!res.ok){
@@ -9690,6 +9694,10 @@ function togglePref(name){
 }
 // Eventos
 document.addEventListener("click", (e) => {
+  if(e.target.closest("#btnTrocarMarca")){
+    window.location.href = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/?abrir=marca";
+    return;
+  }
   if(e.target.closest("#btnPreferences")){ openPrefsModal(); return; }
   if(e.target.closest("#btnClosePref") || e.target.closest("#prefBackdrop")){ closePrefsModal(); return; }
   if(e.target.closest("#prefTogglePrices")){ togglePref("showPrices"); return; }
