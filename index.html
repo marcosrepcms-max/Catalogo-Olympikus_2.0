@@ -1447,9 +1447,9 @@
     </header>
     <div class="home-hero">
       <div class="home-hero-grid">
-        <div class="home-hero-cell"><img src="./hero1.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
-        <div class="home-hero-cell"><img src="./hero2.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
-        <div class="home-hero-cell"><img src="./hero3.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
+        <div class="home-hero-cell"><img id="heroImg1" src="./hero1.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
+        <div class="home-hero-cell"><img id="heroImg2" src="./hero2.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
+        <div class="home-hero-cell"><img id="heroImg3" src="./hero3.webp" alt="" class="home-hero-cell-img" loading="eager" onerror="this.parentElement.style.background='#1a1a2e'"></div>
       </div>
       <div class="home-hero-overlay"></div>
       <div class="home-hero-content">
@@ -2488,13 +2488,15 @@
 const MARCAS = {
   oly: {
     id:"oly", nome:"Olympikus", xlsx:"./Produtos.xlsx", logo:"./logo-olympikus.png",
+    hero:["./hero1.webp","./hero2.webp","./hero3.webp"],
     tema: {
       light: { primary:"#7c3aed", rgb:"124,58,237" },
       dark:  { primary:"#a78bfa", rgb:"167,139,250" }
     }
   },
   ua: {
-    id:"ua", nome:"Under Armour", xlsx:"./produtos_ua.xlsx", logo:"./logo-ua-branca.png",
+    id:"ua", nome:"Under Armour", xlsx:"./produtos_ua.xlsx", logo:"./logo-ua-header.png",
+    hero:["./hero1-ua.webp","./hero2-ua.webp","./hero3-ua.webp"],
     tema: {
       light: { primary:"#E21D26", rgb:"226,29,38" },
       dark:  { primary:"#F26A6F", rgb:"242,106,111" }
@@ -2545,6 +2547,27 @@ const DATA_CONFIG = { xlsxPath: MARCA_ATUAL.xlsx, imagesBasePath: "./imagens_oly
 
     var tc = document.querySelector('meta[name="theme-color"]');
     if(tc) tc.setAttribute("content", t.light.primary);
+  }
+
+  // Hero por marca: troca as imagens e esconde o bloco se faltar alguma
+  var hero = MARCA_ATUAL.hero;
+  if(hero && hero.length === 3){
+    var ids = ["heroImg1","heroImg2","heroImg3"];
+    var falhou = false;
+    var carregadas = 0;
+    function checaHero(){
+      if(falhou){
+        var bloco = document.querySelector(".home-hero");
+        if(bloco) bloco.style.display = "none";
+      }
+    }
+    ids.forEach(function(id, i){
+      var img = document.getElementById(id);
+      if(!img) return;
+      img.onerror = function(){ falhou = true; checaHero(); };
+      img.onload  = function(){ carregadas++; if(carregadas === 3) checaHero(); };
+      img.src = hero[i];
+    });
   }
 })();
 
