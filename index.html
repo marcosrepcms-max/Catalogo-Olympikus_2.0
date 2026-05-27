@@ -523,12 +523,16 @@
       border-radius: 999px;
     }
     .search-collapsed.open { width: min(620px, calc(100vw - 72px)); }
+    /* Tablet: largura confortável, mas deixa botões acessíveis ao lado */
+    @media (max-width: 1024px) {
+      .search-collapsed.open { width: min(340px, calc(100vw - 130px)); }
+    }
 
     /* Responsive: iPhone SE e telas < 390px */
     @media (max-width: 389px) {
       #actionBar { gap: 6px; }
       .search-collapsed { width: 36px; }
-      .search-collapsed.open { width: calc(100vw - 64px); }
+      .search-collapsed.open { width: min(240px, calc(100vw - 110px)); }
       /* Cards: 1 coluna em telas muito pequenas */
       #cards:not([data-favs]) { grid-template-columns: 1fr; }
     }
