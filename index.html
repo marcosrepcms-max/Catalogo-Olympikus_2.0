@@ -2410,6 +2410,28 @@
       </div>
     </div>
 
+    <!-- Modal genérico de confirmação (reaproveitável) -->
+    <div id="confirmModal" class="hidden fixed inset-0 z-[90]">
+      <div class="absolute inset-0 bg-black/50" id="confirmBackdrop"></div>
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-[420px] bg-white rounded-2xl shadow-lift overflow-hidden" style="background:var(--card-bg,#fff);color:var(--text)">
+        <div class="px-5 pt-5 pb-2">
+          <div class="flex items-start gap-3">
+            <div id="confirmIconWrap" class="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style="background:rgba(124,58,237,.1);color:var(--primary)">
+              <i id="confirmIcon" class="fa-solid fa-circle-question text-lg"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 id="confirmTitle" class="text-base font-extrabold leading-tight">Confirmar</h3>
+              <div id="confirmMessage" class="mt-1.5 text-sm font-medium" style="color:var(--muted);line-height:1.5">Mensagem</div>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 pb-5 pt-3 flex gap-2 justify-end flex-wrap">
+          <button id="confirmCancelBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-oly-border bg-white px-4 py-2.5 text-sm font-bold hover:bg-oly-bg" style="color:var(--text)">Cancelar</button>
+          <button id="confirmOkBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold text-white" style="background:var(--primary)">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
     <div id="gradeModal" class="hidden fixed inset-0 z-[75]">
       <div class="absolute inset-0 bg-black/40" id="gradeBackdrop"></div>
       <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" id="gradeSheet" style="max-width:520px;margin:0 auto;">
@@ -5225,6 +5247,11 @@ $("cartModal").addEventListener("change", (e)=>{
   const it = state.cart.get(key);
   if(!it) return;
   it.dataDesejada = novaData;
+  // Item revisado: remove a marcação de "aplicado em lote"
+  if(it.appliedInBulk){
+    delete it.appliedInBulk;
+    delete it.bulkDate;
+  }
   state.cart.set(key, it);
   saveCartToStorage();
   renderCartUI();
@@ -5829,6 +5856,11 @@ function renderCartUI(){
         }
         it.grade = novaGrade;
         it.qty = total;
+        // Item revisado (mudou caixas): remove a marcação de "aplicado em lote"
+        if(it.appliedInBulk){
+          delete it.appliedInBulk;
+          delete it.bulkDate;
+        }
         state.cart.set(it.key, it);
         saveCartToStorage();
         renderCartUI();
@@ -6097,7 +6129,7 @@ function flashPendingCartItems(items){
   }, 360); // espera o drawer abrir antes de tentar achar as rows
 }
 
-function openOrderExportModal(opts = {}){
+async function openOrderExportModal(opts = {}){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
 
   // Gate de grade: só vale pra FINALIZAR pedido.
@@ -6113,6 +6145,36 @@ function openOrderExportModal(opts = {}){
       openCartModal();
       flashPendingCartItems(pending);
       return;
+    }
+
+    // Aviso: itens aplicados em lote sem revisão de data (>=3 com a mesma data do lote)
+    const naoRevisados = [];
+    for(const it of state.cart.values()){
+      if(it.appliedInBulk && it.bulkDate && it.dataDesejada === it.bulkDate){
+        naoRevisados.push(it);
+      }
+    }
+    if(naoRevisados.length >= 3){
+      const dataBR = _formatDataBR(naoRevisados[0].bulkDate);
+      const ok = await appConfirm({
+        title: "Datas iguais aplicadas em lote",
+        message: `Você tem <strong>${naoRevisados.length} produtos</strong> com a mesma data <strong>${dataBR}</strong>, aplicada via grade em lote e ainda não revisada.<br><br>Deseja revisar a sacola antes de finalizar?`,
+        okText: "Revisar a sacola",
+        cancelText: "Finalizar mesmo assim",
+        tone: "warning"
+      });
+      if(ok){
+        // Usuário escolheu revisar → abre a sacola
+        openCartModal();
+        return;
+      }
+      // "Finalizar mesmo assim": limpa as flags pra não alertar de novo
+      for(const it of naoRevisados){
+        delete it.appliedInBulk;
+        delete it.bulkDate;
+        state.cart.set(it.key, it);
+      }
+      saveCartToStorage();
     }
   }
 
@@ -7634,6 +7696,65 @@ function _formatDataBR(iso){
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
 }
 
+/**
+ * Modal de confirmação reutilizável.
+ * appConfirm({ title, message, okText, cancelText, tone }) -> Promise<boolean>
+ *   tone: "primary" (padrão), "warning", "danger"
+ */
+function appConfirm(opts = {}){
+  return new Promise((resolve)=>{
+    const modal   = document.getElementById("confirmModal");
+    const okBtn   = document.getElementById("confirmOkBtn");
+    const cancel  = document.getElementById("confirmCancelBtn");
+    const backd   = document.getElementById("confirmBackdrop");
+    const titleEl = document.getElementById("confirmTitle");
+    const msgEl   = document.getElementById("confirmMessage");
+    const iconWrap= document.getElementById("confirmIconWrap");
+    const iconEl  = document.getElementById("confirmIcon");
+    if(!modal || !okBtn || !cancel){ resolve(window.confirm(opts.message || "Confirmar?")); return; }
+
+    titleEl.textContent = opts.title || "Confirmar";
+    msgEl.innerHTML = opts.message || "";
+    okBtn.textContent = opts.okText || "Confirmar";
+    cancel.textContent = opts.cancelText || "Cancelar";
+
+    // Tom visual do ícone/botão
+    const tone = opts.tone || "primary";
+    const toneMap = {
+      primary: { color:"var(--primary)", bg:"rgba(124,58,237,.1)", icon:"fa-circle-question", btnBg:"var(--primary)" },
+      warning: { color:"#B45309", bg:"rgba(251,191,36,.15)",       icon:"fa-triangle-exclamation", btnBg:"var(--primary)" },
+      danger:  { color:"#B91C1C", bg:"rgba(220,38,38,.12)",        icon:"fa-circle-exclamation", btnBg:"#DC2626" }
+    };
+    const t = toneMap[tone] || toneMap.primary;
+    iconWrap.style.background = t.bg;
+    iconWrap.style.color = t.color;
+    iconEl.className = "fa-solid " + t.icon + " text-lg";
+    okBtn.style.background = t.btnBg;
+
+    modal.classList.remove("hidden");
+    setTimeout(()=> okBtn.focus(), 30);
+
+    const cleanup = (val) => {
+      modal.classList.add("hidden");
+      okBtn.removeEventListener("click", onOk);
+      cancel.removeEventListener("click", onCancel);
+      backd.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKey);
+      resolve(val);
+    };
+    const onOk = ()=> cleanup(true);
+    const onCancel = ()=> cleanup(false);
+    const onKey = (e)=>{
+      if(e.key === "Escape") cleanup(false);
+      else if(e.key === "Enter") cleanup(true);
+    };
+    okBtn.addEventListener("click", onOk);
+    cancel.addEventListener("click", onCancel);
+    backd.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKey);
+  });
+}
+
 /** Atualiza a faixa-resumo do modo lote em tempo real */
 function _renderBulkSummary(){
   const wrap = document.getElementById("gradeBulkSummary");
@@ -7885,7 +8006,7 @@ $("gradeBoxPlus")?.addEventListener("click", ()=>{
 $("gradeDataDesejada")?.addEventListener("change", _renderBulkSummary);
 $("gradeDataDesejada")?.addEventListener("input", _renderBulkSummary);
 
-$("btnConfirmGrade").addEventListener("click", ()=>{
+$("btnConfirmGrade").addEventListener("click", async ()=>{
   // ── Modo lote ─────────────────────────────────────
   if(gradeState.bulkMode){
     const gradeMap = {};
@@ -7922,8 +8043,14 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
     // Confirmação extra se for um lote grande (>= 5 produtos)
     if(targets.length >= 5){
       const dataBR = _formatDataBR(dataLote);
-      const msg = `Aplicar a grade ${gradeResume} e a data ${dataBR} em ${targets.length} produtos?`;
-      if(!window.confirm(msg)) return;
+      const ok = await appConfirm({
+        title: "Aplicar grade em lote",
+        message: `Aplicar a grade <strong>${gradeResume}</strong> e a data <strong>${dataBR}</strong> em <strong>${targets.length} produtos</strong>?`,
+        okText: "Aplicar",
+        cancelText: "Cancelar",
+        tone: "warning"
+      });
+      if(!ok) return;
     }
 
     let updated = 0;
@@ -7937,7 +8064,9 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
         boxes: 1,
         gradeResume,
         qty: totalQty,
-        dataDesejada: dataLote
+        dataDesejada: dataLote,
+        appliedInBulk: true,
+        bulkDate: dataLote
       });
       updated++;
     }
