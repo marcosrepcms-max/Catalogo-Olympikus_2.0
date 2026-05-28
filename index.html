@@ -2687,9 +2687,13 @@ function tamNeedsGrade(categoria, tam){
 // "34/44"         → ["34","35","36",...,"44"]
 // "P-M-G-GG"      → ["P","M","G","GG"]
 // "33/34 a 43/44" → ["33/34","35/36","37/38","39/40","41/42","43/44"]
-function expandTam(tam){
+function expandTam(tam, categoria){
   if(!tam) return [];
   const s = String(tam).trim();
+  // Meia: a faixa (ex.: "33/38", "39/44") é única — não expande em tamanhos individuais
+  if(typeof isSockCategory === "function" && isSockCategory(categoria)){
+    return [s];
+  }
   if(/^\d+\/\d+\s+a\s+\d+\/\d+$/.test(s)){
     const parts = s.split(/\s+a\s+/);
     const [aLow, aHigh] = parts[0].split("/").map(Number);
@@ -7483,7 +7487,7 @@ function openGradeModal(item, opts={}){
     if(boxWrap) boxWrap.classList.remove("hidden");
   }
 
-  const sizes = expandTam(item.tam);
+  const sizes = expandTam(item.tam, item.categoria);
   // Só recupera grade existente quando editando uma linha específica (cartKey explícito).
   // Em modo "novo" ou "+ outra grade", começa sempre LIMPO.
   let existingGrade = {};
