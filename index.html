@@ -2515,6 +2515,13 @@
             <i class="fa-solid fa-plus"></i>
             <span>Adicionar à sacola e abrir outra grade</span>
           </button>
+          <!-- Resumo do lote (visível só em modo lote) -->
+          <div id="gradeBulkSummary" class="hidden rounded-xl px-3 py-2.5 text-[12px] font-bold" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);color:var(--text)">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-circle-info" style="color:var(--primary)"></i>
+              <span id="gradeBulkSummaryText">—</span>
+            </div>
+          </div>
           <button id="btnConfirmGrade" class="focus-ring w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-oly-blue px-5 py-4 text-sm font-extrabold text-white hover:opacity-95">
             <i class="fa-solid fa-bag-shopping"></i>
             <span>Adicionar Grade à Sacola</span>
@@ -7586,6 +7593,7 @@ function openGradeModal(item, opts={}){
   renderGradeSizeList();
   _renderPreviousGradesList();
   _updateGradeUIVisibility();
+  _renderBulkSummary();
 
   // Abre com animação
   const modal = $("gradeModal");
@@ -7625,6 +7633,29 @@ function _formatDataBR(iso){
   const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
 }
+
+/** Atualiza a faixa-resumo do modo lote em tempo real */
+function _renderBulkSummary(){
+  const wrap = document.getElementById("gradeBulkSummary");
+  const txt  = document.getElementById("gradeBulkSummaryText");
+  if(!wrap || !txt) return;
+  if(!gradeState.bulkMode){
+    wrap.classList.add("hidden");
+    return;
+  }
+  const targets = gradeState.bulkApplyMode === "selected"
+    ? getBulkGradeTargets("selected", { filter: gradeState.bulkFilter, selectedKeys: gradeState.bulkSelectedKeys })
+    : getBulkGradeTargets("gender", { filter: gradeState.bulkFilter });
+  const n = targets.length;
+  const totalQty = (gradeState.sizes || []).reduce((a,s)=> a + (Number(s.qty)||0), 0);
+  const dataVal = document.getElementById("gradeDataDesejada")?.value || "";
+  const dataBR = dataVal ? _formatDataBR(dataVal) : "—";
+  const parteData = dataVal ? `e a data <strong>${dataBR}</strong>` : `<strong style="color:#dc2626">(defina a data)</strong>`;
+  const parteGrade = totalQty > 0 ? `<strong>${totalQty} par${totalQty!==1?"es":""}</strong>` : `<strong style="color:#dc2626">(adicione pares)</strong>`;
+  txt.innerHTML = `Aplicar esta grade ${parteGrade} ${parteData} em <strong>${n} produto${n!==1?"s":""}</strong>.`;
+  wrap.classList.remove("hidden");
+}
+
 // Mostra/oculta partes do modal baseado em quantas grades já foram adicionadas
 function _updateGradeUIVisibility(){
   const hasPrevious = (gradeState.addedGrades || []).length > 0;
@@ -7747,6 +7778,7 @@ function renderGradeSizeList(){
 function updateGradeTotal(){
   const total = gradeState.sizes.reduce((s, x) => s + x.qty, 0);
   $("gradeTotalPares").textContent = String(total);
+  _renderBulkSummary();
 }
 
 function gradeToCartEntry(){
@@ -7849,6 +7881,9 @@ $("gradeBoxPlus")?.addEventListener("click", ()=>{
   var cur = parseInt($("gradeBoxValue")?.textContent, 10) || 1;
   setGradeBoxValue(cur + 1);
 });
+// Atualiza a faixa-resumo do modo lote quando a data muda
+$("gradeDataDesejada")?.addEventListener("change", _renderBulkSummary);
+$("gradeDataDesejada")?.addEventListener("input", _renderBulkSummary);
 
 $("btnConfirmGrade").addEventListener("click", ()=>{
   // ── Modo lote ─────────────────────────────────────
@@ -7859,6 +7894,14 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
       if(s.qty > 0){ gradeMap[s.tam] = s.qty; totalQty += s.qty; }
     }
     if(totalQty === 0){ toast("Adicione ao menos 1 par ✅"); return; }
+
+    // Valida data desejada obrigatória (igual ao fluxo normal)
+    const dataLote = $("gradeDataDesejada")?.value || "";
+    if(!dataLote){
+      $("gradeDataError")?.classList.remove("hidden");
+      $("gradeDataDesejada")?.focus();
+      return;
+    }
 
     const gradeResume = Object.entries(gradeMap).map(([t,q])=>t+"x"+q).join(" | ");
     const targets = gradeState.bulkApplyMode === "selected"
@@ -7876,11 +7919,26 @@ $("btnConfirmGrade").addEventListener("click", ()=>{
       return;
     }
 
+    // Confirmação extra se for um lote grande (>= 5 produtos)
+    if(targets.length >= 5){
+      const dataBR = _formatDataBR(dataLote);
+      const msg = `Aplicar a grade ${gradeResume} e a data ${dataBR} em ${targets.length} produtos?`;
+      if(!window.confirm(msg)) return;
+    }
+
     let updated = 0;
     const targetKeys = new Set(targets.map(it => it.key));
     for(const [key, it] of state.cart.entries()){
       if(!targetKeys.has(key)) continue;
-      state.cart.set(key, { ...it, grade: { ...gradeMap }, gradeResume, qty: totalQty });
+      state.cart.set(key, {
+        ...it,
+        grade: { ...gradeMap },
+        gradeBase: { ...gradeMap },
+        boxes: 1,
+        gradeResume,
+        qty: totalQty,
+        dataDesejada: dataLote
+      });
       updated++;
     }
 
