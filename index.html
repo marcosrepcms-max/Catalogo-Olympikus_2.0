@@ -871,6 +871,19 @@
     /* Etiqueta de data clicável na sacola */
     .cart-date-pill { transition: filter .15s, transform .15s; }
     .cart-date-pill:hover { filter: brightness(.96); transform: translateY(-1px); }
+
+    /* Pulsar do botão "Repetir última grade" — chama atenção até o usuário interagir */
+    @keyframes repeatPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,.45); transform: scale(1); }
+      50%       { box-shadow: 0 0 0 8px rgba(124,58,237,0);  transform: scale(1.015); }
+    }
+    .repeat-pulse {
+      animation: repeatPulse 1.6s ease-in-out infinite;
+      background: rgba(124,58,237,.06);
+    }
+    @media (prefers-reduced-motion: reduce){
+      .repeat-pulse { animation: none; }
+    }
     .cart-date-input {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
@@ -2458,18 +2471,23 @@
                     </button>
                   </div>
                 </div>
-                <div class="shrink-0 hidden" id="gradeRepeatBtnWrap">
-                  <label class="text-[11px] font-extrabold uppercase tracking-wider text-oly-muted block mb-1.5">
-                    ↺ Repetir
-                  </label>
-                  <button id="btnRepeatGrade" type="button" class="focus-ring h-[42px] w-[42px] rounded-xl border-2 border-dashed border-oly-blue flex items-center justify-center hover:bg-oly-bg transition" style="background:rgba(124,58,237,.05)" aria-label="Repetir última grade">
-                    <i class="fa-solid fa-rotate-left text-oly-blue text-sm"></i>
-                    <span id="gradeRepeatHint" class="sr-only">—</span>
-                  </button>
-                </div>
               </div>
             </div>
             <div id="gradeDataError" class="hidden text-xs font-bold mt-1.5" style="color:#dc2626">⚠️ Preencha a data desejada antes de adicionar</div>
+
+            <!-- Botão "Repetir última grade" (visível só se houver grade salva na sessão) -->
+            <div id="gradeRepeatBtnWrap" class="hidden mt-3">
+              <button id="btnRepeatGrade" class="focus-ring w-full inline-flex items-center justify-between gap-2 rounded-xl border-2 border-dashed border-oly-blue px-3 py-2.5 text-left hover:bg-oly-bg transition" type="button">
+                <span class="flex items-center gap-2 min-w-0">
+                  <i class="fa-solid fa-rotate-left text-oly-blue"></i>
+                  <span class="flex flex-col min-w-0">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-oly-blue">Repetir última grade</span>
+                    <span id="gradeRepeatHint" class="text-[11px] font-bold text-oly-muted truncate">—</span>
+                  </span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-oly-muted text-xs"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Pedido do cliente (opcional, específico desta linha) -->
@@ -7536,14 +7554,32 @@ function openGradeModal(item, opts={}){
     const lg = state.lastGradeUsed;
     const isEditing = !!opts.cartKey;
     if(wrap && lg && lg.grade && !isEditing){
-      const fromTxt = lg.fromProduto ? lg.fromProduto : "última grade";
       const resumo = Object.entries(lg.grade).map(([t,q])=>`${t}×${q}`).join(" ");
-      const tooltip = `Repetir última grade — ${resumo} (${lg.totalQty} pares · ${fromTxt})`;
-      if(hint) hint.textContent = `${fromTxt} · ${lg.totalQty} pares`;
-      if(btn) btn.setAttribute("title", tooltip);
+      if(hint) hint.textContent = `${resumo} · ${lg.totalQty} pares`;
+      if(btn){
+        btn.setAttribute("title", `Repetir: ${resumo} (${lg.totalQty} pares)`);
+        btn.classList.add("repeat-pulse");
+      }
       wrap.classList.remove("hidden");
     } else if(wrap){
       wrap.classList.add("hidden");
+    }
+  }
+
+  // Parar o pulsar do botão Repetir na primeira interação do usuário no modal
+  {
+    const modalEl = $("gradeModal");
+    const btn = $("btnRepeatGrade");
+    if(modalEl && btn){
+      const stop = () => {
+        btn.classList.remove("repeat-pulse");
+        modalEl.removeEventListener("pointerdown", stop, true);
+        modalEl.removeEventListener("keydown", stop, true);
+        modalEl.removeEventListener("focusin", stop, true);
+      };
+      modalEl.addEventListener("pointerdown", stop, true);
+      modalEl.addEventListener("keydown", stop, true);
+      modalEl.addEventListener("focusin", stop, true);
     }
   }
 
