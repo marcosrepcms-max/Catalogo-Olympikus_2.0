@@ -912,6 +912,15 @@
     @media (prefers-reduced-motion: reduce){
       .repeat-pulse { animation: none; }
     }
+    /* Pulsar da tag laranja de data pendente */
+    @keyframes datePillPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
+      50%       { box-shadow: 0 0 0 7px rgba(251,191,36,0); }
+    }
+    .cart-date-pill-pulse { animation: datePillPulse 1.6s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce){
+      .cart-date-pill-pulse { animation: none; }
+    }
     .cart-date-input {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
@@ -2911,6 +2920,7 @@ async function applyCartDateBulk(){
     const it = state.cart.get(k);
     if(!it) continue;
     it.dataDesejada = data;
+    if(it.pendingDate) delete it.pendingDate;
     state.cart.set(k, it);
     updated++;
   }
@@ -5398,6 +5408,10 @@ $("cartModal").addEventListener("change", (e)=>{
     delete it.appliedInBulk;
     delete it.bulkDate;
   }
+  // Data definida: remove a marcação de "pendente" (duplicata revisada)
+  if(it.pendingDate){
+    delete it.pendingDate;
+  }
   state.cart.set(key, it);
   saveCartToStorage();
   renderCartUI();
@@ -5910,7 +5924,7 @@ function renderCartUI(){
                   const idx = ordemNoBase.get(it.key) || 1;
                   return total > 1 ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD"><i class="fa-solid fa-layer-group" style="font-size:10px"></i> Grade ${idx}/${total}</span>` : "";
                 })()}
-                ${it.dataDesejada ? `<label class="cart-date-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold relative cursor-pointer" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD" title="Clique para alterar a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}<i class="fa-solid fa-pen" style="font-size:8px;opacity:.6;margin-left:2px"></i><input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="${escapeHtml(it.dataDesejada)}" aria-label="Alterar data do pedido"></label>` : (isAccessoryCategory(it.categoria) ? `<label class="cart-date-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold relative cursor-pointer" style="background:rgba(251,191,36,.15);color:#B45309;border:1px dashed rgba(251,191,36,.7)" title="Clique para definir a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> Definir data<input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="" aria-label="Definir data do pedido"></label>` : "")}
+                ${it.dataDesejada ? `<label class="cart-date-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold relative cursor-pointer" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD" title="Clique para alterar a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}<i class="fa-solid fa-pen" style="font-size:8px;opacity:.6;margin-left:2px"></i><input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="${escapeHtml(it.dataDesejada)}" aria-label="Alterar data do pedido"></label>` : ((isAccessoryCategory(it.categoria) || it.pendingDate) ? `<label class="cart-date-pill cart-date-pill-pulse inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold relative cursor-pointer" style="background:rgba(251,191,36,.15);color:#B45309;border:1px dashed rgba(251,191,36,.7)" title="Clique para definir a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> Definir data<input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="" aria-label="Definir data do pedido"></label>` : "")}
                 ${isPending ? `<span class="grade-pending-badge"><i class="fa-solid fa-triangle-exclamation"></i> Grade pendente</span>` : ""}
               </div>
             </div>
@@ -6074,7 +6088,8 @@ function renderCartUI(){
           dataDesejada: "",        // força definir nova data
           pedidoCliente: "",       // pedido do cliente também é por linha
           appliedInBulk: false,    // limpa flag de lote (foi revisado/duplicado)
-          bulkDate: undefined
+          bulkDate: undefined,
+          pendingDate: true        // mostra tag laranja pulsante até preencher
         };
         copia.key = cartKeyFor(copia);
         state.cart.set(copia.key, copia);
@@ -6339,10 +6354,10 @@ function getCartItemsWithPendingGrade(){
     return needsGrade && !hasGrade;
   });
 }
-/** Acessórios sem data desejada — exigidos para finalizar pedido */
+/** Itens com data pendente — exigidos para finalizar pedido (ACCs sem data + duplicatas) */
 function getCartAccessoriesWithoutDate(){
   return [...state.cart.values()].filter(it =>
-    isAccessoryCategory(it.categoria) && !it.dataDesejada
+    (isAccessoryCategory(it.categoria) || it.pendingDate) && !it.dataDesejada
   );
 }
 function flashPendingCartItems(items){
@@ -6383,8 +6398,8 @@ async function openOrderExportModal(opts = {}){
     const accSemData = getCartAccessoriesWithoutDate();
     if(accSemData.length > 0){
       const msg = accSemData.length === 1
-        ? "1 acessório sem data. Defina antes de exportar ⚠️"
-        : `${accSemData.length} acessórios sem data. Defina antes de exportar ⚠️`;
+        ? "1 item sem data. Defina antes de exportar ⚠️"
+        : `${accSemData.length} itens sem data. Defina antes de exportar ⚠️`;
       toast(msg);
       openCartModal();
       flashPendingCartItems(accSemData);
