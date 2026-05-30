@@ -2527,6 +2527,32 @@
       </div>
     </div>
 
+    <!-- Modal genérico de entrada de texto (reaproveitável) -->
+    <div id="textPromptModal" class="hidden fixed inset-0 z-[90]">
+      <div class="absolute inset-0 bg-black/50" id="textPromptBackdrop"></div>
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-[400px] bg-white rounded-2xl shadow-lift overflow-hidden" style="background:var(--card-bg,#fff);color:var(--text)">
+        <div class="px-5 pt-5 pb-2">
+          <div class="flex items-start gap-3">
+            <div class="h-10 w-10 rounded-full flex items-center justify-center shrink-0" style="background:rgba(124,58,237,.1);color:var(--primary)">
+              <i id="textPromptIcon" class="fa-regular fa-clipboard text-lg"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 id="textPromptTitle" class="text-base font-extrabold leading-tight">Editar</h3>
+              <div id="textPromptMessage" class="mt-1.5 text-sm font-medium" style="color:var(--muted);line-height:1.5"></div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <input id="textPromptInput" type="text" class="w-full rounded-xl border border-oly-border px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2" style="background:var(--card-bg,#fff);color:var(--text)" placeholder="">
+          </div>
+        </div>
+        <div class="px-5 pb-5 pt-3 flex gap-2 justify-end flex-wrap">
+          <button id="textPromptClearBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold hover:bg-oly-bg mr-auto" style="color:#B91C1C" title="Apagar conteúdo"><i class="fa-solid fa-eraser"></i> Apagar</button>
+          <button id="textPromptCancelBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-oly-border bg-white px-4 py-2.5 text-sm font-bold hover:bg-oly-bg" style="color:var(--text)">Cancelar</button>
+          <button id="textPromptOkBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold text-white" style="background:var(--primary)">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <div id="gradeModal" class="hidden fixed inset-0 z-[75]">
       <div class="absolute inset-0 bg-black/40" id="gradeBackdrop"></div>
       <div class="grade-sheet absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lift max-h-[90vh] flex flex-col" id="gradeSheet" style="max-width:520px;margin:0 auto;">
@@ -5925,6 +5951,7 @@ function renderCartUI(){
                   return total > 1 ? `<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD"><i class="fa-solid fa-layer-group" style="font-size:10px"></i> Grade ${idx}/${total}</span>` : "";
                 })()}
                 ${it.dataDesejada ? `<label class="cart-date-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold relative cursor-pointer" style="background:#EDE9FE;color:var(--primary);border:1px solid #C4B5FD" title="Clique para alterar a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> ${escapeHtml(_formatDataBR(it.dataDesejada))}<i class="fa-solid fa-pen" style="font-size:8px;opacity:.6;margin-left:2px"></i><input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="${escapeHtml(it.dataDesejada)}" aria-label="Alterar data do pedido"></label>` : ((isAccessoryCategory(it.categoria) || it.pendingDate) ? `<label class="cart-date-pill cart-date-pill-pulse inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold relative cursor-pointer" style="background:rgba(251,191,36,.15);color:#B45309;border:1px dashed rgba(251,191,36,.7)" title="Clique para definir a data"><i class="fa-regular fa-calendar" style="font-size:10px"></i> Definir data<input type="date" class="cart-date-input" data-edit-date="true" data-key="${escapeHtml(it.key)}" value="" aria-label="Definir data do pedido"></label>` : "")}
+                ${it.pedidoCliente ? `<button type="button" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold cursor-pointer hover:opacity-90 transition" style="background:rgba(59,130,246,.10);color:#1d4ed8;border:1px solid rgba(59,130,246,.35)" title="Clique para editar o pedido do cliente" data-edit-pedido="true" data-key="${escapeHtml(it.key)}"><i class="fa-solid fa-clipboard-list" style="font-size:10px"></i> ${escapeHtml(it.pedidoCliente)}<i class="fa-solid fa-pen" style="font-size:8px;opacity:.6;margin-left:2px"></i></button>` : `<button type="button" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold cursor-pointer hover:opacity-90 transition" style="background:transparent;color:var(--muted);border:1px dashed var(--oly-border,#d4d4d8)" title="Clique para definir o pedido do cliente" data-edit-pedido="true" data-key="${escapeHtml(it.key)}"><i class="fa-solid fa-clipboard-list" style="font-size:10px"></i> Definir pedido</button>`}
                 ${isPending ? `<span class="grade-pending-badge"><i class="fa-solid fa-triangle-exclamation"></i> Grade pendente</span>` : ""}
               </div>
             </div>
@@ -6000,7 +6027,7 @@ function renderCartUI(){
       </div>
     `;
 
-    row.addEventListener("click", (e)=>{
+    row.addEventListener("click", async (e)=>{
       // Etiqueta de data: deixa o calendário nativo abrir (não trata como clique no item)
       if(e.target?.closest?.('.cart-date-pill')) return;
 
@@ -6014,6 +6041,7 @@ function renderCartUI(){
       const ed = e.target?.closest?.("[data-edit='true']");
       const eg = e.target?.closest?.("[data-edit-grade='true']");
       const dup = e.target?.closest?.("[data-duplicate='true']");
+      const epd = e.target?.closest?.("[data-edit-pedido='true']");
 
       if(bp){
         const next = new Set(state.cartBulkSelected);
@@ -6076,6 +6104,24 @@ function renderCartUI(){
         state.cart.set(it.key, it);
         saveCartToStorage();
         renderCartUI();
+        return;
+      }
+      if(epd){
+        const valorAtual = it.pedidoCliente || "";
+        const novo = await appTextPrompt({
+          title: "Pedido do Cliente",
+          message: `Identificador do pedido para o produto <strong>${escapeHtml(it.produto || "")}</strong>${it.cor ? ` (${escapeHtml(it.cor)})` : ""}.`,
+          initial: valorAtual,
+          placeholder: "Ex.: PED-2026-001",
+          okText: "Salvar",
+          showClear: !!valorAtual
+        });
+        if(novo === null) return; // cancelou
+        it.pedidoCliente = novo;
+        state.cart.set(it.key, it);
+        saveCartToStorage();
+        renderCartUI();
+        toast(novo ? "Pedido atualizado ✅" : "Pedido apagado");
         return;
       }
       if(dup){
@@ -8064,7 +8110,58 @@ function appDatePick(opts = {}){
   });
 }
 
-/** Atualiza a faixa-resumo do modo lote em tempo real */
+/**
+ * Modal reutilizável de entrada de texto.
+ * appTextPrompt({ title, message, initial, placeholder, okText, cancelText, showClear })
+ *   -> Promise<string | null>  (null = cancelar; string = novo valor; "" se Apagar)
+ */
+function appTextPrompt(opts = {}){
+  return new Promise((resolve)=>{
+    const modal   = document.getElementById("textPromptModal");
+    const okBtn   = document.getElementById("textPromptOkBtn");
+    const cancel  = document.getElementById("textPromptCancelBtn");
+    const clearBtn= document.getElementById("textPromptClearBtn");
+    const backd   = document.getElementById("textPromptBackdrop");
+    const titleEl = document.getElementById("textPromptTitle");
+    const msgEl   = document.getElementById("textPromptMessage");
+    const input   = document.getElementById("textPromptInput");
+    if(!modal || !okBtn || !cancel || !input){ resolve(null); return; }
+
+    titleEl.textContent = opts.title || "Editar";
+    msgEl.innerHTML = opts.message || "";
+    okBtn.textContent = opts.okText || "Salvar";
+    cancel.textContent = opts.cancelText || "Cancelar";
+    input.value = opts.initial || "";
+    input.placeholder = opts.placeholder || "";
+    // Botão "Apagar" só aparece se showClear=true
+    if(clearBtn) clearBtn.style.display = opts.showClear ? "" : "none";
+
+    modal.classList.remove("hidden");
+    setTimeout(()=>{ input.focus(); input.select(); }, 30);
+
+    const cleanup = (val) => {
+      modal.classList.add("hidden");
+      okBtn.removeEventListener("click", onOk);
+      cancel.removeEventListener("click", onCancel);
+      clearBtn?.removeEventListener("click", onClear);
+      backd.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKey);
+      resolve(val);
+    };
+    const onOk = ()=> cleanup((input.value || "").trim());
+    const onCancel = ()=> cleanup(null);
+    const onClear = ()=> cleanup("");
+    const onKey = (e)=>{
+      if(e.key === "Escape") cleanup(null);
+      else if(e.key === "Enter") onOk();
+    };
+    okBtn.addEventListener("click", onOk);
+    cancel.addEventListener("click", onCancel);
+    clearBtn?.addEventListener("click", onClear);
+    backd.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKey);
+  });
+}
 function _renderBulkSummary(){
   const wrap = document.getElementById("gradeBulkSummary");
   const txt  = document.getElementById("gradeBulkSummaryText");
