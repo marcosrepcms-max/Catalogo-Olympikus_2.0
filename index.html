@@ -5354,9 +5354,13 @@ $("btnAddToCart").addEventListener("click", ()=>{
 
 
 function findProductVariantFromCartItem(cartItem){
-  const key = cartItem?.key;
-  if(!key) return null;
-  const found = state.productsRaw.find(p => cartKeyFor(p) === key);
+  if(!cartItem) return null;
+  // A key do item da sacola inclui linhaId quando o produto foi adicionado mais de uma vez.
+  // Os produtos do catálogo (state.productsRaw) NUNCA têm linhaId — então a comparação tem
+  // que ser pela BASE (codigo + cor + tam + categoria + genero), ignorando o linhaId da linha.
+  const baseAlvo = cartKeyBaseFor(cartItem);
+  if(!baseAlvo) return null;
+  const found = state.productsRaw.find(p => cartKeyBaseFor(p) === baseAlvo);
   return found || null;
 }
 /** Cart */
