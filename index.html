@@ -6928,7 +6928,9 @@ function detectSockColumn(it){
   if(hay.includes("39/44")) return "39/44";
   return "";
 }
-function calcQtdCaixas(it, totalQty){
+function calcQtdCaixas(it, totalQty, packing){
+  // Forma de Embalar "P: Padrão" → não sai quantidade de caixas (independente da categoria)
+  if(extractLeadingToken(packing) === "P") return "";
   if(!isFootwearCategory(it?.categoria)) return "";
   if(totalQty <= 0) return "";
   // Detecta o tamanho do lote: se a soma da grade é múltiplo de 12, usa 12 por caixa; senão usa 6
@@ -6951,7 +6953,7 @@ function buildOrderExportRows(cfg, itemsOverride){
     const row = new Array(headers.length).fill("");
     const totalQty = getItemTotalQty(it);
     const corPedido = String(it.corCodigo || it.cor || "").trim();
-    const qtdCaixas = calcQtdCaixas(it, totalQty);
+    const qtdCaixas = calcQtdCaixas(it, totalQty, cfg.packing);
 
     row[idx["Nº"]] = 1;
     row[idx["Comissionista"]] = cfg.commission;
