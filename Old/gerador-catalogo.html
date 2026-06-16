@@ -254,7 +254,8 @@
 
 // ───────── Config ─────────
 const CATALOGO_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus_2.0";
-const XLSX_URL  = `${CATALOGO_BASE}/Produtos.xlsx`;
+const XLSX_URL    = `${CATALOGO_BASE}/Produtos.xlsx`;
+const XLSX_URL_UA = `${CATALOGO_BASE}/produtos_ua.xlsx`;
 const IMG_BASE  = `${CATALOGO_BASE}/imagens_olympikus/`;
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
@@ -276,17 +277,17 @@ function moneyBR(n){
 }
 function numBR(n){ return (Number(n)||0).toLocaleString("pt-BR"); }
 
-// ───────── Passo 1: carrega Produtos.xlsx ─────────
+// ───────── Passo 1: carrega Produtos.xlsx + produtos_ua.xlsx ─────────
 async function carregarBase(){
-  try{
-    const res = await fetch(`${XLSX_URL}?v=${Date.now()}`, { cache:"no-store" });
+  // helper: baixa uma xlsx e mapeia pro formato unificado
+  async function baixar(url, marca){
+    const res = await fetch(`${url}?v=${Date.now()}`, { cache:"no-store" });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.arrayBuffer();
     const wb = XLSX.read(data, { type:"array" });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
-
-    baseProdutos = json.map(r => ({
+    return json.map(r => ({
       imagem:  String(r["Imagem"] ?? r["IMAGEM"] ?? r["imagem"] ?? "").trim(),
       codigo:  String(r["Código"] ?? r["Codigo"] ?? r["CODIGO"] ?? "").trim(),
       produto: String(r["Produto"] ?? r["PRODUTO"] ?? "").trim(),
@@ -295,7 +296,23 @@ async function carregarBase(){
       genero:  String(r["Gênero"] ?? r["Genero"] ?? r["GÊNERO"] ?? r["GENERO"] ?? "").trim(),
       tam:     String(r["TAM"] ?? r["Tam"] ?? r["tam"] ?? "").trim(),
       preco:   Number(r["Preço"] ?? r["Preco"] ?? r["PREÇO"] ?? r["PRECO"] ?? 0) || 0,
+      marca:   marca
     }));
+  }
+  try{
+    // carrega as duas em paralelo — se uma falhar, segue com a outra
+    const [rOly, rUa] = await Promise.allSettled([
+      baixar(XLSX_URL, "Olympikus"),
+      baixar(XLSX_URL_UA, "Under Armour")
+    ]);
+
+    const oly = rOly.status === "fulfilled" ? rOly.value : [];
+    const ua  = rUa.status  === "fulfilled" ? rUa.value  : [];
+
+    if(!oly.length && !ua.length){
+      throw new Error("nenhuma base disponível");
+    }
+    baseProdutos = oly.concat(ua);
 
     // Índice por código+cor (cor pode bater pelo nome OU pelo código de cor)
     baseIndex.clear();
@@ -303,7 +320,17 @@ async function carregarBase(){
       baseIndex.set(`${norm(p.codigo)}|${norm(p.cor)}`, p);
       if(p.corCodigo) baseIndex.set(`${norm(p.codigo)}|${norm(p.corCodigo)}`, p);
     }
-    setStatus($("baseStatus"), "ok", `<i class="fa-solid fa-circle-check"></i> Base carregada — ${baseProdutos.length} produtos disponíveis.`);
+
+    // status — informa quais bases entraram
+    const partes = [];
+    if(oly.length) partes.push(`${oly.length} Olympikus`);
+    if(ua.length)  partes.push(`${ua.length} Under Armour`);
+    const falhouAlguma = rOly.status === "rejected" || rUa.status === "rejected";
+    setStatus($("baseStatus"), falhouAlguma ? "warn" : "ok",
+      falhouAlguma
+        ? `<i class="fa-solid fa-triangle-exclamation"></i> Base parcial carregada — ${partes.join(" + ")}. ${rOly.status==="rejected"?"Olympikus falhou.":""} ${rUa.status==="rejected"?"Under Armour falhou.":""}`
+        : `<i class="fa-solid fa-circle-check"></i> Base carregada — ${partes.join(" + ")} = ${baseProdutos.length} produtos.`
+    );
   }catch(err){
     console.error(err);
     setStatus($("baseStatus"), "err", `<i class="fa-solid fa-triangle-exclamation"></i> Falha ao carregar a base de produtos. Recarregue a página.`);
