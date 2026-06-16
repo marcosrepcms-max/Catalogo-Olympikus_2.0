@@ -481,10 +481,13 @@
     .dark-mode .cat-chip                       { background:var(--card-bg)!important; }
     .dark-mode .cat-chip.active                { background:rgba(80,104,255,.2)!important; }
 
-    /* ── Badges de status ── */
-    .badge-novo     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
-    .badge-novacor  {display:inline-flex;align-items:center;background:linear-gradient(135deg,rgba(var(--primary-rgb),.78),var(--primary));color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
-    .badge-lanc     {display:inline-flex;align-items:center;background:linear-gradient(135deg,#059669,#0891b2);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    /* ── Badges de status (premium: vidro + borda translúcida) ── */
+    .badge-novo     {display:inline-flex;align-items:center;background:rgba(249,115,22,.14);color:#c2410c;border:1px solid rgba(249,115,22,.32);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;backdrop-filter:saturate(140%);}
+    .badge-novacor  {display:inline-flex;align-items:center;background:rgba(var(--primary-rgb),.14);color:var(--primary);border:1px solid rgba(var(--primary-rgb),.32);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    .badge-lanc     {display:inline-flex;align-items:center;background:rgba(5,150,105,.14);color:#047857;border:1px solid rgba(5,150,105,.32);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.04em;}
+    .dark-mode .badge-novo    { color:#fdba74 !important; background:rgba(249,115,22,.20) !important; }
+    .dark-mode .badge-novacor { color:rgb(var(--primary-rgb)) !important; background:rgba(var(--primary-rgb),.22) !important; }
+    .dark-mode .badge-lanc    { color:#6ee7b7 !important; background:rgba(5,150,105,.22) !important; }
 
     /* ── Spinner ── */
     @keyframes spin360{ to{ transform:rotate(360deg); } }
@@ -1062,6 +1065,20 @@
     .dark-mode .home-cat-all { background:rgba(var(--primary-rgb),0.08); }
     .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
     .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    /* ─── Ícones de categoria com brilho radial sutil (premium) ─── */
+    .home-cat-icon-grad{
+      position: relative;
+      box-shadow: 0 1px 2px rgba(15,23,42,.05), inset 0 1px 0 rgba(255,255,255,.6);
+      overflow: hidden;
+    }
+    .home-cat-icon-grad::before{
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 78% 18%, rgba(255,255,255,.55) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .home-cat-icon-grad > svg{ position: relative; z-index: 1; }
+    .dark-mode .home-cat-icon-grad{ box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08); }
     .home-cat-label { display:flex; flex-direction:column; gap:2px; min-width:0; }
     .home-cat-name { font-size:15px; font-weight:800; color:var(--text,#111827); line-height:1.2; }
     .dark-mode .home-cat-name { color:#F9FAFB; }
@@ -1647,7 +1664,7 @@
 
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#EFF6FF"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#F8FAFC 0%,#EFF6FF 55%,#DBEAFE 100%);"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Tênis</span><span class="home-cat-sub">Corrida, treino e lifestyle</span></div>
         </div>
         <div class="home-cat-img-wrap">
@@ -1658,7 +1675,7 @@
       </button>
       <button class="home-cat-card focus-ring" data-cat="CHI">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FFF7ED"><svg viewBox="0 0 44 30" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="18"><ellipse cx="22" cy="22" rx="18" ry="6" fill="#F97316" opacity="0.15" stroke="#F97316" stroke-width="2"/><path d="M14 22 C14 22 15 10 22 8 C29 6 30 22 30 22" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M18 18 C18 18 20 13 22 12" stroke="#F97316" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#FFFBF5 0%,#FFF7ED 55%,#FED7AA 100%);"><svg viewBox="0 0 44 30" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="18"><ellipse cx="22" cy="22" rx="18" ry="6" fill="#F97316" opacity="0.15" stroke="#F97316" stroke-width="2"/><path d="M14 22 C14 22 15 10 22 8 C29 6 30 22 30 22" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M18 18 C18 18 20 13 22 12" stroke="#F97316" stroke-width="1.5" stroke-linecap="round"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Chinelos</span><span class="home-cat-sub">Conforto para o dia a dia</span></div>
         </div>
         <div class="home-cat-img-wrap">
@@ -1669,7 +1686,7 @@
       </button>
       <button class="home-cat-card focus-ring" data-cat="V&A">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#F0FDF4"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#F6FDF8 0%,#F0FDF4 55%,#BBF7D0 100%);"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M15 4 L8 10 L4 8 L4 16 L12 16 L12 36 L28 36 L28 16 L36 16 L36 8 L32 10 L25 4 C25 4 23 7 20 7 C17 7 15 4 15 4Z" fill="#16A34A" opacity="0.15" stroke="#16A34A" stroke-width="2" stroke-linejoin="round"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Vestuário</span><span class="home-cat-sub">Roupas e acessórios esportivos</span></div>
         </div>
         <div class="home-cat-img-wrap">
@@ -1680,7 +1697,7 @@
       </button>
       <button class="home-cat-card focus-ring" data-cat="ACC">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FDF4FF"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect x="8" y="14" width="24" height="20" rx="3" fill="#A855F7" opacity="0.15" stroke="#A855F7" stroke-width="2"/><path d="M14 14 L14 10 C14 7 17 5 20 5 C23 5 26 7 26 10 L26 14" stroke="#A855F7" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 22 L24 22" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/><path d="M16 26 L22 26" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#FBF6FE 0%,#FDF4FF 55%,#F0ABFC 100%);"><svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect x="8" y="14" width="24" height="20" rx="3" fill="#A855F7" opacity="0.15" stroke="#A855F7" stroke-width="2"/><path d="M14 14 L14 10 C14 7 17 5 20 5 C23 5 26 7 26 10 L26 14" stroke="#A855F7" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 22 L24 22" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/><path d="M16 26 L22 26" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Acessórios</span><span class="home-cat-sub">Mochilas, bonés e mais</span></div>
         </div>
         <div class="home-cat-img-wrap">
@@ -1691,7 +1708,7 @@
       </button>
       <button class="home-cat-card focus-ring" data-cat="MEIA">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#FFF1F2"><svg viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="24"><path d="M12 4 L12 24 C12 24 10 26 8 30 C6 34 10 38 14 38 L26 38 C30 38 32 34 28 30 L24 24 L24 4 Z" fill="#F43F5E" opacity="0.15" stroke="#F43F5E" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 L24 10" stroke="#F43F5E" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 2"/><path d="M12 15 L24 15" stroke="#F43F5E" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2" opacity="0.6"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#FFF7F8 0%,#FFF1F2 55%,#FECDD3 100%);"><svg viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="24"><path d="M12 4 L12 24 C12 24 10 26 8 30 C6 34 10 38 14 38 L26 38 C30 38 32 34 28 30 L24 24 L24 4 Z" fill="#F43F5E" opacity="0.15" stroke="#F43F5E" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 L24 10" stroke="#F43F5E" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 2"/><path d="M12 15 L24 15" stroke="#F43F5E" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2" opacity="0.6"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name">Meias</span><span class="home-cat-sub">Performance e casual</span></div>
         </div>
         <div class="home-cat-img-wrap">
@@ -1702,7 +1719,7 @@
       </button>
       <button class="home-cat-card home-cat-all focus-ring" data-cat="">
         <div class="home-cat-info">
-          <div class="home-cat-icon" style="background:#F0F9FF"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22"><rect x="3" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="3" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/></svg></div>
+          <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#F4FAFE 0%,#F0F9FF 55%,#BAE6FD 100%);"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22"><rect x="3" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="3" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="3" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/><rect x="20" y="20" width="13" height="13" rx="2" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1.8"/></svg></div>
           <div class="home-cat-label"><span class="home-cat-name" style="color:var(--primary)">Ver todos os produtos</span><span class="home-cat-sub">Catálogo completo</span></div>
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
