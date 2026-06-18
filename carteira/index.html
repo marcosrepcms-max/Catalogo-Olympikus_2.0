@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0D9488">
+  <title>Carteira CMS</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- SheetJS para ler XLSX -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    /* =========================================================
+       VARIÁVEIS DE TEMA
+       ========================================================= */
+    :root {
+      --primary: #0D9488;
+      --primary-2: #0F766E;
+      --primary-soft: #CCFBF1;
+      --primary-bg: #F0FDFA;
+      --primary-rgb: 13, 148, 136;
+
+      --bg-1: #F8FAFC;
+      --bg-2: #F1F5F9;
+      --bg-grad: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+
+      --card-bg: #FFFFFF;
+      --card-bg-2: #F8FAFC;
+
+      --text: #0F172A;
+      --text-2: #475569;
+      --text-3: #94A3B8;
+
+      --border: #E2E8F0;
+      --border-2: #CBD5E1;
+
+      --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-lift: 0 4px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.05);
+
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 20px;
+
+      --acao-manter:   #10B981;
+      --acao-cancelar: #EF4444;
+      --acao-repassar: #F59E0B;
+      --acao-gestao:   #F97316;
+    }
+
+    html.dark {
+      --primary: #2DD4BF;
+      --primary-2: #5EEAD4;
+      --primary-soft: #134E4A;
+      --primary-bg: #0F2A28;
+      --primary-rgb: 45, 212, 191;
+
+      --bg-1: #0F172A;
+      --bg-2: #1E293B;
+      --bg-grad: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+
+      --card-bg: #1E293B;
+      --card-bg-2: #0F172A;
+
+      --text: #F1F5F9;
+      --text-2: #CBD5E1;
+      --text-3: #64748B;
+
+      --border: #334155;
+      --border-2: #475569;
+
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-lift: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* =========================================================
+       RESET + BASE
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-grad);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    input {
+      font: inherit;
+      color: inherit;
+    }
+
+    /* Desativa transições em touch (evita flash escurecimento) */
+    @media (hover: none), (pointer: coarse) {
+      *, *::before, *::after {
+        transition: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+    }
+
+    /* =========================================================
+       LAYOUT GERAL
+       ========================================================= */
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 20px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 2px;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--text-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-card);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-icon:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lift);
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: var(--shadow-card);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .screen { display: none; flex: 1; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* =========================================================
+       LOGIN
+       ========================================================= */
+    .login-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-lift);
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 6px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--text-2);
+      text-align: center;
+      margin: 0 0 28px;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    .field select, .field input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 14px;
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      background: var(--card-bg-2);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field select:focus, .field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+    }
+
+    .login-error {
+      background: #FEE2E2;
+      color: #991B1B;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    html.dark .login-error { background: #7F1D1D; color: #FECACA; }
+    .login-error.show { display: block; }
+
+    /* =========================================================
+       BUSCA DE CLIENTE
+       ========================================================= */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .search-wrap input {
+      width: 100%;
+      padding: 14px 16px 14px 46px;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card-bg);
+      color: var(--text);
+      outline: none;
+      box-shadow: var(--shadow-card);
+    }
+    .search-wrap input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15), var(--shadow-card);
+    }
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-2);
+    }
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-3);
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+    .empty-state p {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .client-list {
+      background: var(--card-bg);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .client-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .client-item:last-child { border-bottom: none; }
+    .client-item:hover { background: var(--card-bg-2); }
+
+    .client-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    html.dark .client-avatar { background: var(--primary-soft); color: var(--primary); }
+
+    .client-info { flex: 1; min-width: 0; }
+    .client-info .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .client-info .meta {
+      font-size: 12px;
+      color: var(--text-2);
+      margin: 2px 0 0;
+    }
+
+    .client-item .chev {
+      color: var(--text-3);
+      font-size: 14px;
+    }
+
+    .list-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+      padding: 12px;
+    }
+
+    /* =========================================================
+       TELA DE PRODUTOS DO CLIENTE
+       ========================================================= */
+    .client-header {
+      background: var(--card-bg);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .client-header .back {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--card-bg-2);
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .client-header .name {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .client-header .meta {
+      font-size: 12px;
+      color: var(--text-2);
+      margin: 2px 0 0;
+    }
+
+    .products-summary {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .summary-chip {
+      flex-shrink: 0;
+      background: var(--card-bg);
+      box-shadow: var(--shadow-card);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+    .summary-chip strong {
+      color: var(--text);
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border-radius: var(--r-md);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .product-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+
+    .product-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      background: var(--card-bg-2);
+      flex-shrink: 0;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .product-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .product-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 2px;
+    }
+
+    .product-meta {
+      font-size: 12px;
+      color: var(--text-2);
+      margin: 0;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .product-meta .dot {
+      color: var(--text-3);
+    }
+
+    .product-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-2);
+      margin-top: 4px;
+    }
+    html.dark .product-price { color: var(--primary); }
+
+    .product-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .product-total {
+      background: var(--primary-soft);
+      color: var(--primary-2);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    html.dark .product-total { color: var(--primary); }
+
+    .expand-icon {
+      color: var(--text-3);
+      font-size: 12px;
+      transition: transform .2s;
+    }
+
+    .product-card.expanded .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .product-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease;
+      border-top: 1px solid transparent;
+    }
+
+    .product-card.expanded .product-details {
+      max-height: 600px;
+      border-top-color: var(--border);
+    }
+
+    .product-details-inner {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .detail-row .label {
+      color: var(--text-2);
+    }
+    .detail-row .value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .grade-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .grade-cell {
+      background: var(--primary-bg);
+      border: 1px solid var(--primary-soft);
+      border-radius: 6px;
+      padding: 4px 6px;
+      min-width: 36px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      line-height: 1.15;
+    }
+    html.dark .grade-cell {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+    }
+    .grade-cell .g-size {
+      display: block;
+      font-size: 9px;
+      color: var(--primary-2);
+      font-weight: 500;
+    }
+    .grade-cell .g-qty {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-2);
+    }
+    html.dark .grade-cell .g-size,
+    html.dark .grade-cell .g-qty { color: var(--primary-2); }
+
+    .action-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .action-pill {
+      flex: 1;
+      min-width: 80px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      background: var(--card-bg-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .action-pill:hover { border-color: var(--primary); color: var(--primary); }
+    .action-pill.active.manter   { background: var(--acao-manter); color: #fff; border-color: var(--acao-manter); }
+    .action-pill.active.cancelar { background: var(--acao-cancelar); color: #fff; border-color: var(--acao-cancelar); }
+    .action-pill.active.repassar { background: var(--acao-repassar); color: #fff; border-color: var(--acao-repassar); }
+    .action-pill.active.gestao   { background: var(--acao-gestao); color: #fff; border-color: var(--acao-gestao); }
+
+    /* =========================================================
+       MENSAGEM / TOAST
+       ========================================================= */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: var(--card-bg);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lift);
+      transition: transform .3s;
+      z-index: 100;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* =========================================================
+       FILE INPUT escondido
+       ========================================================= */
+    .file-input { display: none; }
+
+    /* =========================================================
+       RESPONSIVO
+       ========================================================= */
+    @media (max-width: 480px) {
+      .app { padding: 12px; }
+      .login-card { padding: 24px 20px; }
+      .product-thumb { width: 56px; height: 56px; }
+      .product-name { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- =================================================================
+       TELA: LOGIN
+       ================================================================= -->
+  <div id="screen-login" class="screen active">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo"><i class="fa-solid fa-wallet"></i></div>
+        <h1 class="login-title">Carteira CMS</h1>
+        <p class="login-sub">Gestão de carteira comercial</p>
+
+        <div id="login-error" class="login-error"></div>
+
+        <div class="field">
+          <label>Vendedor</label>
+          <select id="login-vendedor">
+            <option value="">— Selecione —</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Código de comissionista</label>
+          <input id="login-codigo" type="tel" inputmode="numeric" placeholder="Digite o código">
+        </div>
+
+        <button class="btn-primary" id="btn-login" style="width:100%; justify-content:center; margin-top:8px;">
+          Entrar <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       TELA: BUSCA DE CLIENTE
+       ================================================================= -->
+  <div id="screen-clientes" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-wallet"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <label class="btn-icon" title="Importar XLSX" for="file-input-xlsx">
+          <i class="fa-solid fa-file-import"></i>
+        </label>
+        <input type="file" id="file-input-xlsx" class="file-input" accept=".xlsx,.xls">
+
+        <button class="btn-icon" id="btn-tema" title="Alternar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <button class="btn-icon" id="btn-sair" title="Sair">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="search"
+        id="busca-cliente"
+        inputmode="search"
+        enterkeyhint="search"
+        placeholder="Buscar cliente por nome ou código…"
+        autocomplete="off">
+    </div>
+
+    <div id="client-results">
+      <!-- Estado vazio inicial -->
+      <div class="empty-state" id="empty-no-import">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>Importe um arquivo XLSX para começar</p>
+        <p style="margin-top:8px;font-size:12px;">Toque no ícone <i class="fa-solid fa-file-import"></i> no topo</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       TELA: PRODUTOS DO CLIENTE
+       ================================================================= -->
+  <div id="screen-produtos" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-wallet"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user-2">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="btn-tema-2" title="Alternar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="client-header">
+      <button class="back" id="btn-voltar-clientes" title="Voltar">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div style="flex:1;min-width:0;">
+        <p class="name" id="cliente-nome">—</p>
+        <p class="meta" id="cliente-meta">—</p>
+      </div>
+    </div>
+
+    <div class="products-summary" id="products-summary"></div>
+
+    <div class="products-list" id="products-list"></div>
+
+    <div class="list-footer" id="products-footer"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONSTANTES
+   ============================================================ */
+const VENDEDORES = [
+  { nome: 'JORGE',   codigo: '114611',  papel: 'vendedor' },
+  { nome: 'MARIANA', codigo: '109839',  papel: 'vendedor' },
+  { nome: 'RAFAEL',  codigo: '1333497', papel: 'vendedor' },
+  { nome: 'WILLAME', codigo: '25471',   papel: 'vendedor' },
+  { nome: 'LEANDRO', codigo: '25745',   papel: 'vendedor' },
+  { nome: 'MARCOS',  codigo: '3616654', papel: 'vendedor' },
+  { nome: 'CMS',     codigo: '25846',   papel: 'admin'    },
+];
+
+// Mapeamento de preposto do XLSX → nome canônico
+const PREPOSTO_MAP = {
+  'LÉO': 'LEANDRO',
+  'LEO': 'LEANDRO',
+  'C': 'CMS',
+};
+
+// Caminho relativo das imagens (rodando em /carteira/index.html)
+const IMG_PATH = '../imagens_olympikus/';
+
+const STORAGE = {
+  sessao: 'carteira.sessao',
+  tema:   'carteira.tema',
+  pedidos: 'carteira.pedidos',
+  produtos: 'carteira.produtos',
+};
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+const APP = {
+  sessao: null,
+  pedidos: [],   // todos os pedidos do XLSX importado
+  produtos: {},  // base do produtos.xlsx: { '43447473_PTOCH': { preco, categoria } }
+  clienteAtual: null,
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function $(id) { return document.getElementById(id); }
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function normalizar(s) {
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function iniciais(nome) {
+  return String(nome || '').split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
+}
+function formatarDataBR(v) {
+  if (!v) return '';
+  const s = String(v);
+  // já tá no formato dd/mm/aaaa
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s.slice(0, 10);
+  // formato ISO
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return s;
+}
+function mesAno(v) {
+  const d = formatarDataBR(v);
+  if (d.length >= 10) return d.slice(3); // mm/aaaa
+  return '';
+}
+function formatarPreco(v) {
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  if (isNaN(n)) return '—';
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/* ============================================================
+   TEMA
+   ============================================================ */
+function aplicarTema() {
+  const t = localStorage.getItem(STORAGE.tema) || 'claro';
+  document.documentElement.classList.toggle('dark', t === 'escuro');
+  document.querySelectorAll('#btn-tema i, #btn-tema-2 i').forEach(i => {
+    i.className = t === 'escuro' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  });
+}
+function toggleTema() {
+  const atual = localStorage.getItem(STORAGE.tema) || 'claro';
+  localStorage.setItem(STORAGE.tema, atual === 'claro' ? 'escuro' : 'claro');
+  aplicarTema();
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function popularDropdownVendedores() {
+  const sel = $('login-vendedor');
+  for (const v of VENDEDORES) {
+    const opt = document.createElement('option');
+    opt.value = v.nome;
+    opt.textContent = v.nome;
+    sel.appendChild(opt);
+  }
+}
+
+function tentarLogin() {
+  const nome = $('login-vendedor').value;
+  const codigo = $('login-codigo').value.trim();
+  const erroEl = $('login-error');
+
+  if (!nome) {
+    erroEl.textContent = 'Selecione um vendedor';
+    erroEl.classList.add('show');
+    return;
+  }
+  if (!codigo) {
+    erroEl.textContent = 'Digite o código';
+    erroEl.classList.add('show');
+    return;
+  }
+
+  const v = VENDEDORES.find(x => x.nome === nome && x.codigo === codigo);
+  if (!v) {
+    erroEl.textContent = 'Código incorreto';
+    erroEl.classList.add('show');
+    return;
+  }
+
+  APP.sessao = v;
+  localStorage.setItem(STORAGE.sessao, JSON.stringify(v));
+  erroEl.classList.remove('show');
+  irParaClientes();
+}
+
+function logout() {
+  APP.sessao = null;
+  localStorage.removeItem(STORAGE.sessao);
+  $('login-vendedor').value = '';
+  $('login-codigo').value = '';
+  show('screen-login');
+}
+
+function irParaClientes() {
+  $('topbar-user').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  $('topbar-user-2').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  show('screen-clientes');
+  renderClientes('');
+}
+
+/* ============================================================
+   IMPORTAÇÃO XLSX
+   ============================================================ */
+async function importarXLSX(file) {
+  try {
+    toast('Importando arquivo…');
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+
+    const pedidos = [];
+    for (const sheetName of wb.SheetNames) {
+      if (!/EM ABERTO/i.test(sheetName)) continue;
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      for (const row of rows) {
+        const ped = parseLinhaPedido(row);
+        if (ped) pedidos.push(ped);
+      }
+    }
+
+    if (pedidos.length === 0) {
+      toast('Nenhum pedido encontrado no XLSX');
+      return;
+    }
+
+    APP.pedidos = pedidos;
+    localStorage.setItem(STORAGE.pedidos, JSON.stringify(pedidos));
+
+    toast(`${pedidos.length} pedidos importados`);
+    renderClientes('');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao ler o arquivo');
+  }
+}
+
+function parseLinhaPedido(row) {
+  // Pega tanto colunas com e sem acento
+  const get = (...keys) => {
+    for (const k of keys) {
+      if (row[k] != null && row[k] !== '') return row[k];
+    }
+    return '';
+  };
+
+  const prepostoBruto = String(get('Preposto', 'preposto')).trim().toUpperCase();
+  const preposto = PREPOSTO_MAP[prepostoBruto] || prepostoBruto;
+  if (!preposto) return null;
+
+  const artigo = String(get('Artigo', 'artigo')).trim();
+  const cor    = String(get('Cor', 'cor')).trim();
+  if (!artigo || !cor) return null;
+
+  // Monta a grade dos tamanhos 28-48
+  const grade = {};
+  for (let t = 28; t <= 48; t++) {
+    const v = row[String(t)] ?? row[t];
+    if (v && Number(v) > 0) grade[t] = Number(v);
+  }
+
+  return {
+    marca:       String(get('Marca', 'marca')).trim(),
+    cliente_cod: String(get('Cliente', 'cliente')).trim(),
+    cliente_razao: String(get('Razão', 'Razao', 'razão', 'razao')).trim(),
+    razao_social: String(get('Razão Social', 'Razao Social')).trim(),
+    cnpj:        String(get('CNPJ', 'cnpj')).trim(),
+    cidade:      String(get('Cidade', 'cidade')).trim(),
+    endereco:    String(get('Endereço do Cliente', 'Endereco do Cliente')).trim(),
+    ped_cliente: String(get('Ped.Cliente', 'PedCliente')).trim(),
+    empresa:     String(get('Empresa', 'empresa')).trim(),
+    cond_pag:    String(get('Cond. Pag', 'CondPag')).trim(),
+    prazo:       String(get('Prazo', 'prazo')).trim(),
+    campanha:    String(get('Campanha Comercial', 'Campanha')).trim(),
+    gci:         String(get('Enc.GCI', 'GCI', 'gci')).trim(),
+    ebm:         String(get('Enc.EBM', 'EBM', 'ebm')).trim(),
+    preposto:    preposto,
+    descricao:   String(get('descrição', 'Descrição', 'descricao', 'Descricao')).trim(),
+    artigo:      artigo,
+    cor:         cor,
+    grade_str:   String(get('grade', 'Grade')).trim(),
+    faixa:       String(get('Faixa', 'faixa')).trim(),
+    grade:       grade,
+    total:       Number(get('Total de pares', 'Total') || 0),
+    prev_fat:    formatarDataBR(get('Prev.fat.', 'PrevFat', 'Prev. Fat.')),
+    acao:        'MANTER',
+  };
+}
+
+/* ============================================================
+   CARREGAR PRODUTOS.XLSX (preço, categoria)
+   ============================================================ */
+async function carregarProdutosXLSX() {
+  try {
+    const r = await fetch('../Produtos.xlsx');
+    if (!r.ok) return;
+    const buf = await r.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+    APP.produtos = {};
+    for (const row of rows) {
+      // tenta vários possíveis nomes de coluna
+      const artigo = String(row.Artigo || row.artigo || row.ARTIGO || '').trim();
+      const cor    = String(row.Cor || row.cor || row.COR || '').trim();
+      if (!artigo || !cor) continue;
+      const key = `${artigo}_${cor}`;
+      APP.produtos[key] = {
+        preco:     row.Preco || row.Preço || row.PRECO || row.preco || row.preço || '',
+        categoria: row.Categoria || row.categoria || row.CATEGORIA || '',
+        descricao: row.Descricao || row.Descrição || row.descricao || row.descrição || '',
+      };
+    }
+
+    localStorage.setItem(STORAGE.produtos, JSON.stringify(APP.produtos));
+  } catch (e) {
+    // sem produtos.xlsx, segue o jogo sem preço
+    console.warn('Não foi possível carregar Produtos.xlsx', e);
+  }
+}
+
+/* ============================================================
+   RENDER: LISTA DE CLIENTES
+   ============================================================ */
+function renderClientes(filtro) {
+  const container = $('client-results');
+
+  // Filtra pedidos do vendedor logado (admin vê todos)
+  const meusPedidos = APP.sessao.papel === 'admin'
+    ? APP.pedidos
+    : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
+
+  if (meusPedidos.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>Importe um arquivo XLSX para começar</p>
+        <p style="margin-top:8px;font-size:12px;">Toque no ícone <i class="fa-solid fa-file-import"></i> no topo</p>
+      </div>`;
+    return;
+  }
+
+  // Agrupa por cliente
+  const map = new Map();
+  for (const p of meusPedidos) {
+    const key = p.cliente_cod;
+    if (!map.has(key)) {
+      map.set(key, {
+        codigo: p.cliente_cod,
+        razao: p.razao_social || p.cliente_razao,
+        razaoCompleta: p.cliente_razao,
+        cidade: p.cidade,
+        totalPedidos: 0,
+        totalPares: 0,
+      });
+    }
+    const c = map.get(key);
+    c.totalPedidos += 1;
+    c.totalPares += p.total;
+  }
+
+  const clientes = [...map.values()];
+
+  // Filtra busca
+  const filtroNorm = normalizar(filtro);
+  const filtrados = filtroNorm
+    ? clientes.filter(c =>
+        normalizar(c.razao).includes(filtroNorm) ||
+        normalizar(c.codigo).includes(filtroNorm))
+    : clientes;
+
+  if (filtrados.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>Nenhum cliente encontrado</p>
+      </div>`;
+    return;
+  }
+
+  const html = `
+    <div class="client-list">
+      ${filtrados.map(c => `
+        <div class="client-item" data-cliente="${c.codigo}">
+          <div class="client-avatar">${iniciais(c.razao)}</div>
+          <div class="client-info">
+            <p class="name">${c.razao}</p>
+            <p class="meta">${c.codigo} · ${c.totalPedidos} pedidos · ${c.totalPares} pares</p>
+          </div>
+          <i class="fa-solid fa-chevron-right chev"></i>
+        </div>
+      `).join('')}
+    </div>
+    <div class="list-footer">${filtrados.length} cliente${filtrados.length !== 1 ? 's' : ''}</div>
+  `;
+  container.innerHTML = html;
+
+  container.querySelectorAll('.client-item').forEach(el => {
+    el.addEventListener('click', () => abrirCliente(el.dataset.cliente));
+  });
+}
+
+/* ============================================================
+   RENDER: PRODUTOS DO CLIENTE
+   ============================================================ */
+function abrirCliente(codigo) {
+  const meusPedidos = APP.sessao.papel === 'admin'
+    ? APP.pedidos
+    : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
+
+  const pedidosCliente = meusPedidos.filter(p => p.cliente_cod === codigo);
+  if (pedidosCliente.length === 0) return;
+
+  APP.clienteAtual = {
+    codigo,
+    razao: pedidosCliente[0].razao_social || pedidosCliente[0].cliente_razao,
+    cidade: pedidosCliente[0].cidade,
+    cnpj: pedidosCliente[0].cnpj,
+    pedidos: pedidosCliente,
+  };
+
+  $('cliente-nome').textContent = APP.clienteAtual.razao;
+  $('cliente-meta').textContent = `${codigo} · ${APP.clienteAtual.cidade}`;
+
+  // Resumo
+  const totalPares = pedidosCliente.reduce((s, p) => s + p.total, 0);
+  const totalProdutos = pedidosCliente.length;
+  const mesesUnicos = [...new Set(pedidosCliente.map(p => mesAno(p.prev_fat)).filter(Boolean))].length;
+
+  $('products-summary').innerHTML = `
+    <div class="summary-chip"><strong>${totalProdutos}</strong> produtos</div>
+    <div class="summary-chip"><strong>${totalPares}</strong> pares</div>
+    <div class="summary-chip"><strong>${mesesUnicos}</strong> meses</div>
+  `;
+
+  // Lista de produtos
+  const listaEl = $('products-list');
+  listaEl.innerHTML = pedidosCliente.map((p, idx) => renderCardProduto(p, idx)).join('');
+
+  // Eventos de expandir
+  listaEl.querySelectorAll('.product-main').forEach(el => {
+    el.addEventListener('click', () => {
+      el.parentElement.classList.toggle('expanded');
+    });
+  });
+
+  // Eventos das ações
+  listaEl.querySelectorAll('.action-pill').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = Number(el.dataset.idx);
+      const acao = el.dataset.acao;
+      APP.clienteAtual.pedidos[idx].acao = acao;
+      toast(`${acao} aplicado`);
+      // re-render só os pills dessa linha
+      const pills = el.parentElement.querySelectorAll('.action-pill');
+      pills.forEach(p => p.classList.remove('active', 'manter', 'cancelar', 'repassar', 'gestao'));
+      el.classList.add('active', acao.toLowerCase().replace('_', ''));
+    });
+  });
+
+  $('products-footer').textContent = `${pedidosCliente.length} produto${pedidosCliente.length !== 1 ? 's' : ''}`;
+
+  show('screen-produtos');
+  window.scrollTo(0, 0);
+}
+
+function renderCardProduto(p, idx) {
+  const imgKey = `${p.artigo}_${p.cor}`;
+  const imgUrl = `${IMG_PATH}${imgKey}.jpg`;
+  const prod = APP.produtos[imgKey] || {};
+
+  const gradeHtml = Object.keys(p.grade).length > 0
+    ? `<div class="grade-row">
+        ${Object.entries(p.grade).map(([t, q]) => `
+          <div class="grade-cell">
+            <span class="g-size">${t}</span>
+            <span class="g-qty">${q}</span>
+          </div>
+        `).join('')}
+      </div>`
+    : '<span style="color:var(--text-3);font-size:12px;">—</span>';
+
+  const acoes = ['MANTER', 'CANCELAR', 'REPASSAR'];
+  if (APP.sessao.papel === 'admin') acoes.push('GESTAO_CMS');
+  const pillsHtml = acoes.map(a => {
+    const ativo = p.acao === a;
+    const cls = a.toLowerCase().replace('_cms', '').replace('_', '');
+    return `<button class="action-pill ${ativo ? 'active ' + cls : ''}" data-idx="${idx}" data-acao="${a}">${a === 'GESTAO_CMS' ? 'GESTÃO' : a}</button>`;
+  }).join('');
+
+  return `
+    <div class="product-card">
+      <div class="product-main">
+        <img class="product-thumb" src="${imgUrl}" alt="${p.descricao}" onerror="this.style.background='var(--card-bg-2)';this.removeAttribute('src');">
+        <div class="product-info">
+          <p class="product-name">${p.descricao || p.artigo}</p>
+          <p class="product-meta">
+            <span>${p.cor}</span>
+            <span class="dot">·</span>
+            <span>Art. ${p.artigo}</span>
+          </p>
+          ${prod.preco ? `<div class="product-price">${formatarPreco(prod.preco)}</div>` : ''}
+        </div>
+        <div class="product-right">
+          <span class="product-total">${p.total} pares</span>
+          <i class="fa-solid fa-chevron-down expand-icon"></i>
+        </div>
+      </div>
+
+      <div class="product-details">
+        <div class="product-details-inner">
+          ${prod.categoria ? `
+            <div class="detail-row">
+              <span class="label">Categoria</span>
+              <span class="value">${prod.categoria}</span>
+            </div>` : ''}
+          <div class="detail-row">
+            <span class="label">Mês de previsão</span>
+            <span class="value">${mesAno(p.prev_fat) || '—'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Encomenda (GCI)</span>
+            <span class="value">${p.gci || '—'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">EBM</span>
+            <span class="value">${p.ebm || '—'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Faixa</span>
+            <span class="value">${p.faixa || '—'}</span>
+          </div>
+          <div>
+            <div class="label" style="font-size:12px;color:var(--text-2);margin-bottom:4px;">Grade</div>
+            ${gradeHtml}
+          </div>
+          <div>
+            <div class="label" style="font-size:12px;color:var(--text-2);margin-bottom:4px;">Ação</div>
+            <div class="action-pills">${pillsHtml}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  aplicarTema();
+  popularDropdownVendedores();
+
+  // tenta carregar produtos.xlsx em background
+  carregarProdutosXLSX();
+
+  // Carrega cache de pedidos se houver
+  const ped = localStorage.getItem(STORAGE.pedidos);
+  if (ped) {
+    try { APP.pedidos = JSON.parse(ped); } catch {}
+  }
+  const prod = localStorage.getItem(STORAGE.produtos);
+  if (prod) {
+    try { APP.produtos = JSON.parse(prod); } catch {}
+  }
+
+  // Restaura sessão
+  const ses = localStorage.getItem(STORAGE.sessao);
+  if (ses) {
+    try {
+      APP.sessao = JSON.parse(ses);
+      irParaClientes();
+    } catch {}
+  }
+
+  // Login
+  $('btn-login').addEventListener('click', tentarLogin);
+  $('login-codigo').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tentarLogin();
+  });
+
+  // Tema
+  $('btn-tema').addEventListener('click', toggleTema);
+  $('btn-tema-2').addEventListener('click', toggleTema);
+
+  // Sair
+  $('btn-sair').addEventListener('click', logout);
+
+  // Importar XLSX
+  $('file-input-xlsx').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) importarXLSX(file);
+    e.target.value = '';
+  });
+
+  // Busca de cliente
+  let buscaTimer;
+  $('busca-cliente').addEventListener('input', (e) => {
+    clearTimeout(buscaTimer);
+    buscaTimer = setTimeout(() => renderClientes(e.target.value), 200);
+  });
+
+  // Voltar pra lista de clientes
+  $('btn-voltar-clientes').addEventListener('click', () => {
+    show('screen-clientes');
+    $('busca-cliente').focus();
+  });
+});
+</script>
+
+</body>
+</html>
