@@ -1656,10 +1656,15 @@ function renderClientes(filtro) {
     filtrados = clientes;
   }
 
-  // KPIs respondem ao filtro
+  // KPIs respondem ao filtro. Se a busca casa com produto, Pedidos e Pares
+  // refletem só o produto filtrado (cores consolidadas); senão, o total do cliente.
   const kpiClientes = filtrados.length;
-  const kpiPedidos = filtrados.reduce((s, c) => s + c.totalPedidos, 0);
-  const kpiPares = filtrados.reduce((s, c) => s + c.totalPares, 0);
+  let kpiPedidos = 0, kpiPares = 0;
+  for (const c of filtrados) {
+    const base = (filtroNorm && c.produtosCasados.length) ? c.produtosCasados : c.pedidos;
+    kpiPedidos += base.length;
+    kpiPares += base.reduce((s, p) => s + p.total, 0);
+  }
 
   $('kpi-clientes').textContent = formatarNumero(kpiClientes);
   $('kpi-pedidos').textContent = formatarNumero(kpiPedidos);
