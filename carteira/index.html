@@ -413,6 +413,36 @@
       font-size: 12px; color: var(--text-2); margin: 2px 0 0;
     }
     .client-item .chev { color: var(--text-3); font-size: 14px; }
+    .rede-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: var(--primary-soft); color: var(--primary-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    html.dark .rede-icon { color: var(--primary); }
+    .rede-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: .04em;
+      background: var(--primary-soft); color: var(--primary-2);
+      padding: 1px 6px; border-radius: 5px; margin-left: 6px;
+      vertical-align: middle;
+    }
+    html.dark .rede-badge { color: var(--primary); }
+    .rede-portas { margin-top: 10px; border-top: 1px solid var(--border); }
+    .rede-porta {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 10px 4px 10px 10px;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .rede-porta:last-child { border-bottom: none; }
+    .rede-porta:hover { background: var(--card-bg-2); }
+    .rede-porta .porta-nome {
+      font-size: 13px; font-weight: 600; color: var(--text); margin: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rede-porta .porta-meta { font-size: 11px; color: var(--text-2); margin: 1px 0 0; }
+    .rede-porta i { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
+    .rede-chev { transition: transform .15s; }
+    .client-item.rede-aberta .rede-chev { transform: rotate(90deg); }
     .list-footer {
       text-align: center; font-size: 12px;
       color: var(--text-3); padding: 12px;
@@ -1676,6 +1706,69 @@ function htmlProdutosCasados(produtos) {
   return `<div class="cliente-produtos">${blocos}</div>`;
 }
 
+function nomeFantasiaDe(codigo) {
+  return APP.clientesInfo[codigo]?.nomeFantasia || '';
+}
+function portaDe(codigo) {
+  return APP.clientesInfo[codigo]?.porta || '';
+}
+
+function cardAvulsoHTML(c, temTermos) {
+  const temProd = temTermos && c.produtosCasados.length;
+  const nPedidos = temProd ? c.produtosCasados.length : c.totalPedidos;
+  const nPares = temProd ? c.produtosCasados.reduce((s, p) => s + p.total, 0) : c.totalPares;
+  const fant = nomeFantasiaDe(c.codigo);
+  const titulo = (fant && normalizar(fant) !== normalizar(c.razao)) ? `${c.razao} · ${fant}` : c.razao;
+  return `
+    <div class="client-item" data-cliente="${c.codigo}">
+      <div class="client-row">
+        <div class="client-avatar">${iniciais(c.razao)}</div>
+        <div class="client-info">
+          <p class="name">${titulo}</p>
+          <p class="meta">${c.codigo} · ${c.cidade || '—'} · ${nPedidos} pedidos · ${nPares} pares</p>
+        </div>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </div>
+      ${htmlProdutosCasados(c.produtosCasados)}
+    </div>`;
+}
+
+function cardRedeHTML(grupo, temTermos) {
+  const portas = grupo.portas;
+  const temProd = temTermos && portas.some(c => c.produtosCasados.length);
+  const combinados = [];
+  for (const c of portas) for (const p of c.produtosCasados) combinados.push(p);
+  let pares = 0;
+  for (const c of portas) {
+    const base = temProd ? c.produtosCasados : c.pedidos;
+    pares += base.reduce((s, p) => s + p.total, 0);
+  }
+  const portasRows = portas.map(c => {
+    const porta = portaDe(c.codigo) || c.cidade || '—';
+    return `
+      <div class="rede-porta" data-cliente="${c.codigo}">
+        <div style="min-width:0;">
+          <p class="porta-nome">${c.razao}</p>
+          <p class="porta-meta">${porta} · ${c.totalPedidos} ped · ${c.totalPares} pares</p>
+        </div>
+        <i class="fa-solid fa-chevron-right"></i>
+      </div>`;
+  }).join('');
+  return `
+    <div class="client-item rede-card" data-rede="1">
+      <div class="client-row rede-head">
+        <div class="rede-icon"><i class="fa-solid fa-store"></i></div>
+        <div class="client-info">
+          <p class="name">${grupo.nome}<span class="rede-badge">REDE</span></p>
+          <p class="meta">${portas.length} de ${grupo.totalPortas} portas · ${pares} pares</p>
+        </div>
+        <i class="fa-solid fa-chevron-right chev rede-chev"></i>
+      </div>
+      ${temProd ? htmlProdutosCasados(combinados) : ''}
+      <div class="rede-portas" hidden>${portasRows}</div>
+    </div>`;
+}
+
 function renderClientes(filtro) {
   APP.filtroCliente = filtro || '';
   const container = $('client-results');
@@ -1771,32 +1864,47 @@ function renderClientes(filtro) {
     return;
   }
 
+  // Agrupa: redes viram um card só; avulsos individuais. Preserva a ordem.
+  const temTermos = termos.length > 0;
+  const grupos = new Map();
+  for (const c of filtrados) {
+    const nn = normalizar(nomeFantasiaDe(c.codigo));
+    if (nn && APP.redes[nn]) {
+      if (!grupos.has(nn)) grupos.set(nn, { nome: APP.redes[nn].nome, totalPortas: APP.redes[nn].codigos.length, portas: [] });
+      grupos.get(nn).portas.push(c);
+    }
+  }
+  const renderizadas = new Set();
+  const cards = [];
+  for (const c of filtrados) {
+    const nn = normalizar(nomeFantasiaDe(c.codigo));
+    if (nn && APP.redes[nn]) {
+      if (renderizadas.has(nn)) continue;
+      renderizadas.add(nn);
+      cards.push(cardRedeHTML(grupos.get(nn), temTermos));
+    } else {
+      cards.push(cardAvulsoHTML(c, temTermos));
+    }
+  }
+
   const html = `
-    <div class="client-list">
-      ${filtrados.map(c => {
-        const temProd = termos.length && c.produtosCasados.length;
-        const nPedidos = temProd ? c.produtosCasados.length : c.totalPedidos;
-        const nPares = temProd ? c.produtosCasados.reduce((s, p) => s + p.total, 0) : c.totalPares;
-        return `
-        <div class="client-item" data-cliente="${c.codigo}">
-          <div class="client-row">
-            <div class="client-avatar">${iniciais(c.razao)}</div>
-            <div class="client-info">
-              <p class="name">${c.razao}</p>
-              <p class="meta">${c.codigo} · ${c.cidade || '—'} · ${nPedidos} pedidos · ${nPares} pares</p>
-            </div>
-            <i class="fa-solid fa-chevron-right chev"></i>
-          </div>
-          ${htmlProdutosCasados(c.produtosCasados)}
-        </div>`;
-      }).join('')}
-    </div>
+    <div class="client-list">${cards.join('')}</div>
     <div class="list-footer">${filtrados.length} cliente${filtrados.length !== 1 ? 's' : ''}</div>
   `;
   container.innerHTML = html;
 
-  container.querySelectorAll('.client-item').forEach(el => {
-    el.addEventListener('click', () => abrirCliente(el.dataset.cliente));
+  // Avulsos e portas de rede abrem o cliente
+  container.querySelectorAll('[data-cliente]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); abrirCliente(el.dataset.cliente); });
+  });
+  // Cabeçalho da rede expande/recolhe as portas
+  container.querySelectorAll('.rede-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const card = head.closest('.rede-card');
+      const lista = card.querySelector('.rede-portas');
+      lista.hidden = !lista.hidden;
+      card.classList.toggle('rede-aberta', !lista.hidden);
+    });
   });
 }
 
