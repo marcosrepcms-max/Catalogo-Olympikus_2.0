@@ -1497,7 +1497,17 @@ function iniciais(nome) {
   return String(nome || '').split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
 }
 function formatarDataBR(v) {
-  if (!v) return '';
+  if (!v && v !== 0) return '';
+  // Número serial do Excel (ex: 46204) → converte para data
+  if (typeof v === 'number' || (/^\d+(\.\d+)?$/.test(String(v).trim()) && Number(v) > 59 && Number(v) < 90000)) {
+    const serial = Number(v);
+    const d = new Date(Math.round((serial - 25569) * 86400000));
+    if (!isNaN(d)) {
+      const dia = String(d.getUTCDate()).padStart(2, '0');
+      const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
+      return `${dia}/${mes}/${d.getUTCFullYear()}`;
+    }
+  }
   const s = String(v);
   if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s.slice(0, 10);
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
