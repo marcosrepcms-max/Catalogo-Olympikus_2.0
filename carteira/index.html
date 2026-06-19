@@ -500,6 +500,66 @@
     .rede-prod-card .pares { font-size: 14px; font-weight: 700; color: var(--primary-2); flex-shrink: 0; text-align: right; }
     html.dark .rede-prod-card .pares { color: var(--primary); }
     .rede-prod-card .pares small { display: block; font-size: 11px; font-weight: 400; color: var(--text-2); }
+    .rp-thumb {
+      width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+      background: var(--card-bg-2); border: 1px solid var(--border); display: block; flex-shrink: 0;
+    }
+    .rp-fallback {
+      width: 56px; height: 56px; border-radius: 10px; background: var(--card-bg-2);
+      border: 1px dashed var(--border-2); display: none; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 18px; flex-shrink: 0;
+    }
+    .rp-thumb.failed { display: none; }
+    .rp-thumb.failed + .rp-fallback { display: flex; }
+
+    /* Distribuição por porta */
+    #rede-dist-body { padding: 4px 0 24px; }
+    .dist-head { display: flex; align-items: center; gap: 14px; padding: 4px 4px 14px; }
+    .dist-img {
+      width: 72px; height: 72px; border-radius: 12px; object-fit: cover;
+      background: var(--card-bg-2); border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .dist-fallback {
+      width: 72px; height: 72px; border-radius: 12px; background: var(--card-bg-2);
+      border: 1px dashed var(--border-2); display: none; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 24px; flex-shrink: 0;
+    }
+    .dist-img.failed { display: none; }
+    .dist-img.failed + .dist-fallback { display: flex; }
+    .dist-resumo { display: flex; gap: 18px; }
+    .dist-kpi { text-align: center; }
+    .dist-kpi .n { display: block; font-size: 20px; font-weight: 700; color: var(--text); }
+    .dist-kpi .n.ok { color: var(--primary-2); }
+    html.dark .dist-kpi .n.ok { color: var(--primary); }
+    .dist-kpi .n.alerta { color: #d97706; }
+    html.dark .dist-kpi .n.alerta { color: #fbbf24; }
+    .dist-kpi .l { font-size: 11px; color: var(--text-2); }
+    .dist-list {
+      background: var(--card-bg); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card); overflow: hidden;
+    }
+    .dist-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+    }
+    .dist-item:last-child { border-bottom: none; }
+    .dist-item[data-cliente] { cursor: pointer; }
+    .dist-item[data-cliente]:hover { background: var(--card-bg-2); }
+    .dist-item.vazio { opacity: .55; }
+    .dist-info { min-width: 0; }
+    .dist-info .nome {
+      font-size: 14px; font-weight: 600; color: var(--text); margin: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .dist-info .meta { font-size: 11px; color: var(--text-2); margin: 1px 0 0; }
+    .dist-pares { font-size: 13px; font-weight: 600; color: var(--primary-2); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    html.dark .dist-pares { color: var(--primary); }
+    .dist-pares.zero { color: var(--text-3); font-weight: 400; }
+    .dist-badge {
+      font-size: 10px; font-weight: 700; background: #fef3c7; color: #92400e;
+      padding: 2px 7px; border-radius: 5px;
+    }
+    html.dark .dist-badge { background: #78350f; color: #fde68a; }
     .list-footer {
       text-align: center; font-size: 12px;
       color: var(--text-3); padding: 12px;
@@ -1269,6 +1329,40 @@
   </div>
 
   <!-- =================================================================
+       TELA REDE — DISTRIBUIÇÃO DE UM PRODUTO POR PORTA
+       ================================================================= -->
+  <div id="screen-rede-dist" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-store"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user-5">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="btn-tema-5" title="Alternar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="frozen-header">
+      <div class="client-strip">
+        <button class="back" id="btn-voltar-rede-prod" title="Voltar">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="client-info-compact">
+          <p class="name" id="rede-dist-titulo">—</p>
+          <p class="meta" id="rede-dist-sub">—</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="rede-dist-body"></div>
+  </div>
+
+  <!-- =================================================================
        MODAL DE ZOOM
        ================================================================= -->
   <div class="zoom-modal" id="zoom-modal">
@@ -1355,6 +1449,7 @@ const APP = {
   redeAtual: null,
   redeSelecao: new Set(),
   redeBuscaProduto: '',
+  redeDistKey: null,
 };
 
 /* ============================================================
@@ -1458,7 +1553,7 @@ function configurarCopiaAoSelecionar() {
 function aplicarTema() {
   const t = localStorage.getItem(STORAGE.tema) || 'claro';
   document.documentElement.classList.toggle('dark', t === 'escuro');
-  document.querySelectorAll('#btn-tema i, #btn-tema-2 i, #btn-tema-3 i, #btn-tema-4 i').forEach(i => {
+  document.querySelectorAll('#btn-tema i, #btn-tema-2 i, #btn-tema-3 i, #btn-tema-4 i, #btn-tema-5 i').forEach(i => {
     i.className = t === 'escuro' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
   });
 }
@@ -1704,6 +1799,7 @@ function irParaClientes() {
   $('topbar-user-2').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-3').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-4').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  $('topbar-user-5').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   show('screen-clientes');
   renderClientes(APP.filtroCliente);
 }
@@ -2132,6 +2228,12 @@ function toggleTodasPortas(marcar) {
 
 function verProdutosRede() {
   if (APP.redeSelecao.size === 0) return;
+  // 1 porta = tela normal do cliente (imagem, GCI, detalhes, ações)
+  if (APP.redeSelecao.size === 1) {
+    const cod = [...APP.redeSelecao][0];
+    abrirCliente(cod);
+    return;
+  }
   APP.redeBuscaProduto = '';
   $('busca-rede-produto').value = '';
   $('search-rede-produto-wrap').classList.remove('has-value');
@@ -2174,9 +2276,14 @@ function renderRedeProdutos(filtro) {
     return;
   }
   cont.innerHTML = lista.map(g => {
-    const preco = APP.produtos[`${g.artigo}_${corParaArquivo(g.cor)}`]?.preco;
+    const corArq = corParaArquivo(g.cor);
+    const preco = APP.produtos[`${g.artigo}_${corArq}`]?.preco;
+    const imgUrl = `${IMG_PATH}${g.artigo}_${corArq}.jpg`;
+    const desc = (g.descricao || g.artigo).replace(/"/g, '&quot;');
     return `
-      <div class="rede-prod-card" data-key="${g.artigo}_${g.cor}">
+      <div class="rede-prod-card" data-artigo="${g.artigo}" data-cor="${g.cor}" data-desc="${desc}">
+        <img class="rp-thumb" src="${imgUrl}" alt="" loading="lazy" onerror="this.classList.add('failed')">
+        <div class="rp-fallback"><i class="fa-solid fa-image"></i></div>
         <div class="info">
           <p class="desc">${g.descricao || g.artigo}</p>
           <p class="sub">${g.cor} · art. ${g.artigo}${preco ? ' · ' + formatarPreco(preco) : ''}</p>
@@ -2185,6 +2292,82 @@ function renderRedeProdutos(filtro) {
       </div>`;
   }).join('');
   $('rede-produtos-footer').textContent = `${lista.length} produto${lista.length !== 1 ? 's' : ''}`;
+
+  cont.querySelectorAll('.rede-prod-card').forEach(card => {
+    card.addEventListener('click', () => {
+      abrirDistribuicaoRede(card.dataset.artigo, card.dataset.cor, card.dataset.desc);
+    });
+  });
+}
+
+function abrirDistribuicaoRede(artigo, cor, descricao) {
+  APP.redeDistKey = { artigo, cor, descricao };
+  renderDistribuicaoRede();
+  show('screen-rede-dist');
+  window.scrollTo(0, 0);
+}
+
+function renderDistribuicaoRede() {
+  const { artigo, cor, descricao } = APP.redeDistKey;
+  const cods = APP.redeSelecao;
+  const portasInfo = dadosPortasDaRede(APP.redeAtual).filter(p => cods.has(p.codigo));
+  const peds = obterClientesDoVendedor().filter(p => cods.has(p.cliente_cod) && p.artigo === artigo && p.cor === cor);
+  const porCod = {};
+  for (const p of peds) (porCod[p.cliente_cod] = porCod[p.cliente_cod] || []).push(p);
+
+  const linhas = portasInfo.map(info => {
+    const ps = porCod[info.codigo] || [];
+    return {
+      ...info,
+      pares: ps.reduce((s, p) => s + p.total, 0),
+      nLinhas: ps.length,
+      dobrada: ps.length >= 2,
+      tem: ps.length > 0,
+    };
+  }).sort((a, b) => b.pares - a.pares);
+
+  const com = linhas.filter(l => l.tem).length;
+  const sem = linhas.length - com;
+  const dobr = linhas.filter(l => l.dobrada).length;
+  const totalPares = linhas.reduce((s, l) => s + l.pares, 0);
+
+  const corArq = corParaArquivo(cor);
+  const imgUrl = `${IMG_PATH}${artigo}_${corArq}.jpg`;
+
+  $('rede-dist-titulo').textContent = descricao || artigo;
+  $('rede-dist-sub').textContent = `${cor} · art. ${artigo} · ${formatarNumero(totalPares)} pares`;
+
+  $('rede-dist-body').innerHTML = `
+    <div class="dist-head">
+      <img class="dist-img" src="${imgUrl}" alt="" onerror="this.classList.add('failed')">
+      <div class="dist-fallback"><i class="fa-solid fa-image"></i></div>
+      <div class="dist-resumo">
+        <div class="dist-kpi"><span class="n ok">${com}</span><span class="l">com</span></div>
+        <div class="dist-kpi"><span class="n">${sem}</span><span class="l">sem</span></div>
+        <div class="dist-kpi"><span class="n alerta">${dobr}</span><span class="l">dobrada</span></div>
+      </div>
+    </div>
+    <div class="dist-list">
+      ${linhas.map(l => {
+        const porta = l.porta || l.cidade || '—';
+        const dir = l.tem
+          ? `<span class="dist-pares">${l.dobrada ? `<span class="dist-badge">dobrada · ${l.nLinhas}×</span>` : ''}${formatarNumero(l.pares)} pares</span>`
+          : `<span class="dist-pares zero">não recebe</span>`;
+        return `
+          <div class="dist-item ${l.tem ? '' : 'vazio'}" ${l.tem ? `data-cliente="${l.codigo}"` : ''}>
+            <div class="dist-info">
+              <p class="nome">${l.razao || porta}</p>
+              <p class="meta">${porta} · ${l.codigo}</p>
+            </div>
+            ${dir}
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  $('rede-dist-body').querySelectorAll('.dist-item[data-cliente]').forEach(el => {
+    el.addEventListener('click', () => abrirCliente(el.dataset.cliente));
+  });
 }
 
 /* ============================================================
@@ -2697,6 +2880,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btn-tema-4').addEventListener('click', toggleTema);
   $('btn-voltar-clientes-2').addEventListener('click', () => show('screen-clientes'));
   $('btn-voltar-rede').addEventListener('click', () => show('screen-rede'));
+  $('btn-tema-5').addEventListener('click', toggleTema);
+  $('btn-voltar-rede-prod').addEventListener('click', () => show('screen-rede-produtos'));
   $('rede-check-todas').addEventListener('change', (e) => toggleTodasPortas(e.target.checked));
   $('btn-ver-produtos-rede').addEventListener('click', verProdutosRede);
 
