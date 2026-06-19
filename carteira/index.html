@@ -370,13 +370,29 @@
       overflow: hidden;
     }
     .client-item {
-      display: flex; align-items: center; gap: 14px;
+      display: flex; flex-direction: column;
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
     }
+    .client-row { display: flex; align-items: center; gap: 14px; }
     .client-item:last-child { border-bottom: none; }
     .client-item:hover { background: var(--card-bg-2); }
+    .cliente-produtos {
+      margin-top: 10px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .cliente-produto + .cliente-produto { margin-top: 8px; }
+    .cp-nome {
+      font-size: 11px; font-weight: 700; color: var(--primary-2);
+      margin: 0 0 6px; letter-spacing: .02em;
+    }
+    html.dark .cp-nome { color: var(--primary); }
+    .cp-linha {
+      display: flex; justify-content: space-between;
+      font-size: 13px; padding: 3px 0; color: var(--text);
+    }
+    .cp-pares { font-weight: 600; }
     .client-avatar {
       width: 42px; height: 42px;
       border-radius: 50%;
@@ -1551,6 +1567,30 @@ function obterClientesDoVendedor() {
     : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
 }
 
+function htmlProdutosCasados(produtos) {
+  if (!produtos || produtos.length === 0) return '';
+  // Agrupa por produto (artigo), e dentro de cada produto agrupa por cor somando pares
+  const porProduto = new Map();
+  for (const p of produtos) {
+    const k = p.artigo || p.descricao || '—';
+    if (!porProduto.has(k)) {
+      porProduto.set(k, { descricao: p.descricao || p.artigo, artigo: p.artigo, cores: new Map() });
+    }
+    const g = porProduto.get(k);
+    const cor = p.cor || '—';
+    g.cores.set(cor, (g.cores.get(cor) || 0) + p.total);
+  }
+  const blocos = [...porProduto.values()].map(g => `
+    <div class="cliente-produto">
+      <p class="cp-nome">${g.descricao}${g.artigo ? ` · art. ${g.artigo}` : ''}</p>
+      ${[...g.cores.entries()].map(([cor, pares]) =>
+        `<div class="cp-linha"><span>${cor}</span><span class="cp-pares">${pares} pares</span></div>`
+      ).join('')}
+    </div>
+  `).join('');
+  return `<div class="cliente-produtos">${blocos}</div>`;
+}
+
 function renderClientes(filtro) {
   APP.filtroCliente = filtro || '';
   const container = $('client-results');
@@ -1593,14 +1633,28 @@ function renderClientes(filtro) {
 
   const clientes = [...mapClientes.values()];
 
-  // Filtra busca (nome, código ou cidade)
+  // Filtra busca: casa por nome/código/cidade OU por produto (descrição/artigo)
   const filtroNorm = normalizar(filtro);
-  const filtrados = filtroNorm
-    ? clientes.filter(c =>
+  let filtrados;
+  if (filtroNorm) {
+    filtrados = [];
+    for (const c of clientes) {
+      const casaCliente =
         normalizar(c.razao).includes(filtroNorm) ||
         normalizar(c.codigo).includes(filtroNorm) ||
-        normalizar(c.cidade).includes(filtroNorm))
-    : clientes;
+        normalizar(c.cidade).includes(filtroNorm);
+      const produtosCasados = c.pedidos.filter(p =>
+        normalizar(p.descricao).includes(filtroNorm) ||
+        normalizar(p.artigo).includes(filtroNorm));
+      if (casaCliente || produtosCasados.length > 0) {
+        c.produtosCasados = produtosCasados;
+        filtrados.push(c);
+      }
+    }
+  } else {
+    for (const c of clientes) c.produtosCasados = [];
+    filtrados = clientes;
+  }
 
   // KPIs respondem ao filtro
   const kpiClientes = filtrados.length;
@@ -1624,12 +1678,15 @@ function renderClientes(filtro) {
     <div class="client-list">
       ${filtrados.map(c => `
         <div class="client-item" data-cliente="${c.codigo}">
-          <div class="client-avatar">${iniciais(c.razao)}</div>
-          <div class="client-info">
-            <p class="name">${c.razao}</p>
-            <p class="meta">${c.codigo} · ${c.cidade || '—'} · ${c.totalPedidos} pedidos · ${c.totalPares} pares</p>
+          <div class="client-row">
+            <div class="client-avatar">${iniciais(c.razao)}</div>
+            <div class="client-info">
+              <p class="name">${c.razao}</p>
+              <p class="meta">${c.codigo} · ${c.cidade || '—'} · ${c.totalPedidos} pedidos · ${c.totalPares} pares</p>
+            </div>
+            <i class="fa-solid fa-chevron-right chev"></i>
           </div>
-          <i class="fa-solid fa-chevron-right chev"></i>
+          ${htmlProdutosCasados(c.produtosCasados)}
         </div>
       `).join('')}
     </div>

@@ -1729,9 +1729,9 @@ function renderProdutos() {
   const pedidosCliente = APP.clienteAtual.pedidos;
   const pedidosFiltrados = obterPedidosFiltrados();
 
-  const totalPares = pedidosCliente.reduce((s, p) => s + p.total, 0);
-  const totalProdutos = pedidosCliente.length;
-  const mesesUnicos = [...new Set(pedidosCliente.map(p => mesAno(p.prev_fat)).filter(Boolean))].length;
+  const totalPares = pedidosFiltrados.reduce((s, p) => s + p.total, 0);
+  const totalProdutos = pedidosFiltrados.length;
+  const mesesUnicos = [...new Set(pedidosFiltrados.map(p => mesAno(p.prev_fat)).filter(Boolean))].length;
 
   $('products-summary').innerHTML = `
     <div class="summary-chip"><strong>${totalProdutos}</strong> produtos</div>
