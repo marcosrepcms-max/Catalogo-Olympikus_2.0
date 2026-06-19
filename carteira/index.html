@@ -143,6 +143,8 @@
     .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
     .logo-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    @keyframes girar360 { to { transform: rotate(360deg); } }
+    .btn-icon.girando i { animation: girar360 .7s linear infinite; }
 
     .btn-icon {
       width: 36px; height: 36px;
@@ -591,6 +593,12 @@
     .repasse-grupo-titulo.bom { color: var(--primary-2); }
     html.dark .repasse-grupo-titulo.bom { color: var(--primary); }
     .repasse-grupo-titulo.neutro { color: var(--text-2); }
+    .repasse-grupo-titulo.aviso { color: var(--acao-cancelar); display: flex; align-items: center; gap: 6px; }
+    .rede-sel-item.item-aviso { background: rgba(163,45,45,.06); }
+    .badge-jatem {
+      font-size: 10px; font-weight: 700; color: #fff; background: var(--acao-cancelar);
+      padding: 1px 6px; border-radius: 5px; margin-left: 4px;
+    }
     .repasse-grupo {
       background: var(--card-bg); border-radius: var(--r-lg);
       box-shadow: var(--shadow-card); overflow: hidden;
@@ -1167,6 +1175,9 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="btn-icon" id="btn-atualizar-clientes" title="Atualizar">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
         <label class="btn-icon" id="btn-importar" title="Importar XLSX" for="file-input-xlsx">
           <i class="fa-solid fa-file-import"></i>
         </label>
@@ -1243,6 +1254,9 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="btn-icon" id="btn-atualizar-produtos" title="Atualizar">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
         <button class="btn-icon" id="btn-inicio-produtos" title="Início (clientes)">
           <i class="fa-solid fa-house"></i>
         </button>
@@ -1916,7 +1930,34 @@ async function salvarCarteiraNoServidor(modo = 'full') {
 
 function agendarSaveAcoes() {
   clearTimeout(APP.saveTimer);
-  APP.saveTimer = setTimeout(() => salvarCarteiraNoServidor('acoes'), 800);
+  APP.saveTimer = setTimeout(() => salvarCarteiraNoServidor('acoes'), 400);
+}
+
+// Envia imediatamente qualquer ação pendente (antes de puxar ou ao sair da tela)
+async function flushSaveAcoes() {
+  if (APP.saveTimer) { clearTimeout(APP.saveTimer); APP.saveTimer = null; }
+  await salvarCarteiraNoServidor('acoes');
+}
+
+// Botão "Atualizar": garante o envio do que é local, puxa o servidor e re-renderiza a tela atual
+async function atualizarDoServidor(btn) {
+  if (btn) btn.classList.add('girando');
+  try {
+    await flushSaveAcoes();
+    await carregarCarteiraDoServidor();
+    if (APP.clienteAtual && document.querySelector('#screen-produtos.active')) {
+      const cod = APP.clienteAtual.codigo;
+      APP.clienteAtual.pedidos = obterClientesDoVendedor().filter(p => p.cliente_cod === cod);
+      renderProdutos();
+    } else {
+      renderClientes($('busca-cliente')?.value || '');
+    }
+    toast('Atualizado');
+  } catch (e) {
+    toast('Falha ao atualizar');
+  } finally {
+    if (btn) btn.classList.remove('girando');
+  }
 }
 
 /* ============================================================
@@ -2606,10 +2647,9 @@ function renderRepasse() {
   else escopoCods = [...comCarteira].filter(c => c !== origemCod);
 
   const naRede = c => redeNN && APP.redes[redeNN].codigos.includes(c);
-  const tier1 = [], tier2 = []; let conflitos = 0;
+  const tier1 = [], tier2 = [], jaTem = [];
   for (const cod of escopoCods) {
     const cores = comArtigo[cod];
-    if (cores && cores.has(cor)) { conflitos++; continue; }
     const nome = nomeDe[cod] || APP.clientesInfo[cod]?.nomeFantasia || cod;
     const porta = portaDe(cod);
     if (busca) {
@@ -2617,7 +2657,9 @@ function renderRepasse() {
       if (!txt.includes(busca)) continue;
     }
     const obj = { cod, nome, porta, cores: cores ? [...cores] : null, rede: naRede(cod) };
-    if (cores) tier1.push(obj); else tier2.push(obj);
+    if (cores && cores.has(cor)) jaTem.push(obj);
+    else if (cores) tier1.push(obj);
+    else tier2.push(obj);
   }
 
   let semCarteira = [];
@@ -2630,12 +2672,12 @@ function renderRepasse() {
     }
   }
 
-  const item = (c, mostrarCor) => `
-    <label class="rede-sel-item">
+  const item = (c, mostrarCor, aviso) => `
+    <label class="rede-sel-item ${aviso ? 'item-aviso' : ''}">
       <input type="checkbox" data-cod="${c.cod}" ${APP.repasseSel.has(c.cod) ? 'checked' : ''}>
       <div class="rede-sel-info">
-        <p class="nome">${c.nome}${c.rede ? ' <span class="rede-badge">REDE</span>' : ''}</p>
-        <p class="meta">${[c.porta || '', c.cod].filter(Boolean).join(' · ')}${mostrarCor && c.cores ? ` · <span class="repasse-cor-tag">tem em ${c.cores.join(', ')}</span>` : ''}</p>
+        <p class="nome">${c.nome}${c.rede ? ' <span class="rede-badge">REDE</span>' : ''}${aviso ? ' <span class="badge-jatem">já tem · dobraria</span>' : ''}</p>
+        <p class="meta">${[c.porta || '', c.cod].filter(Boolean).join(' · ')}${(mostrarCor || aviso) && c.cores ? ` · <span class="repasse-cor-tag">tem em ${c.cores.join(', ')}</span>` : ''}</p>
       </div>
     </label>`;
 
@@ -2643,8 +2685,8 @@ function renderRepasse() {
   if (tier1.length) html += `<p class="repasse-grupo-titulo bom">① Tem o artigo · falta esta cor</p><div class="repasse-grupo">${tier1.map(c => item(c, true)).join('')}</div>`;
   if (tier2.length) html += `<p class="repasse-grupo-titulo neutro">② Não tem este artigo</p><div class="repasse-grupo">${tier2.map(c => item(c, false)).join('')}</div>`;
   if (semCarteira.length) html += `<p class="repasse-grupo-titulo neutro">③ Sem carteira</p><div class="repasse-grupo">${semCarteira.map(c => item(c, false)).join('')}</div>`;
-  if (conflitos) html += `<p class="repasse-conflito-aviso"><i class="fa-solid fa-triangle-exclamation"></i> ${conflitos} já tem este artigo+cor (ocultos — receberiam dobrado)</p>`;
-  if (!tier1.length && !tier2.length && !semCarteira.length) html += `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Nenhum destino${busca ? ' encontrado' : ''}</p></div>`;
+  if (jaTem.length) html += `<p class="repasse-grupo-titulo aviso"><i class="fa-solid fa-triangle-exclamation"></i> Já tem este artigo + cor · receberia dobrado</p><div class="repasse-grupo">${jaTem.map(c => item(c, false, true)).join('')}</div>`;
+  if (!tier1.length && !tier2.length && !semCarteira.length && !jaTem.length) html += `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Nenhum destino${busca ? ' encontrado' : ''}</p></div>`;
   $('repasse-body').innerHTML = html;
 
   $('repasse-body').querySelectorAll('input[data-cod]').forEach(chk => chk.addEventListener('change', () => {
@@ -3290,6 +3332,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     APP.focoProduto = null;
     APP.produtosOrigem = 'clientes';
     show('screen-clientes');
+  });
+
+  $('btn-atualizar-clientes').addEventListener('click', (e) => atualizarDoServidor(e.currentTarget));
+  $('btn-atualizar-produtos').addEventListener('click', (e) => atualizarDoServidor(e.currentTarget));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && APP.saveTimer) flushSaveAcoes();
   });
 
   // Tela de repasse
