@@ -1142,6 +1142,7 @@ const STORAGE = {
   tema: 'carteira.tema',
   pedidos: 'carteira.pedidos',
   produtos: 'carteira.produtos',
+  clientesInfo: 'carteira.clientesInfo',
   kpisOcultos: 'carteira.kpisOcultos',
 };
 
@@ -1167,6 +1168,8 @@ const APP = {
   sessao: null,
   pedidos: [],
   produtos: {},
+  clientesInfo: {},
+  redes: {},
   clienteAtual: null,
   filtroProduto: '',
   filtros: {
@@ -1400,6 +1403,62 @@ async function carregarProdutosDoServidor() {
       }
     }
   } catch {}
+}
+
+// Monta o mapa código -> { nomeFantasia, porta } a partir de linhas (à prova de acento/caixa).
+function montarClientesInfo(rows) {
+  const acha = (row, ...nomes) => {
+    const alvo = nomes.map(normalizar);
+    for (const k of Object.keys(row)) {
+      if (alvo.includes(normalizar(k))) return row[k];
+    }
+    return '';
+  };
+  const out = {};
+  for (const row of rows) {
+    const codigo = String(acha(row, 'CODIGO', 'Codigo', 'Código') || '').trim();
+    if (!codigo) continue;
+    out[codigo] = {
+      nomeFantasia: String(acha(row, 'NOME FANTASIA', 'Nome Fantasia') || '').trim(),
+      porta: String(acha(row, 'PORTA', 'Porta') || '').trim(),
+    };
+  }
+  return out;
+}
+
+// Índice de redes: nome fantasia (normalizado) com 2+ códigos.
+function montarRedes(clientesInfo) {
+  const porNome = {};
+  for (const [codigo, info] of Object.entries(clientesInfo)) {
+    const nomeNorm = normalizar(info.nomeFantasia);
+    if (!nomeNorm) continue;
+    (porNome[nomeNorm] = porNome[nomeNorm] || { nome: info.nomeFantasia, codigos: [] }).codigos.push(codigo);
+  }
+  const redes = {};
+  for (const [nomeNorm, r] of Object.entries(porNome)) {
+    if (r.codigos.length > 1) redes[nomeNorm] = r;
+  }
+  return redes;
+}
+
+async function carregarClientesDoServidor() {
+  try {
+    const r = await fetch('../Clientes.xlsx', { cache: 'no-store' });
+    if (!r.ok) return;
+    const buf = await r.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    const info = montarClientesInfo(rows);
+    if (Object.keys(info).length > 0) {
+      APP.clientesInfo = info;
+      APP.redes = montarRedes(info);
+      localStorage.setItem(STORAGE.clientesInfo, JSON.stringify(info));
+      if (APP.sessao && !APP.clienteAtual) renderClientes($('busca-cliente')?.value || '');
+    }
+  } catch (e) {
+    console.warn('Falha ao ler Clientes.xlsx', e);
+  }
 }
 
 async function salvarCarteiraNoServidor(modo = 'full') {
@@ -2195,6 +2254,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const prod = localStorage.getItem(STORAGE.produtos);
     if (prod) APP.produtos = JSON.parse(prod);
   } catch {}
+  try {
+    const ci = localStorage.getItem(STORAGE.clientesInfo);
+    if (ci) {
+      APP.clientesInfo = JSON.parse(ci);
+      APP.redes = montarRedes(APP.clientesInfo);
+    }
+  } catch {}
 
   const ses = localStorage.getItem(STORAGE.sessao);
   if (ses) {
@@ -2263,6 +2329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Carrega do servidor
   carregarProdutosDoServidor();
+  carregarClientesDoServidor();
   if (APP.sessao) {
     await carregarCarteiraDoServidor();
     if (APP.clienteAtual === null) renderClientes(APP.filtroCliente);
