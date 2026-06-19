@@ -511,18 +511,6 @@
     }
     .rp-thumb.failed { display: none; }
     .rp-thumb.failed + .rp-fallback { display: flex; }
-    .foco-banner {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      background: var(--primary-soft); color: var(--primary-2);
-      border-radius: var(--r-md); padding: 8px 12px; margin-bottom: 10px;
-      font-size: 12px; font-weight: 600;
-    }
-    html.dark .foco-banner { color: var(--primary); }
-    .foco-banner button {
-      background: transparent; border: 1px solid currentColor; color: inherit;
-      border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
-      cursor: pointer; white-space: nowrap;
-    }
 
     /* Distribuição por porta */
     #rede-dist-body { padding: 4px 0 24px; }
@@ -1188,9 +1176,6 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="btn-icon" id="btn-inicio-produtos" title="Início (clientes)">
-          <i class="fa-solid fa-house"></i>
-        </button>
         <button class="btn-icon" id="btn-tema-2" title="Alternar tema">
           <i class="fa-solid fa-moon"></i>
         </button>
@@ -1465,8 +1450,6 @@ const APP = {
   redeSelecao: new Set(),
   redeBuscaProduto: '',
   redeDistKey: null,
-  focoProduto: null,
-  produtosOrigem: 'clientes',
 };
 
 /* ============================================================
@@ -2383,7 +2366,7 @@ function renderDistribuicaoRede() {
   `;
 
   $('rede-dist-body').querySelectorAll('.dist-item[data-cliente]').forEach(el => {
-    el.addEventListener('click', () => abrirProdutoNaLoja(el.dataset.cliente, APP.redeDistKey.artigo, APP.redeDistKey.cor));
+    el.addEventListener('click', () => abrirCliente(el.dataset.cliente));
   });
 }
 
@@ -2413,19 +2396,9 @@ function abrirCliente(codigo) {
   $('cliente-meta').textContent = `${codigo} · ${APP.clienteAtual.cidade}`;
 
   atualizarBotoesFiltros();
-  APP.produtosOrigem = 'clientes';
-  APP.focoProduto = null;
   renderProdutos();
   show('screen-produtos');
   window.scrollTo(0, 0);
-}
-
-// Abre a tela de produtos focada num artigo+cor (a partir da distribuição da rede)
-function abrirProdutoNaLoja(codigo, artigo, cor) {
-  abrirCliente(codigo);
-  APP.produtosOrigem = 'rede-dist';
-  APP.focoProduto = { artigo, cor };
-  renderProdutos();
 }
 
 function obterPedidosFiltrados() {
@@ -2434,7 +2407,6 @@ function obterPedidosFiltrados() {
   const filtroNorm = normalizar(APP.filtroProduto);
 
   let resultado = todos.filter(p => {
-    if (APP.focoProduto && (p.artigo !== APP.focoProduto.artigo || p.cor !== APP.focoProduto.cor)) return false;
     if (filtroNorm) {
       const casa =
         normalizar(p.descricao).includes(filtroNorm) ||
@@ -2507,15 +2479,7 @@ function renderProdutos() {
     return;
   }
 
-  const focoBanner = APP.focoProduto ? `
-    <div class="foco-banner">
-      <span><i class="fa-solid fa-bullseye"></i> Focado neste produto da loja</span>
-      <button id="btn-ver-tudo-loja">Ver tudo da loja</button>
-    </div>` : '';
-  listaEl.innerHTML = focoBanner + pedidosFiltrados.map((p) => renderCardProduto(p, pedidosCliente.indexOf(p))).join('');
-
-  const verTudo = $('btn-ver-tudo-loja');
-  if (verTudo) verTudo.addEventListener('click', () => { APP.focoProduto = null; renderProdutos(); });
+  listaEl.innerHTML = pedidosFiltrados.map((p) => renderCardProduto(p, pedidosCliente.indexOf(p))).join('');
 
   listaEl.querySelectorAll('.product-main').forEach(el => {
     el.addEventListener('click', (e) => {
@@ -2907,14 +2871,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   $('btn-voltar-clientes').addEventListener('click', () => {
-    if (APP.produtosOrigem === 'rede-dist') {
-      APP.focoProduto = null;
-      renderDistribuicaoRede();
-      show('screen-rede-dist');
-    } else {
-      show('screen-clientes');
-      $('busca-cliente').focus();
-    }
+    show('screen-clientes');
+    $('busca-cliente').focus();
   });
 
   // Tela de rede
@@ -2924,11 +2882,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btn-voltar-rede').addEventListener('click', () => show('screen-rede'));
   $('btn-tema-5').addEventListener('click', toggleTema);
   $('btn-voltar-rede-prod').addEventListener('click', () => show('screen-rede-produtos'));
-  $('btn-inicio-produtos').addEventListener('click', () => {
-    APP.focoProduto = null;
-    APP.produtosOrigem = 'clientes';
-    show('screen-clientes');
-  });
   $('rede-check-todas').addEventListener('change', (e) => toggleTodasPortas(e.target.checked));
   $('btn-ver-produtos-rede').addEventListener('click', verProdutosRede);
 
