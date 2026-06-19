@@ -443,6 +443,63 @@
     .rede-porta i { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
     .rede-chev { transition: transform .15s; }
     .client-item.rede-aberta .rede-chev { transform: rotate(90deg); }
+
+    /* Tela rede — seleção de portas */
+    .rede-todas {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 10px; padding: 11px 12px;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--r-lg); cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--text);
+    }
+    .rede-todas input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .rede-todas-count { margin-left: auto; font-size: 12px; color: var(--primary-2); font-weight: 600; }
+    html.dark .rede-todas-count { color: var(--primary); }
+    .rede-sel-list {
+      background: var(--card-bg); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card); overflow: hidden; margin: 12px 0 90px;
+    }
+    .rede-sel-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .rede-sel-item:last-child { border-bottom: none; }
+    .rede-sel-item input { width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0; }
+    .rede-sel-info { flex: 1; min-width: 0; }
+    .rede-sel-info .nome {
+      font-size: 14px; font-weight: 600; color: var(--text); margin: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rede-sel-info .meta { font-size: 12px; color: var(--text-2); margin: 2px 0 0; }
+    .rede-sel-pares { font-size: 13px; font-weight: 600; color: var(--primary-2); flex-shrink: 0; }
+    html.dark .rede-sel-pares { color: var(--primary); }
+    .rede-sel-pares.zero { color: var(--text-3); font-weight: 400; font-size: 12px; }
+    .rede-actionbar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: var(--card-bg); border-top: 1px solid var(--border);
+      z-index: 30;
+    }
+    .rede-ver-btn {
+      width: 100%; max-width: 720px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--primary); color: #fff; border: none;
+      border-radius: var(--r-md); padding: 14px; font-size: 14px; font-weight: 600;
+    }
+    .rede-ver-btn:disabled { opacity: .5; }
+
+    /* Tela rede — produtos consolidados */
+    .rede-prod-card {
+      background: var(--card-bg); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card); padding: 12px 14px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px; cursor: pointer;
+    }
+    .rede-prod-card .info { flex: 1; min-width: 0; }
+    .rede-prod-card .desc { font-size: 14px; font-weight: 600; color: var(--text); margin: 0; }
+    .rede-prod-card .sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; }
+    .rede-prod-card .pares { font-size: 14px; font-weight: 700; color: var(--primary-2); flex-shrink: 0; text-align: right; }
+    html.dark .rede-prod-card .pares { color: var(--primary); }
+    .rede-prod-card .pares small { display: block; font-size: 11px; font-weight: 400; color: var(--text-2); }
     .list-footer {
       text-align: center; font-size: 12px;
       color: var(--text-3); padding: 12px;
@@ -1126,6 +1183,92 @@
   </div>
 
   <!-- =================================================================
+       TELA REDE — SELEÇÃO DE PORTAS
+       ================================================================= -->
+  <div id="screen-rede" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-store"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user-3">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="btn-tema-3" title="Alternar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="frozen-header">
+      <div class="client-strip">
+        <button class="back" id="btn-voltar-clientes-2" title="Voltar">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="client-info-compact">
+          <p class="name" id="rede-nome">—</p>
+          <p class="meta" id="rede-meta">—</p>
+        </div>
+      </div>
+      <label class="rede-todas" id="rede-todas-label">
+        <input type="checkbox" id="rede-check-todas">
+        <span>Selecionar todas</span>
+        <span class="rede-todas-count" id="rede-todas-count"></span>
+      </label>
+    </div>
+
+    <div class="rede-sel-list" id="rede-sel-list"></div>
+
+    <div class="rede-actionbar">
+      <button class="rede-ver-btn" id="btn-ver-produtos-rede">
+        <i class="fa-solid fa-box"></i>
+        <span id="btn-ver-produtos-label">Ver produtos</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =================================================================
+       TELA REDE — PRODUTOS CONSOLIDADOS
+       ================================================================= -->
+  <div id="screen-rede-produtos" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-store"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user-4">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="btn-tema-4" title="Alternar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="frozen-header">
+      <div class="client-strip">
+        <button class="back" id="btn-voltar-rede" title="Voltar">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="client-info-compact">
+          <p class="name" id="rede-prod-nome">—</p>
+          <p class="meta" id="rede-prod-meta">—</p>
+        </div>
+        <div class="search-inline" id="search-rede-produto-wrap">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="search" id="busca-rede-produto" inputmode="search" enterkeyhint="search" placeholder="Buscar produto…" autocomplete="off">
+          <button class="search-clear" title="Limpar (ESC)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="products-list" id="rede-produtos-list"></div>
+    <div class="list-footer" id="rede-produtos-footer"></div>
+  </div>
+
+  <!-- =================================================================
        MODAL DE ZOOM
        ================================================================= -->
   <div class="zoom-modal" id="zoom-modal">
@@ -1209,6 +1352,9 @@ const APP = {
   ordem: 'mes_proximo',
   saveTimer: null,
   filtroCliente: '',
+  redeAtual: null,
+  redeSelecao: new Set(),
+  redeBuscaProduto: '',
 };
 
 /* ============================================================
@@ -1312,7 +1458,7 @@ function configurarCopiaAoSelecionar() {
 function aplicarTema() {
   const t = localStorage.getItem(STORAGE.tema) || 'claro';
   document.documentElement.classList.toggle('dark', t === 'escuro');
-  document.querySelectorAll('#btn-tema i, #btn-tema-2 i').forEach(i => {
+  document.querySelectorAll('#btn-tema i, #btn-tema-2 i, #btn-tema-3 i, #btn-tema-4 i').forEach(i => {
     i.className = t === 'escuro' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
   });
 }
@@ -1556,6 +1702,8 @@ function logout() {
 function irParaClientes() {
   $('topbar-user').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-2').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  $('topbar-user-3').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  $('topbar-user-4').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   show('screen-clientes');
   renderClientes(APP.filtroCliente);
 }
@@ -1733,7 +1881,7 @@ function cardAvulsoHTML(c, temTermos) {
     </div>`;
 }
 
-function cardRedeHTML(grupo, temTermos) {
+function cardRedeHTML(grupo, nn, temTermos) {
   const portas = grupo.portas;
   const temProd = temTermos && portas.some(c => c.produtosCasados.length);
   const combinados = [];
@@ -1743,29 +1891,17 @@ function cardRedeHTML(grupo, temTermos) {
     const base = temProd ? c.produtosCasados : c.pedidos;
     pares += base.reduce((s, p) => s + p.total, 0);
   }
-  const portasRows = portas.map(c => {
-    const porta = portaDe(c.codigo) || c.cidade || '—';
-    return `
-      <div class="rede-porta" data-cliente="${c.codigo}">
-        <div style="min-width:0;">
-          <p class="porta-nome">${c.razao}</p>
-          <p class="porta-meta">${porta} · ${c.totalPedidos} ped · ${c.totalPares} pares</p>
-        </div>
-        <i class="fa-solid fa-chevron-right"></i>
-      </div>`;
-  }).join('');
   return `
-    <div class="client-item rede-card" data-rede="1">
+    <div class="client-item rede-card" data-rede="${nn}">
       <div class="client-row rede-head">
         <div class="rede-icon"><i class="fa-solid fa-store"></i></div>
         <div class="client-info">
           <p class="name">${grupo.nome}<span class="rede-badge">REDE</span></p>
           <p class="meta">${portas.length} de ${grupo.totalPortas} portas · ${pares} pares</p>
         </div>
-        <i class="fa-solid fa-chevron-right chev rede-chev"></i>
+        <i class="fa-solid fa-chevron-right chev"></i>
       </div>
       ${temProd ? htmlProdutosCasados(combinados) : ''}
-      <div class="rede-portas" hidden>${portasRows}</div>
     </div>`;
 }
 
@@ -1881,7 +2017,7 @@ function renderClientes(filtro) {
     if (nn && APP.redes[nn]) {
       if (renderizadas.has(nn)) continue;
       renderizadas.add(nn);
-      cards.push(cardRedeHTML(grupos.get(nn), temTermos));
+      cards.push(cardRedeHTML(grupos.get(nn), nn, temTermos));
     } else {
       cards.push(cardAvulsoHTML(c, temTermos));
     }
@@ -1893,19 +2029,162 @@ function renderClientes(filtro) {
   `;
   container.innerHTML = html;
 
-  // Avulsos e portas de rede abrem o cliente
+  // Avulsos abrem o cliente
   container.querySelectorAll('[data-cliente]').forEach(el => {
     el.addEventListener('click', (e) => { e.stopPropagation(); abrirCliente(el.dataset.cliente); });
   });
-  // Cabeçalho da rede expande/recolhe as portas
-  container.querySelectorAll('.rede-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const card = head.closest('.rede-card');
-      const lista = card.querySelector('.rede-portas');
-      lista.hidden = !lista.hidden;
-      card.classList.toggle('rede-aberta', !lista.hidden);
+  // Card de rede abre a tela da rede
+  container.querySelectorAll('.rede-card[data-rede]').forEach(el => {
+    el.addEventListener('click', () => abrirRede(el.dataset.rede));
+  });
+}
+
+/* ============================================================
+   TELA: REDE (seleção de portas + produtos consolidados)
+   ============================================================ */
+function dadosPortasDaRede(nn) {
+  const rede = APP.redes[nn];
+  if (!rede) return [];
+  const porCod = {};
+  for (const p of obterClientesDoVendedor()) {
+    (porCod[p.cliente_cod] = porCod[p.cliente_cod] || []).push(p);
+  }
+  return rede.codigos.map(cod => {
+    const peds = porCod[cod] || [];
+    return {
+      codigo: cod,
+      porta: portaDe(cod),
+      razao: peds[0] ? (peds[0].razao_social || peds[0].cliente_razao) : '',
+      cidade: peds[0] ? peds[0].cidade : '',
+      pares: peds.reduce((s, p) => s + p.total, 0),
+      nPedidos: peds.length,
+      temPedido: peds.length > 0,
+    };
+  }).sort((a, b) => b.pares - a.pares);
+}
+
+function abrirRede(nn) {
+  const rede = APP.redes[nn];
+  if (!rede) return;
+  APP.redeAtual = nn;
+  APP.redeSelecao = new Set(rede.codigos);
+  $('rede-nome').textContent = rede.nome;
+  renderRedePortas();
+  show('screen-rede');
+  window.scrollTo(0, 0);
+}
+
+function renderRedePortas() {
+  const portas = dadosPortasDaRede(APP.redeAtual);
+  const comPedido = portas.filter(p => p.temPedido).length;
+  $('rede-meta').textContent = `${portas.length} portas · ${comPedido} com pedido`;
+
+  const cont = $('rede-sel-list');
+  cont.innerHTML = portas.map(p => {
+    const marcado = APP.redeSelecao.has(p.codigo) ? 'checked' : '';
+    const titulo = p.razao || p.porta || p.codigo;
+    const sub = [p.porta || p.cidade || '—', p.codigo].filter(Boolean).join(' · ');
+    const pares = p.temPedido
+      ? `<span class="rede-sel-pares">${formatarNumero(p.pares)} pares</span>`
+      : `<span class="rede-sel-pares zero">sem pedido</span>`;
+    return `
+      <label class="rede-sel-item">
+        <input type="checkbox" data-cod="${p.codigo}" ${marcado}>
+        <div class="rede-sel-info">
+          <p class="nome">${titulo}</p>
+          <p class="meta">${sub}</p>
+        </div>
+        ${pares}
+      </label>`;
+  }).join('');
+
+  cont.querySelectorAll('input[data-cod]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (chk.checked) APP.redeSelecao.add(chk.dataset.cod);
+      else APP.redeSelecao.delete(chk.dataset.cod);
+      atualizarSelecaoRede(portas.length);
     });
   });
+  atualizarSelecaoRede(portas.length);
+}
+
+function atualizarSelecaoRede(total) {
+  const n = APP.redeSelecao.size;
+  $('rede-todas-count').textContent = `${n} marcadas`;
+  const todas = $('rede-check-todas');
+  todas.checked = n === total && total > 0;
+  todas.indeterminate = n > 0 && n < total;
+  const btn = $('btn-ver-produtos-rede');
+  btn.disabled = n === 0;
+  $('btn-ver-produtos-label').textContent = n
+    ? `Ver produtos · ${n} ${n === 1 ? 'porta' : 'portas'}`
+    : 'Selecione ao menos uma porta';
+}
+
+function toggleTodasPortas(marcar) {
+  const portas = dadosPortasDaRede(APP.redeAtual);
+  APP.redeSelecao = marcar ? new Set(portas.map(p => p.codigo)) : new Set();
+  $('rede-sel-list').querySelectorAll('input[data-cod]').forEach(chk => {
+    chk.checked = APP.redeSelecao.has(chk.dataset.cod);
+  });
+  atualizarSelecaoRede(portas.length);
+}
+
+function verProdutosRede() {
+  if (APP.redeSelecao.size === 0) return;
+  APP.redeBuscaProduto = '';
+  $('busca-rede-produto').value = '';
+  $('search-rede-produto-wrap').classList.remove('has-value');
+  $('rede-prod-nome').textContent = APP.redes[APP.redeAtual].nome;
+  renderRedeProdutos('');
+  show('screen-rede-produtos');
+  window.scrollTo(0, 0);
+}
+
+function renderRedeProdutos(filtro) {
+  const cods = APP.redeSelecao;
+  const filtroNorm = normalizar(filtro);
+  const peds = obterClientesDoVendedor().filter(p => cods.has(p.cliente_cod));
+
+  const mapa = new Map();
+  for (const p of peds) {
+    const key = `${p.artigo}_${p.cor}`;
+    if (!mapa.has(key)) mapa.set(key, { artigo: p.artigo, cor: p.cor, descricao: p.descricao, pares: 0, portas: new Set() });
+    const g = mapa.get(key);
+    g.pares += p.total;
+    g.portas.add(p.cliente_cod);
+    if (!g.descricao && p.descricao) g.descricao = p.descricao;
+  }
+  let lista = [...mapa.values()];
+  if (filtroNorm) {
+    lista = lista.filter(g =>
+      normalizar(g.descricao).includes(filtroNorm) ||
+      normalizar(g.artigo).includes(filtroNorm) ||
+      normalizar(g.cor).includes(filtroNorm));
+  }
+  lista.sort((a, b) => b.pares - a.pares);
+
+  const totalPortas = cods.size;
+  $('rede-prod-meta').textContent = `${totalPortas} ${totalPortas === 1 ? 'porta' : 'portas'} · ${lista.length} produtos`;
+
+  const cont = $('rede-produtos-list');
+  if (lista.length === 0) {
+    cont.innerHTML = `<div class="empty-state"><i class="fa-solid fa-box-open"></i><p>Nenhum produto</p></div>`;
+    $('rede-produtos-footer').textContent = '';
+    return;
+  }
+  cont.innerHTML = lista.map(g => {
+    const preco = APP.produtos[`${g.artigo}_${corParaArquivo(g.cor)}`]?.preco;
+    return `
+      <div class="rede-prod-card" data-key="${g.artigo}_${g.cor}">
+        <div class="info">
+          <p class="desc">${g.descricao || g.artigo}</p>
+          <p class="sub">${g.cor} · art. ${g.artigo}${preco ? ' · ' + formatarPreco(preco) : ''}</p>
+        </div>
+        <div class="pares">${formatarNumero(g.pares)}<small>pares · ${g.portas.size} ${g.portas.size === 1 ? 'porta' : 'portas'}</small></div>
+      </div>`;
+  }).join('');
+  $('rede-produtos-footer').textContent = `${lista.length} produto${lista.length !== 1 ? 's' : ''}`;
 }
 
 /* ============================================================
@@ -2411,6 +2690,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btn-voltar-clientes').addEventListener('click', () => {
     show('screen-clientes');
     $('busca-cliente').focus();
+  });
+
+  // Tela de rede
+  $('btn-tema-3').addEventListener('click', toggleTema);
+  $('btn-tema-4').addEventListener('click', toggleTema);
+  $('btn-voltar-clientes-2').addEventListener('click', () => show('screen-clientes'));
+  $('btn-voltar-rede').addEventListener('click', () => show('screen-rede'));
+  $('rede-check-todas').addEventListener('change', (e) => toggleTodasPortas(e.target.checked));
+  $('btn-ver-produtos-rede').addEventListener('click', verProdutosRede);
+
+  let redeProdTimer;
+  configurarBuscaComX('busca-rede-produto', 'search-rede-produto-wrap', (val) => {
+    clearTimeout(redeProdTimer);
+    redeProdTimer = setTimeout(() => {
+      APP.redeBuscaProduto = val;
+      renderRedeProdutos(val);
+    }, 200);
   });
 
   // Filtros
