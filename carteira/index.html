@@ -558,6 +558,8 @@
     .dist-item[data-cliente] { cursor: pointer; }
     .dist-item[data-cliente]:hover { background: var(--card-bg-2); }
     .dist-item.vazio { opacity: .55; }
+    .dist-saldo { font-size: 11px; font-weight: 600; color: var(--primary-2); margin-top: 3px; }
+    html.dark .dist-saldo { color: var(--primary); }
     .dist-info { min-width: 0; }
     .dist-info .nome {
       font-size: 14px; font-weight: 600; color: var(--text); margin: 0;
@@ -993,10 +995,13 @@
     .product-card.acao-cancelar { border: 2px solid var(--acao-cancelar); }
     .product-card.acao-repassar { border: 2px solid var(--acao-repassar); }
     .product-card.acao-gestao   { border: 2px solid var(--acao-gestao); }
+    .product-card.acao-repassado { border: 2px solid var(--primary); }
     .tag.tag-acao { font-weight: 700; color: #fff; }
     .tag.tag-acao.cancelar { background: var(--acao-cancelar); }
     .tag.tag-acao.repassar { background: var(--acao-repassar); }
+    .tag.tag-acao.repassado { background: var(--primary); }
     .tag.tag-acao.gestao   { background: var(--acao-gestao); }
+    .tag.tag-alerta { background: var(--acao-cancelar); color: #fff; font-weight: 700; }
     .tag.tag-destino { background: var(--primary-soft); color: var(--primary-2); font-weight: 700; }
     html.dark .tag.tag-destino { color: var(--primary); }
     .action-pill.rep-cancelar { border-color: var(--acao-cancelar); color: var(--acao-cancelar); }
@@ -1290,6 +1295,13 @@
           </button>
         </div>
         <div style="position:relative;">
+          <button class="filter-chip" data-filter="status">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+            <span>Status</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+        <div style="position:relative;">
           <button class="filter-chip" data-filter="ordem">
             <i class="fa-solid fa-arrow-down-wide-short"></i>
             <span id="ordem-label">Mês mais próximo</span>
@@ -1529,6 +1541,13 @@ const OPCOES_ORDEM = [
   { id: 'descricao', label: 'A-Z (descrição)' },
 ];
 
+const OPCOES_STATUS = [
+  { id: 'MANTER', label: 'Manter' },
+  { id: 'REPASSAR', label: 'Repassar (pendente)' },
+  { id: 'REPASSADO', label: 'Repassado' },
+  { id: 'CANCELAR', label: 'Cancelar' },
+];
+
 // Mapeamento de campanhas → sufixo da condição de pagamento
 const CAMPANHA_SUFIXO = {
   'CO681': '+ 28 DD',
@@ -1549,6 +1568,7 @@ const APP = {
   filtros: {
     ped_cliente: null,
     mes: null,
+    status: null,
   },
   ordem: 'mes_proximo',
   saveTimer: null,
@@ -1632,6 +1652,17 @@ function diasAteFat(p) {
   return Math.round((alvo - hoje) / 86400000);
 }
 const MIN_DIAS_CANCELAR = 45;
+const DIAS_ALERTA_REPASSE = 20;
+function repFinalizadoP(p) { return p.acao === 'REPASSAR' && p.repasse && (p.repasse.destinos || []).length > 0; }
+function repPendenteP(p) { return p.acao === 'REPASSAR' && !repFinalizadoP(p); }
+function alertaRepasse(p) { return repPendenteP(p) && diasAteFat(p) <= DIAS_ALERTA_REPASSE; }
+function statusPedido(p) {
+  if (repFinalizadoP(p)) return 'REPASSADO';
+  if (repPendenteP(p)) return 'REPASSAR';
+  if (p.acao === 'CANCELAR') return 'CANCELAR';
+  if (p.acao === 'GESTAO_CMS') return 'GESTAO_CMS';
+  return 'MANTER';
+}
 function formatarPreco(v) {
   if (v == null || v === '') return '—';
   const n = Number(v);
@@ -2452,9 +2483,17 @@ function renderDistribuicaoRede() {
 
   const linhas = portasInfo.map(info => {
     const ps = porCod[info.codigo] || [];
+    const pares = ps.reduce((s, p) => s + p.total, 0);
+    const repassado = ps.filter(repFinalizadoP).reduce((s, p) => s + p.total, 0);
+    const cancelado = ps.filter(p => p.acao === 'CANCELAR').reduce((s, p) => s + p.total, 0);
+    const saindo = repassado + cancelado;
     return {
       ...info,
-      pares: ps.reduce((s, p) => s + p.total, 0),
+      pares,
+      repassado,
+      cancelado,
+      saindo,
+      saldo: pares - saindo,
       nLinhas: ps.length,
       dobrada: ps.length >= 2,
       tem: ps.length > 0,
@@ -2493,6 +2532,7 @@ function renderDistribuicaoRede() {
             <div class="dist-info">
               <p class="nome">${l.razao || porta}</p>
               <p class="meta">${porta} · ${l.codigo}</p>
+              ${l.saindo > 0 ? `<p class="dist-saldo"><i class="fa-solid fa-right-long"></i> ${[l.repassado ? `repassou ${formatarNumero(l.repassado)}` : '', l.cancelado ? `cancelou ${formatarNumero(l.cancelado)}` : ''].filter(Boolean).join(' · ')} · saldo ${formatarNumero(l.saldo)} pares</p>` : ''}
             </div>
             ${dir}
           </div>`;
@@ -2648,7 +2688,7 @@ function abrirCliente(codigo) {
     pedidos: pedidosCliente,
   };
   APP.filtroProduto = '';
-  APP.filtros = { ped_cliente: null, mes: null };
+  APP.filtros = { ped_cliente: null, mes: null, status: null };
   APP.ordem = 'mes_proximo';
 
   $('busca-produto').value = '';
@@ -2693,6 +2733,7 @@ function obterPedidosFiltrados() {
     }
     if (APP.filtros.ped_cliente && p.ped_cliente !== APP.filtros.ped_cliente) return false;
     if (APP.filtros.mes && mesAno(p.prev_fat) !== APP.filtros.mes) return false;
+    if (APP.filtros.status && statusPedido(p) !== APP.filtros.status) return false;
     return true;
   });
 
@@ -2722,6 +2763,16 @@ function obterPedidosFiltrados() {
       resultado.sort((a, b) => (a.descricao || '').localeCompare(b.descricao || ''));
       break;
   }
+
+  // #2/#3: ações sobem ao topo — alerta > pendente > cancelar > repassado > manter (estável)
+  const rankAcao = p => {
+    if (alertaRepasse(p)) return 0;
+    if (repPendenteP(p)) return 1;
+    if (p.acao === 'CANCELAR') return 2;
+    if (repFinalizadoP(p)) return 3;
+    return 4;
+  };
+  resultado.sort((a, b) => rankAcao(a) - rankAcao(b));
 
   return resultado;
 }
@@ -2852,8 +2903,8 @@ function renderCardProduto(p, idx) {
     : '<span style="color:var(--text-3);font-size:12px;">—</span>';
 
   const podeCancelar = diasAteFat(p) >= MIN_DIAS_CANCELAR;
-  const repFinalizado = p.acao === 'REPASSAR' && p.repasse && (p.repasse.destinos || []).length > 0;
-  const repPendente = p.acao === 'REPASSAR' && !repFinalizado;
+  const repFinalizado = repFinalizadoP(p);
+  const repPendente = repPendenteP(p);
   let pillsHtml;
   if (repFinalizado) {
     pillsHtml = `
@@ -2878,7 +2929,7 @@ function renderCardProduto(p, idx) {
     pillsHtml = btns.join('');
   }
 
-  const acaoCls = 'acao-' + (p.acao || 'MANTER').toLowerCase().replace('_cms', '').replace('_', '');
+  const acaoCls = repFinalizado ? 'acao-repassado' : 'acao-' + (p.acao || 'MANTER').toLowerCase().replace('_cms', '').replace('_', '');
 
   // Imagem com fallback "Imagem em breve"
   // Esconde a lupa quando a imagem falha
@@ -2909,7 +2960,12 @@ function renderCardProduto(p, idx) {
             <span>Art. ${p.artigo}</span>
           </p>
           <div class="product-tags">
-            ${p.acao && p.acao !== 'MANTER' ? `<span class="tag tag-acao ${p.acao.toLowerCase().replace('_cms', '').replace('_', '')}"><i class="fa-solid ${p.acao === 'CANCELAR' ? 'fa-ban' : p.acao === 'REPASSAR' ? 'fa-right-left' : 'fa-gear'}"></i> ${p.acao === 'GESTAO_CMS' ? 'GESTÃO' : p.acao.charAt(0) + p.acao.slice(1).toLowerCase()}</span>` : ''}
+            ${alertaRepasse(p) ? `<span class="tag tag-alerta"><i class="fa-solid fa-triangle-exclamation"></i> ${diasAteFat(p) >= 0 ? 'faltam ' + diasAteFat(p) + ' dias' : 'atrasado'}</span>` : ''}
+            ${repFinalizado
+              ? `<span class="tag tag-acao repassado"><i class="fa-solid fa-check"></i> Repassado</span>`
+              : (p.acao && p.acao !== 'MANTER'
+                ? `<span class="tag tag-acao ${p.acao.toLowerCase().replace('_cms', '').replace('_', '')}"><i class="fa-solid ${p.acao === 'CANCELAR' ? 'fa-ban' : p.acao === 'REPASSAR' ? 'fa-right-left' : 'fa-gear'}"></i> ${p.acao === 'GESTAO_CMS' ? 'GESTÃO' : p.acao.charAt(0) + p.acao.slice(1).toLowerCase()}</span>`
+                : '')}
             ${repFinalizado ? `<span class="tag tag-destino"><i class="fa-solid fa-arrow-right-long"></i> ${(p.repasse.destinos || []).length === 1 ? p.repasse.destinos[0].nome : (p.repasse.destinos || []).length + ' destinos'}</span>` : ''}
             ${p.gci ? `<span class="tag tag-gci"><i class="fa-solid fa-receipt"></i> GCI ${p.gci}</span>` : ''}
             ${mes ? `<span class="tag tag-mes"><i class="fa-solid fa-calendar"></i> ${mes}</span>` : ''}
@@ -3016,6 +3072,9 @@ function abrirPopoverFiltro(filtroId, btnEl) {
   if (filtroId === 'ordem') {
     opcoes = OPCOES_ORDEM;
     valorAtual = APP.ordem;
+  } else if (filtroId === 'status') {
+    opcoes = OPCOES_STATUS;
+    valorAtual = APP.filtros.status;
   } else {
     const valores = getValoresUnicos(filtroId);
     opcoes = valores.map(v => ({ id: v, label: v }));
@@ -3092,7 +3151,7 @@ function atualizarBotoesFiltros() {
       if (APP.filtros[f]) {
         btn.classList.add('active');
         const span = btn.querySelector('span');
-        if (span) span.textContent = APP.filtros[f];
+        if (span) span.textContent = (f === 'status' ? (OPCOES_STATUS.find(o => o.id === APP.filtros.status)?.label || 'Status') : APP.filtros[f]);
         temAlgum = true;
       } else {
         btn.classList.remove('active');
@@ -3100,6 +3159,7 @@ function atualizarBotoesFiltros() {
         if (span) {
           if (f === 'ped_cliente') span.textContent = 'Ped.Cliente';
           else if (f === 'mes') span.textContent = 'Mês';
+          else if (f === 'status') span.textContent = 'Status';
         }
       }
     }
@@ -3109,7 +3169,7 @@ function atualizarBotoesFiltros() {
 }
 
 function limparFiltros() {
-  APP.filtros = { ped_cliente: null, mes: null };
+  APP.filtros = { ped_cliente: null, mes: null, status: null };
   APP.ordem = 'mes_proximo';
   $('ordem-label').textContent = 'Mês mais próximo';
   atualizarBotoesFiltros();
