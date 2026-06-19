@@ -1531,6 +1531,14 @@ function parseLinhaPedido(row) {
     }
     return '';
   };
+  // Busca por nome de coluna normalizado (à prova de acento/maiúscula).
+  const getNorm = (...nomes) => {
+    const alvo = nomes.map(normalizar);
+    for (const k of Object.keys(row)) {
+      if (alvo.includes(normalizar(k)) && row[k] != null && row[k] !== '') return row[k];
+    }
+    return '';
+  };
 
   const prepostoBruto = String(get('Preposto', 'preposto')).trim().toUpperCase();
   const preposto = PREPOSTO_MAP[prepostoBruto] || prepostoBruto;
@@ -1569,6 +1577,8 @@ function parseLinhaPedido(row) {
     faixa: String(get('Faixa', 'faixa')).trim(),
     grade: grade,
     total: Number(get('Total de pares', 'Total') || 0),
+    preco_unit: getNorm('Preço', 'Preco'),
+    total_preco: getNorm('Total Preço', 'Total Preco'),
     prev_fat: formatarDataBR(get('Prev.fat.', 'PrevFat', 'Prev. Fat.')),
     acao: 'MANTER',
   };
@@ -1949,11 +1959,14 @@ function renderCardProduto(p, idx) {
 
       <div class="product-details">
         <div class="product-details-inner">
-          ${prod.categoria ? `
-            <div class="detail-row">
-              <span class="label">Categoria</span>
-              <span class="value">${prod.categoria}</span>
-            </div>` : ''}
+          <div class="detail-row">
+            <span class="label">Preço unitário</span>
+            <span class="value">${formatarPreco(p.preco_unit)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Valor total</span>
+            <span class="value">${formatarPreco(p.total_preco)}</span>
+          </div>
           <div class="detail-row">
             <span class="label">Data prevista</span>
             <span class="value">${formatarDataBR(p.prev_fat) || '—'}</span>
@@ -1961,10 +1974,6 @@ function renderCardProduto(p, idx) {
           <div class="detail-row">
             <span class="label">EBM</span>
             <span class="value">${p.ebm || '—'}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Faixa</span>
-            <span class="value">${p.faixa || '—'}</span>
           </div>
           <div class="detail-row">
             <span class="label">Empresa</span>
