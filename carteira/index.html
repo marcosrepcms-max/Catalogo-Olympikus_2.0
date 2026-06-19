@@ -572,6 +572,44 @@
       padding: 2px 7px; border-radius: 5px;
     }
     html.dark .dist-badge { background: #78350f; color: #fde68a; }
+
+    /* Seletor de destino do repasse */
+    #repasse-body { padding-bottom: 96px; }
+    .repasse-escopo { display: flex; gap: 8px; margin-top: 10px; }
+    .repasse-chip {
+      font-size: 12px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border-2); color: var(--text-2); background: transparent;
+    }
+    .repasse-chip.ativo { background: var(--primary-soft); color: var(--primary-2); border-color: transparent; font-weight: 600; }
+    html.dark .repasse-chip.ativo { color: var(--primary); }
+    .repasse-grupo-titulo {
+      font-size: 11px; font-weight: 700; letter-spacing: .03em;
+      margin: 14px 2px 6px; text-transform: uppercase;
+    }
+    .repasse-grupo-titulo.bom { color: var(--primary-2); }
+    html.dark .repasse-grupo-titulo.bom { color: var(--primary); }
+    .repasse-grupo-titulo.neutro { color: var(--text-2); }
+    .repasse-grupo {
+      background: var(--card-bg); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card); overflow: hidden;
+    }
+    .repasse-pendente {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; margin: 6px 0 4px;
+      background: var(--card-bg); border: 1px dashed var(--border-2);
+      border-radius: var(--r-lg); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .repasse-pendente input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .repasse-cor-tag { font-size: 11px; color: var(--primary-2); }
+    html.dark .repasse-cor-tag { color: var(--primary); }
+    .repasse-conflito-aviso {
+      font-size: 11px; color: var(--acao-cancelar);
+      margin: 12px 2px 0; display: flex; align-items: center; gap: 6px;
+    }
+    .repasse-destinos {
+      margin-top: 8px; font-size: 12px; font-weight: 600;
+      color: var(--acao-repassar); display: flex; align-items: center; gap: 6px;
+    }
     .list-footer {
       text-align: center; font-size: 12px;
       color: var(--text-3); padding: 12px;
@@ -955,6 +993,10 @@
     .product-card.acao-cancelar { border: 2px solid var(--acao-cancelar); }
     .product-card.acao-repassar { border: 2px solid var(--acao-repassar); }
     .product-card.acao-gestao   { border: 2px solid var(--acao-gestao); }
+    .tag.tag-acao { font-weight: 700; color: #fff; }
+    .tag.tag-acao.cancelar { background: var(--acao-cancelar); }
+    .tag.tag-acao.repassar { background: var(--acao-repassar); }
+    .tag.tag-acao.gestao   { background: var(--acao-gestao); }
 
     /* =========================================================
        ZOOM MODAL
@@ -1382,6 +1424,48 @@
   </div>
 
   <!-- =================================================================
+       TELA REPASSE — SELEÇÃO DE DESTINO(S)
+       ================================================================= -->
+  <div id="screen-repasse" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark"><i class="fa-solid fa-right-left"></i></div>
+        <div>
+          <div class="logo-text">Carteira CMS</div>
+          <div class="logo-sub" id="topbar-user-6">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" id="btn-tema-6" title="Alternar tema"><i class="fa-solid fa-moon"></i></button>
+      </div>
+    </div>
+
+    <div class="frozen-header">
+      <div class="client-strip">
+        <button class="back" id="btn-cancelar-repasse" title="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="client-info-compact">
+          <p class="name" id="repasse-titulo">Repassar destino</p>
+          <p class="meta" id="repasse-sub">—</p>
+        </div>
+      </div>
+      <div class="search-wrap" id="repasse-busca-wrap" style="margin-top:10px;">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="search" id="busca-repasse" inputmode="search" enterkeyhint="search" placeholder="Buscar cliente (nome, cidade, código)" autocomplete="off">
+        <button class="search-clear" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="repasse-escopo" id="repasse-escopo"></div>
+    </div>
+
+    <div id="repasse-body"></div>
+
+    <div class="rede-actionbar">
+      <button class="rede-ver-btn" id="btn-confirmar-repasse">
+        <i class="fa-solid fa-check"></i> <span id="btn-confirmar-repasse-label">Selecione um destino</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =================================================================
        MODAL DE ZOOM
        ================================================================= -->
   <div class="zoom-modal" id="zoom-modal">
@@ -1471,6 +1555,10 @@ const APP = {
   redeDistKey: null,
   focoProduto: null,
   produtosOrigem: 'clientes',
+  repasseCtx: null,
+  repasseSel: new Set(),
+  repasseEscopo: 'todos',
+  repassePendente: false,
 };
 
 /* ============================================================
@@ -1595,7 +1683,7 @@ function configurarCopiaAoSelecionar() {
 function aplicarTema() {
   const t = localStorage.getItem(STORAGE.tema) || 'claro';
   document.documentElement.classList.toggle('dark', t === 'escuro');
-  document.querySelectorAll('#btn-tema i, #btn-tema-2 i, #btn-tema-3 i, #btn-tema-4 i, #btn-tema-5 i').forEach(i => {
+  document.querySelectorAll('#btn-tema i, #btn-tema-2 i, #btn-tema-3 i, #btn-tema-4 i, #btn-tema-5 i, #btn-tema-6 i').forEach(i => {
     i.className = t === 'escuro' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
   });
 }
@@ -1842,6 +1930,7 @@ function irParaClientes() {
   $('topbar-user-3').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-4').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-5').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
+  $('topbar-user-6').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   show('screen-clientes');
   renderClientes(APP.filtroCliente);
 }
@@ -2415,6 +2504,138 @@ function renderDistribuicaoRede() {
 /* ============================================================
    TELA: PRODUTOS DO CLIENTE
    ============================================================ */
+function nomeClienteRepasse(cod) {
+  const p = APP.pedidos.find(x => x.cliente_cod === cod);
+  if (p) return p.razao_social || p.cliente_razao;
+  return APP.clientesInfo[cod]?.nomeFantasia || cod;
+}
+
+function abrirRepasse(idx) {
+  const p = APP.clienteAtual.pedidos[idx];
+  const origemCod = APP.clienteAtual.codigo;
+  const nn = normalizar(nomeFantasiaDe(origemCod));
+  const redeNN = (nn && APP.redes[nn]) ? nn : null;
+  APP.repasseCtx = { idx, artigo: p.artigo, cor: p.cor, descricao: p.descricao, origemCod, redeNN };
+  APP.repasseEscopo = redeNN ? 'rede' : 'todos';
+  APP.repasseSel = new Set((p.repasse?.destinos || []).map(d => d.codigo));
+  APP.repassePendente = !!p.repasse?.pendente;
+  APP.repasseBusca = '';
+  $('repasse-titulo').textContent = `Repassar · ${p.descricao || p.artigo}`;
+  $('repasse-sub').textContent = `${p.cor} · art. ${p.artigo} · de ${APP.clienteAtual.razao}`;
+  $('busca-repasse').value = '';
+  $('repasse-busca-wrap').classList.remove('has-value');
+  renderRepasseEscopo();
+  renderRepasse();
+  show('screen-repasse');
+  window.scrollTo(0, 0);
+}
+
+function renderRepasseEscopo() {
+  const redeNN = APP.repasseCtx.redeNN;
+  const el = $('repasse-escopo');
+  if (!redeNN) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <button class="repasse-chip ${APP.repasseEscopo === 'rede' ? 'ativo' : ''}" data-escopo="rede">Rede ${APP.redes[redeNN].nome}</button>
+    <button class="repasse-chip ${APP.repasseEscopo === 'todos' ? 'ativo' : ''}" data-escopo="todos">Todos os clientes</button>`;
+  el.querySelectorAll('.repasse-chip').forEach(b => b.addEventListener('click', () => {
+    APP.repasseEscopo = b.dataset.escopo;
+    renderRepasseEscopo();
+    renderRepasse();
+  }));
+}
+
+function renderRepasse() {
+  const { artigo, cor, origemCod, redeNN } = APP.repasseCtx;
+  const busca = normalizar(APP.repasseBusca || '');
+  const peds = obterClientesDoVendedor();
+
+  const comArtigo = {}, nomeDe = {}, cidadeDe = {};
+  const comCarteira = new Set();
+  for (const pp of peds) {
+    comCarteira.add(pp.cliente_cod);
+    if (!nomeDe[pp.cliente_cod]) { nomeDe[pp.cliente_cod] = pp.razao_social || pp.cliente_razao; cidadeDe[pp.cliente_cod] = pp.cidade; }
+    if (pp.artigo === artigo) (comArtigo[pp.cliente_cod] = comArtigo[pp.cliente_cod] || new Set()).add(pp.cor);
+  }
+
+  let escopoCods;
+  if (APP.repasseEscopo === 'rede' && redeNN) escopoCods = APP.redes[redeNN].codigos.filter(c => c !== origemCod);
+  else escopoCods = [...comCarteira].filter(c => c !== origemCod);
+
+  const naRede = c => redeNN && APP.redes[redeNN].codigos.includes(c);
+  const tier1 = [], tier2 = []; let conflitos = 0;
+  for (const cod of escopoCods) {
+    const cores = comArtigo[cod];
+    if (cores && cores.has(cor)) { conflitos++; continue; }
+    const nome = nomeDe[cod] || APP.clientesInfo[cod]?.nomeFantasia || cod;
+    const porta = portaDe(cod);
+    if (busca) {
+      const txt = normalizar(nome + ' ' + porta + ' ' + cod + ' ' + (cidadeDe[cod] || ''));
+      if (!txt.includes(busca)) continue;
+    }
+    const obj = { cod, nome, porta, cores: cores ? [...cores] : null, rede: naRede(cod) };
+    if (cores) tier1.push(obj); else tier2.push(obj);
+  }
+
+  let semCarteira = [];
+  if (busca) {
+    for (const [cod, info] of Object.entries(APP.clientesInfo)) {
+      if (cod === origemCod || comCarteira.has(cod)) continue;
+      if (APP.repasseEscopo === 'rede' && redeNN && !APP.redes[redeNN].codigos.includes(cod)) continue;
+      const txt = normalizar((info.nomeFantasia || '') + ' ' + (info.porta || '') + ' ' + cod);
+      if (txt.includes(busca)) semCarteira.push({ cod, nome: info.nomeFantasia || cod, porta: info.porta, cores: null, rede: naRede(cod) });
+    }
+  }
+
+  const item = (c, mostrarCor) => `
+    <label class="rede-sel-item">
+      <input type="checkbox" data-cod="${c.cod}" ${APP.repasseSel.has(c.cod) ? 'checked' : ''}>
+      <div class="rede-sel-info">
+        <p class="nome">${c.nome}${c.rede ? ' <span class="rede-badge">REDE</span>' : ''}</p>
+        <p class="meta">${[c.porta || '', c.cod].filter(Boolean).join(' · ')}${mostrarCor && c.cores ? ` · <span class="repasse-cor-tag">tem em ${c.cores.join(', ')}</span>` : ''}</p>
+      </div>
+    </label>`;
+
+  let html = `<label class="repasse-pendente"><input type="checkbox" id="chk-pendente" ${APP.repassePendente ? 'checked' : ''}> Destino a definir (vendedor de rota escolhe)</label>`;
+  if (tier1.length) html += `<p class="repasse-grupo-titulo bom">① Tem o artigo · falta esta cor</p><div class="repasse-grupo">${tier1.map(c => item(c, true)).join('')}</div>`;
+  if (tier2.length) html += `<p class="repasse-grupo-titulo neutro">② Não tem este artigo</p><div class="repasse-grupo">${tier2.map(c => item(c, false)).join('')}</div>`;
+  if (semCarteira.length) html += `<p class="repasse-grupo-titulo neutro">③ Sem carteira</p><div class="repasse-grupo">${semCarteira.map(c => item(c, false)).join('')}</div>`;
+  if (conflitos) html += `<p class="repasse-conflito-aviso"><i class="fa-solid fa-triangle-exclamation"></i> ${conflitos} já tem este artigo+cor (ocultos — receberiam dobrado)</p>`;
+  if (!tier1.length && !tier2.length && !semCarteira.length) html += `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Nenhum destino${busca ? ' encontrado' : ''}</p></div>`;
+  $('repasse-body').innerHTML = html;
+
+  $('repasse-body').querySelectorAll('input[data-cod]').forEach(chk => chk.addEventListener('change', () => {
+    if (chk.checked) APP.repasseSel.add(chk.dataset.cod); else APP.repasseSel.delete(chk.dataset.cod);
+    atualizarConfirmarRepasse();
+  }));
+  const pend = $('chk-pendente');
+  if (pend) pend.addEventListener('change', () => { APP.repassePendente = pend.checked; atualizarConfirmarRepasse(); });
+  atualizarConfirmarRepasse();
+}
+
+function atualizarConfirmarRepasse() {
+  const n = APP.repasseSel.size;
+  const btn = $('btn-confirmar-repasse');
+  btn.disabled = !(n > 0 || APP.repassePendente);
+  $('btn-confirmar-repasse-label').textContent = (APP.repassePendente && n === 0)
+    ? 'Marcar repasse (destino a definir)'
+    : n ? `Repassar para ${n} destino${n !== 1 ? 's' : ''}` : 'Selecione um destino';
+}
+
+function confirmarRepasse() {
+  const n = APP.repasseSel.size;
+  if (!(n > 0 || APP.repassePendente)) return;
+  const p = APP.clienteAtual.pedidos[APP.repasseCtx.idx];
+  const destinos = [...APP.repasseSel].map(cod => ({ codigo: cod, nome: nomeClienteRepasse(cod), porta: portaDe(cod) }));
+  p.acao = 'REPASSAR';
+  p.repasse = { pendente: APP.repassePendente && destinos.length === 0, destinos };
+  localStorage.setItem(STORAGE.pedidos, JSON.stringify(APP.pedidos));
+  agendarSaveAcoes();
+  toast(p.repasse.pendente ? 'Repasse marcado (destino a definir)' : `Repasse para ${destinos.length} destino${destinos.length !== 1 ? 's' : ''}`);
+  APP.repasseCtx = null;
+  renderProdutos();
+  show('screen-produtos');
+}
+
 function abrirCliente(codigo) {
   const meusPedidos = obterClientesDoVendedor();
   const pedidosCliente = meusPedidos.filter(p => p.cliente_cod === codigo);
@@ -2567,6 +2788,10 @@ function renderProdutos() {
       }
       const idx = Number(el.dataset.idx);
       const acao = el.dataset.acao;
+      if (acao === 'REPASSAR') {
+        abrirRepasse(idx);
+        return;
+      }
       APP.clienteAtual.pedidos[idx].acao = acao;
 
       const pills = el.parentElement.querySelectorAll('.action-pill');
@@ -2577,6 +2802,17 @@ function renderProdutos() {
       if (card) {
         card.classList.remove('acao-manter', 'acao-cancelar', 'acao-repassar', 'acao-gestao');
         card.classList.add('acao-' + acao.toLowerCase().replace('_cms', '').replace('_', ''));
+        const tagsEl = card.querySelector('.product-tags');
+        if (tagsEl) {
+          const old = tagsEl.querySelector('.tag-acao');
+          if (old) old.remove();
+          if (acao !== 'MANTER') {
+            const cls = acao.toLowerCase().replace('_cms', '').replace('_', '');
+            const icon = acao === 'CANCELAR' ? 'fa-ban' : acao === 'REPASSAR' ? 'fa-right-left' : 'fa-gear';
+            const label = acao === 'GESTAO_CMS' ? 'GESTÃO' : acao.charAt(0) + acao.slice(1).toLowerCase();
+            tagsEl.insertAdjacentHTML('afterbegin', `<span class="tag tag-acao ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`);
+          }
+        }
       }
 
       localStorage.setItem(STORAGE.pedidos, JSON.stringify(APP.pedidos));
@@ -2649,6 +2885,7 @@ function renderCardProduto(p, idx) {
             <span>Art. ${p.artigo}</span>
           </p>
           <div class="product-tags">
+            ${p.acao && p.acao !== 'MANTER' ? `<span class="tag tag-acao ${p.acao.toLowerCase().replace('_cms', '').replace('_', '')}"><i class="fa-solid ${p.acao === 'CANCELAR' ? 'fa-ban' : p.acao === 'REPASSAR' ? 'fa-right-left' : 'fa-gear'}"></i> ${p.acao === 'GESTAO_CMS' ? 'GESTÃO' : p.acao.charAt(0) + p.acao.slice(1).toLowerCase()}</span>` : ''}
             ${p.gci ? `<span class="tag tag-gci"><i class="fa-solid fa-receipt"></i> GCI ${p.gci}</span>` : ''}
             ${mes ? `<span class="tag tag-mes"><i class="fa-solid fa-calendar"></i> ${mes}</span>` : ''}
             ${p.ped_cliente ? `<span class="tag tag-ped"><i class="fa-solid fa-tag"></i> ${p.ped_cliente}</span>` : ''}
@@ -2694,6 +2931,7 @@ function renderCardProduto(p, idx) {
           <div>
             <div style="font-size:12px;color:var(--text-2);margin-bottom:4px;">Ação</div>
             <div class="action-pills">${pillsHtml}</div>
+            ${p.acao === 'REPASSAR' && p.repasse ? `<div class="repasse-destinos">${p.repasse.pendente ? '<i class="fa-solid fa-clock"></i> Destino a definir (vendedor)' : '<i class="fa-solid fa-right-long"></i> ' + (p.repasse.destinos || []).map(d => d.nome).join(', ')}</div>` : ''}
           </div>
         </div>
       </div>
@@ -2967,6 +3205,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     APP.focoProduto = null;
     APP.produtosOrigem = 'clientes';
     show('screen-clientes');
+  });
+
+  // Tela de repasse
+  $('btn-tema-6').addEventListener('click', toggleTema);
+  $('btn-cancelar-repasse').addEventListener('click', () => { APP.repasseCtx = null; show('screen-produtos'); });
+  $('btn-confirmar-repasse').addEventListener('click', confirmarRepasse);
+  let repasseTimer;
+  configurarBuscaComX('busca-repasse', 'repasse-busca-wrap', (val) => {
+    clearTimeout(repasseTimer);
+    repasseTimer = setTimeout(() => { APP.repasseBusca = val; renderRepasse(); }, 200);
   });
   $('rede-check-todas').addEventListener('change', (e) => toggleTodasPortas(e.target.checked));
   $('btn-ver-produtos-rede').addEventListener('click', verProdutosRede);
