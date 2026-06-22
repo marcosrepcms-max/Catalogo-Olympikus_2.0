@@ -142,21 +142,6 @@
     }
     .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
     .logo-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
-    .marca-switch { display: flex; align-items: center; gap: 6px; }
-    .marca-badge {
-      width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
-      object-fit: cover; opacity: 0.32; filter: grayscale(0.55);
-      box-shadow: 0 0 0 1px var(--border-2); transition: opacity .15s, filter .15s, box-shadow .15s;
-    }
-    .marca-badge.ativo { opacity: 1; filter: none; box-shadow: 0 0 0 2px var(--primary); }
-    .marca-badge.escondida { display: none; }
-    .tipo-chips { display: flex; gap: 6px; margin-bottom: 10px; }
-    .tipo-chips.escondida { display: none; }
-    .tipo-chip {
-      font-size: 12px; padding: 5px 13px; border-radius: 16px; cursor: pointer;
-      border: 1px solid var(--border-2); background: var(--card-bg); color: var(--text-2);
-    }
-    .tipo-chip.ativo { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
     .topbar-actions { display: flex; align-items: center; gap: 8px; }
     @keyframes girar360 { to { transform: rotate(360deg); } }
     .btn-icon.girando i { animation: girar360 .7s linear infinite; }
@@ -1288,10 +1273,7 @@
   <div id="screen-clientes" class="screen">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="marca-switch" id="marca-switch">
-          <img class="marca-badge ativo" id="marca-oly" data-marca="OLY" alt="Olympikus">
-          <img class="marca-badge" id="marca-ua" data-marca="UA" alt="Under Armour">
-        </div>
+        <div class="logo-mark"><i class="fa-solid fa-wallet"></i></div>
         <div>
           <div class="logo-text">Carteira CMS</div>
           <div class="logo-sub" id="topbar-user">—</div>
@@ -1350,8 +1332,6 @@
           <p class="kpi-value" id="kpi-pares">0</p>
         </div>
       </div>
-
-      <div class="tipo-chips" id="tipo-chips"></div>
 
       <div class="search-wrap" id="search-cliente-wrap">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -1832,8 +1812,6 @@ const APP = {
   filtroCliente: '',
   soRedes: false,
   soCorre: false,
-  marca: 'OLY',
-  tipo: null,
   redeAtual: null,
   redeSelecao: new Set(),
   redeBuscaProduto: '',
@@ -2386,7 +2364,6 @@ async function atualizarDoServidor(btn) {
     }
     await carregarCarteiraDoServidor();
     await carregarClientesCadastrados();
-    atualizarCabecalhoMarca();
     if (APP.clienteAtual && document.querySelector('#screen-produtos.active')) {
       const cod = APP.clienteAtual.codigo;
       APP.clienteAtual.pedidos = obterClientesDoVendedor().filter(p => p.cliente_cod === cod);
@@ -2455,7 +2432,6 @@ function irParaClientes() {
   $('topbar-user-7').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   $('topbar-user-8').textContent = `${APP.sessao.nome} · ${APP.sessao.papel}`;
   show('screen-clientes');
-  atualizarCabecalhoMarca();
   renderClientes(APP.filtroCliente);
 }
 
@@ -2472,11 +2448,10 @@ async function importarXLSX(file) {
     const pedidos = [];
     for (const sheetName of wb.SheetNames) {
       if (!/EM ABERTO/i.test(sheetName)) continue;
-      const tipo = /CHI/i.test(sheetName) ? 'chinelo' : 'calcado';
       const ws = wb.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
       for (const row of rows) {
-        const ped = parseLinhaPedido(row, tipo);
+        const ped = parseLinhaPedido(row);
         if (ped) pedidos.push(ped);
       }
     }
@@ -2501,7 +2476,6 @@ async function importarXLSX(file) {
     localStorage.setItem(STORAGE.pedidos, JSON.stringify(pedidos));
 
     toast(`${pedidos.length} pedidos importados`);
-    atualizarCabecalhoMarca();
     renderClientes($('busca-cliente').value);
 
     await salvarCarteiraNoServidor('full');
@@ -2514,7 +2488,7 @@ async function importarXLSX(file) {
   }
 }
 
-function parseLinhaPedido(row, tipo = 'calcado') {
+function parseLinhaPedido(row) {
   const get = (...keys) => {
     for (const k of keys) {
       if (row[k] != null && row[k] !== '') return row[k];
@@ -2538,26 +2512,14 @@ function parseLinhaPedido(row, tipo = 'calcado') {
   const cor = String(get('Cor', 'cor')).trim();
   if (!artigo || !cor) return null;
 
-  // Calçado: tamanhos 28–48. Chinelo: tamanhos em pares (33/34 … 43/44).
   const grade = {};
-  if (tipo === 'chinelo') {
-    for (const par of ['33/34', '35/36', '37/38', '39/40', '41/42', '43/44']) {
-      const v = row[par];
-      if (v && Number(v) > 0) grade[par] = Number(v);
-    }
-  } else {
-    for (let t = 28; t <= 48; t++) {
-      const v = row[String(t)] ?? row[t];
-      if (v && Number(v) > 0) grade[t] = Number(v);
-    }
+  for (let t = 28; t <= 48; t++) {
+    const v = row[String(t)] ?? row[t];
+    if (v && Number(v) > 0) grade[t] = Number(v);
   }
 
-  const marcaBruta = String(get('Marca', 'marca')).trim().toUpperCase();
-  const marca = marcaBruta.startsWith('UA') ? 'UA' : 'OLY';
-
   return {
-    marca: marca,
-    tipo: tipo,
+    marca: String(get('Marca', 'marca')).trim(),
     cliente_cod: String(get('Cliente', 'cliente')).trim(),
     cliente_razao: String(get('Razão', 'Razao', 'razão', 'razao')).trim(),
     razao_social: String(get('Razão Social', 'Razao Social')).trim(),
@@ -2566,7 +2528,6 @@ function parseLinhaPedido(row, tipo = 'calcado') {
     endereco: String(get('Endereço do Cliente', 'Endereco do Cliente')).trim(),
     ped_cliente: String(get('Ped.Cliente', 'PedCliente')).trim(),
     empresa: String(get('Empresa', 'empresa')).trim(),
-    nota_fiscal: String(get('Nota Fiscal', 'NotaFiscal', 'NF')).trim(),
     cond_pag: String(get('Cond. Pag', 'CondPag')).trim(),
     prazo: String(get('Prazo', 'prazo')).trim(),
     campanha: String(get('Campanha Comercial', 'Campanha')).trim(),
@@ -2594,72 +2555,9 @@ function obterClientesDoVendedor() {
   let lista = APP.sessao.papel === 'admin'
     ? APP.pedidos
     : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
-  lista = lista.filter(p => (p.marca || 'OLY') === APP.marca);
-  if (APP.tipo) lista = lista.filter(p => (p.tipo || 'calcado') === APP.tipo);
   if (APP.soCorre) lista = lista.filter(p => normalizar(p.descricao).includes('corre'));
   return lista;
 }
-
-// Marcas/tipos presentes na carteira do vendedor (ignora o filtro de marca/tipo atual)
-function marcasDisponiveis() {
-  const base = APP.sessao.papel === 'admin' ? APP.pedidos : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
-  return new Set(base.map(p => p.marca || 'OLY'));
-}
-function tiposDisponiveis() {
-  const base = (APP.sessao.papel === 'admin' ? APP.pedidos : APP.pedidos.filter(p => p.preposto === APP.sessao.nome))
-    .filter(p => (p.marca || 'OLY') === APP.marca);
-  return new Set(base.map(p => p.tipo || 'calcado'));
-}
-
-const LOGO_OLY = 'data:image/jpeg;base64,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';
-const LOGO_UA = 'data:image/jpeg;base64,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';
-
-function nomeMarca(m) { return m === 'UA' ? 'Under Armour' : 'Olympikus'; }
-
-function atualizarCabecalhoMarca() {
-  const oly = $('marca-oly'), ua = $('marca-ua');
-  if (oly && !oly.getAttribute('src')) oly.src = LOGO_OLY;
-  if (ua && !ua.getAttribute('src')) ua.src = LOGO_UA;
-  const marcas = marcasDisponiveis();
-  if (ua) ua.classList.toggle('escondida', !marcas.has('UA'));
-  if (oly) oly.classList.toggle('escondida', marcas.size > 0 && !marcas.has('OLY'));
-  if (oly) oly.classList.toggle('ativo', APP.marca === 'OLY');
-  if (ua) ua.classList.toggle('ativo', APP.marca === 'UA');
-  const sub = $('topbar-user');
-  if (sub && APP.sessao) sub.textContent = nomeMarca(APP.marca) + ' \u00b7 ' + APP.sessao.nome + ' \u00b7 ' + APP.sessao.papel;
-  renderTipoChips();
-}
-
-function renderTipoChips() {
-  const cont = $('tipo-chips');
-  if (!cont) return;
-  const tipos = tiposDisponiveis();
-  if (!(tipos.has('calcado') && tipos.has('chinelo'))) {
-    cont.classList.add('escondida');
-    cont.innerHTML = '';
-    if (APP.tipo && !tipos.has(APP.tipo)) APP.tipo = null;
-    return;
-  }
-  cont.classList.remove('escondida');
-  const chip = (val, label) => '<span class="tipo-chip ' + ((val === null ? !APP.tipo : APP.tipo === val) ? 'ativo' : '') + '" data-tipo="' + (val === null ? '' : val) + '">' + label + '</span>';
-  cont.innerHTML = chip(null, 'Todos') + chip('calcado', 'Cal\u00e7ado') + chip('chinelo', 'Chinelo');
-  cont.querySelectorAll('.tipo-chip').forEach(c => c.addEventListener('click', () => trocarTipo(c.dataset.tipo || null)));
-}
-
-function trocarMarca(m) {
-  if (APP.marca === m) return;
-  APP.marca = m;
-  APP.tipo = null;
-  atualizarCabecalhoMarca();
-  renderClientes($('busca-cliente') ? $('busca-cliente').value : '');
-}
-
-function trocarTipo(t) {
-  APP.tipo = t || null;
-  renderTipoChips();
-  renderClientes($('busca-cliente') ? $('busca-cliente').value : '');
-}
-
 
 function htmlProdutosCasados(produtos) {
   if (!produtos || produtos.length === 0) return '';
@@ -4265,8 +4163,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.currentTarget.title = APP.soRedes ? 'Mostrar todos' : 'Mostrar só redes';
     renderClientes($('busca-cliente')?.value || '');
   });
-  $('marca-oly').addEventListener('click', () => trocarMarca('OLY'));
-  $('marca-ua').addEventListener('click', () => trocarMarca('UA'));
   $('btn-so-corre').addEventListener('click', (e) => {
     APP.soCorre = !APP.soCorre;
     e.currentTarget.classList.toggle('ativo', APP.soCorre);
@@ -4353,7 +4249,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   carregarClientesCadastrados();
   if (APP.sessao) {
     await carregarCarteiraDoServidor();
-    atualizarCabecalhoMarca();
     if (APP.clienteAtual === null) renderClientes(APP.filtroCliente);
   }
 });
