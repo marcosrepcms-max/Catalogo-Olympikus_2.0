@@ -598,7 +598,7 @@
     html.dark .dist-badge { background: #78350f; color: #fde68a; }
 
     /* Tela Repasses (lista geral) */
-    #repasses-body { padding-bottom: 96px; }
+    #repasses-body { padding-bottom: 24px; }
     .repasses-filtros { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
     .rep-select {
       flex: 1; min-width: 0; font-size: 12px; padding: 7px 10px;
@@ -1619,12 +1619,6 @@
     </div>
 
     <div id="repasses-body"></div>
-
-    <div class="rede-actionbar">
-      <button class="rede-ver-btn" id="btn-exportar-repasses" disabled>
-        <i class="fa-solid fa-file-excel"></i> <span id="btn-exportar-label">Exportar XLSX</span>
-      </button>
-    </div>
   </div>
 
   <!-- =================================================================
@@ -2466,8 +2460,6 @@ function renderClientes(filtro) {
       for (const termo of termos) {
         const casaCliente =
           normalizar(c.razao).includes(termo) ||
-          normalizar(nomeFantasiaDe(c.codigo)).includes(termo) ||
-          normalizar(portaDe(c.codigo)).includes(termo) ||
           normalizar(c.codigo).includes(termo) ||
           normalizar(c.cidade).includes(termo);
         const prodMatches = c.pedidos.filter(p =>
@@ -3140,46 +3132,6 @@ function pedidoPorKey(key) {
   return APP.pedidos.find(p => keyPedido(p) === key);
 }
 
-function exportarRepassesXLSX() {
-  const selecionados = obterClientesDoVendedor().filter(p => p.acao === 'REPASSAR' && APP.repExportSel.has(keyPedido(p)));
-  if (!selecionados.length) { toast('Selecione ao menos um repasse'); return; }
-
-  const finalizados = selecionados.filter(repFinalizadoP);
-  const pendentes = selecionados.length - finalizados.length;
-  if (!finalizados.length) { toast('Os selecionados ainda não têm destino (pendentes)'); return; }
-
-  const cabecalho = ['Empresa', 'Prev.fat.', 'Enc.EBM', 'Enc.GCI', 'Cliente', 'Razão', 'Total de pares', 'Família', 'descrição', 'Artigo', 'Cor', 'Destino'];
-  const linhas = [cabecalho];
-  for (const p of finalizados) {
-    for (const d of (p.repasse.destinos || [])) {
-      linhas.push([
-        p.empresa || '',
-        formatarDataBR(p.prev_fat),
-        p.ebm || '',
-        p.gci || '',
-        p.cliente_cod || '',
-        p.cliente_razao || p.razao_social || '',
-        p.total || 0,
-        '043',
-        p.descricao || '',
-        p.artigo || '',
-        p.cor || '',
-        d.codigo || '',
-      ]);
-    }
-  }
-
-  const ws = XLSX.utils.aoa_to_sheet(linhas);
-  ws['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 12 }, { wch: 8 }, { wch: 26 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Repasses');
-  const h = new Date();
-  const nome = `repasses_fabrica_${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}.xlsx`;
-  XLSX.writeFile(wb, nome);
-
-  toast(pendentes ? `Exportado · ${pendentes} pendente(s) sem destino ignorado(s)` : `Exportado · ${linhas.length - 1} linha(s)`);
-}
-
 function acoesRepasseItemHTML(p) {
   const key = escAttr(keyPedido(p));
   const podeCancelar = diasAteFat(p) >= MIN_DIAS_CANCELAR;
@@ -3200,11 +3152,6 @@ function atualizarContadorRepasses() {
   let nSel = 0, paresSel = 0;
   for (const i of montarItensRepasse()) if (APP.repExportSel.has(i.key)) { nSel++; paresSel += i.pares; }
   $('rep-sel-contador').textContent = nSel ? `${nSel} selecionado${nSel !== 1 ? 's' : ''} · ${formatarNumero(paresSel)} pares` : 'Nenhum selecionado';
-  const btnExp = $('btn-exportar-repasses');
-  if (btnExp) {
-    btnExp.disabled = nSel === 0;
-    $('btn-exportar-label').textContent = nSel ? `Exportar XLSX (${nSel})` : 'Exportar XLSX';
-  }
   const vis = APP.repVisiveis || [];
   const chk = $('rep-selecionar-todos');
   if (chk) {
@@ -3880,7 +3827,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btn-tema-7').addEventListener('click', toggleTema);
   $('btn-atualizar-repasses').addEventListener('click', (e) => atualizarDoServidor(e.currentTarget));
   $('rep-selecionar-todos').addEventListener('change', (e) => toggleTodosRepasses(e.target.checked));
-  $('btn-exportar-repasses').addEventListener('click', exportarRepassesXLSX);
   $('rep-f-status').addEventListener('change', (e) => { APP.repFiltros.status = e.target.value || null; renderRepassesLista(); });
   $('rep-f-genero').addEventListener('change', (e) => { APP.repFiltros.genero = e.target.value || null; renderRepassesLista(); });
   $('rep-f-cliente').addEventListener('change', (e) => { APP.repFiltros.cliente = e.target.value || null; renderRepassesLista(); });
