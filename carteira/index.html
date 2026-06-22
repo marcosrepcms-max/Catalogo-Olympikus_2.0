@@ -2230,9 +2230,11 @@ function parseLinhaPedido(row) {
    LISTA DE CLIENTES + KPIs
    ============================================================ */
 function obterClientesDoVendedor() {
-  return APP.sessao.papel === 'admin'
+  let lista = APP.sessao.papel === 'admin'
     ? APP.pedidos
     : APP.pedidos.filter(p => p.preposto === APP.sessao.nome);
+  if (APP.soCorre) lista = lista.filter(p => normalizar(p.descricao).includes('corre'));
+  return lista;
 }
 
 function htmlProdutosCasados(produtos) {
@@ -2355,7 +2357,6 @@ function renderClientes(filtro) {
   // Filtra busca: até 3 termos separados por vírgula, com E (todos precisam casar).
   // Cada termo casa por nome/código/cidade OU por produto (descrição/artigo).
   const termos = filtro.split(',').map(normalizar).filter(Boolean).slice(0, 3);
-  if (APP.soCorre && !termos.includes('corre')) termos.unshift('corre');
   let filtrados;
   if (termos.length) {
     filtrados = [];
