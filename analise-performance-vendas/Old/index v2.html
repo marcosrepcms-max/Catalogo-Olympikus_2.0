@@ -53,27 +53,11 @@
   .lede code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 7px;
     font-family:"Space Grotesk",sans-serif;font-size:13px;color:var(--navy)}
   /* ano base (pill abaixo do título) */
-  /* seletor de período (ano + semestre) */
-  .period{display:flex;align-items:center;gap:16px;margin-top:18px;flex-wrap:wrap}
-  .period[hidden]{display:none}
-  .pgroup{display:flex;align-items:center;gap:8px}
-  .pgroup label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
-  .period select{font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;color:var(--navy);
-    background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
-  .period select:hover{border-color:#CBD2DC}
-  .plabel{display:inline-flex;align-items:center;gap:7px;font-family:"Space Grotesk",sans-serif;font-size:12.5px;
-    font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
-  /* modal de publicação */
-  .modal{position:fixed;inset:0;background:rgba(14,23,38,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-  .modal[hidden]{display:none}
-  .modal-card{background:#fff;border-radius:16px;padding:24px 24px 20px;width:340px;max-width:100%;box-shadow:0 24px 64px rgba(16,23,38,.32)}
-  .modal-card h3{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;margin:0 0 4px}
-  .modal-sub{font-size:12px;color:var(--mute);margin:0 0 18px;word-break:break-all}
-  .fld{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:var(--slate);
-    text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
-  .fld input,.fld select{font-family:"Inter",sans-serif;font-size:15px;font-weight:400;text-transform:none;letter-spacing:0;
-    color:var(--ink);padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .yearpill{display:inline-flex;align-items:center;gap:7px;margin-top:16px;
+    font-family:"Space Grotesk",sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.04em;
+    color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
+  .yearpill b{color:var(--ftw);font-weight:700}
+  .yearpill[hidden]{display:none}
   /* toast (feedback de upload) */
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);
     background:var(--ink);color:#fff;font-size:13px;font-weight:500;padding:11px 18px;border-radius:11px;
@@ -235,7 +219,7 @@
 
   <header class="hero">
     <h1>Análise de Performance de Vendas</h1>
-    <div class="period" id="period" hidden></div>
+    <div class="yearpill" id="yearpill" hidden>Ano&nbsp;base <b id="baseyear"></b></div>
   </header>
 
   <div id="empty" class="drop">
@@ -261,23 +245,6 @@
 <button id="totop" title="Voltar ao topo" aria-label="Voltar ao topo">&uarr;</button>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<div id="pubModal" class="modal" hidden>
-  <div class="modal-card">
-    <h3>Publicar planilha</h3>
-    <p class="modal-sub" id="pubFile"></p>
-    <label class="fld">Ano<input type="number" id="pubAno" min="2000" max="2100" step="1" placeholder="2026"></label>
-    <label class="fld">Período<select id="pubSem">
-      <option value="ALL">Ano todo</option>
-      <option value="S1">1º semestre</option>
-      <option value="S2">2º semestre</option>
-    </select></label>
-    <div class="modal-actions">
-      <button class="btn" id="pubCancel">Cancelar</button>
-      <button class="btn primary" id="pubOk">Publicar</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const FAIXAS = [
   {key:'ftw',      label:'FTW Olympikus', sub:'Calçados Olympikus',  cls:'ftw'},
@@ -290,7 +257,7 @@ const FAIXAS = [
 const OLY_MAP = {calcados:'ftw', meias:'meias', acessorios:'acess', vestuario:'conf', chinelos:'chinelos'};
 const NOMES = {cms:'C M S', jorge:'Jorge Luiz das Neves', leandro:'Leandro de Paula',
   mariana:'Mariana Fernandes', rafael:'Rafael Lima Moreira', willame:'Willame Rocha Teixeira'};
-const LS_DATA='apv_xlsx_b64', LS_NAME='apv_xlsx_name', LS_ANO='apv_ano_base', LS_ACCENT='apv_accent', LS_PERIODS='apv_periods';
+const LS_DATA='apv_xlsx_b64', LS_NAME='apv_xlsx_name', LS_ANO='apv_ano_base', LS_ACCENT='apv_accent';
 
 // ==== Sincronização entre dispositivos (Cloudflare Worker) ====
 // URL do Worker. Deixe '' para desativar e usar só este navegador.
@@ -410,6 +377,12 @@ function render(vendors){
   document.getElementById('footer').style.display='flex';
 }
 
+let BASE_YEAR='';
+function setYear(ano){
+  BASE_YEAR = ano ? String(ano).trim() : '';
+  const pill=document.getElementById('yearpill'), y=document.getElementById('baseyear');
+  if(BASE_YEAR){ y.textContent=BASE_YEAR; pill.hidden=false; } else { pill.hidden=true; }
+}
 let _toastT;
 function showToast(msg){
   const t=document.getElementById('toast');
@@ -418,119 +391,48 @@ function showToast(msg){
 }
 function toB64(u8){ let bin='',CH=0x8000; for(let i=0;i<u8.length;i+=CH){bin+=String.fromCharCode.apply(null,u8.subarray(i,i+CH));} return btoa(bin); }
 function fromB64(b64){ const bin=atob(b64); const u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i); return u8; }
+function cacheLocal(u8,name,ano){ try{ localStorage.setItem(LS_DATA,toB64(u8)); localStorage.setItem(LS_NAME,name); if(ano!==undefined) localStorage.setItem(LS_ANO,ano||''); }catch(_){}}
 
-// ===== períodos (ano + semestre) =====
-let PERIODS = {};      // chave "2025-ALL" -> {ano, sem, name, b64}
-let CURRENT_KEY = null;
-const semText = s => s==='S1' ? '1º semestre' : s==='S2' ? '2º semestre' : 'Ano todo';
-const semOrder = s => s==='S2' ? 2 : s==='S1' ? 1 : 0;
-const periodLabel = (ano,sem) => ano + ' · ' + semText(sem);
-function sortedKeys(){
-  return Object.keys(PERIODS).sort((a,b)=>{
-    const A=PERIODS[a], B=PERIODS[b];
-    if(+B.ano!==+A.ano) return +B.ano - +A.ano;
-    return semOrder(B.sem) - semOrder(A.sem);
-  });
-}
-function normalizePeriods(j){
-  if(!j) return {};
-  if(j.periods && typeof j.periods==='object') return j.periods;
-  if(j.b64) return { '2025-ALL': {ano:String(j.ano||'2025'), sem:'ALL', name:j.name||'planilha.xlsx', b64:j.b64} };
-  return {};
-}
-function cachePeriods(){ try{ localStorage.setItem(LS_PERIODS, JSON.stringify(PERIODS)); }catch(_){}}
-
-function buildControls(){
-  const el=document.getElementById('period');
-  const keys=sortedKeys();
-  if(!keys.length){ el.hidden=true; el.innerHTML=''; return; }
-  if(keys.length===1){
-    const p=PERIODS[keys[0]];
-    el.innerHTML='<span class="plabel"><i class="ti"></i>'+periodLabel(p.ano,p.sem)+'</span>';
-    el.hidden=false; return;
-  }
-  const cur=PERIODS[CURRENT_KEY];
-  const anos=[...new Set(keys.map(k=>PERIODS[k].ano))].sort((a,b)=>+b-+a);
-  const sems=keys.filter(k=>PERIODS[k].ano===cur.ano).map(k=>PERIODS[k].sem).sort((a,b)=>semOrder(b)-semOrder(a));
-  el.innerHTML =
-    '<div class="pgroup"><label>Ano</label><select id="selAno">'+
-      anos.map(a=>'<option value="'+a+'"'+(a===cur.ano?' selected':'')+'>'+a+'</option>').join('')+'</select></div>'+
-    '<div class="pgroup"><label>Semestre</label><select id="selSem">'+
-      sems.map(s=>'<option value="'+s+'"'+(s===cur.sem?' selected':'')+'>'+semText(s)+'</option>').join('')+'</select></div>';
-  el.hidden=false;
-  document.getElementById('selAno').onchange=e=>{
-    const ks=sortedKeys().filter(k=>PERIODS[k].ano===e.target.value);
-    if(ks.length) showPeriod(ks[0]);
-  };
-  document.getElementById('selSem').onchange=e=>{
-    const ano=document.getElementById('selAno').value;
-    const key=ano+'-'+e.target.value;
-    if(PERIODS[key]) showPeriod(key);
-  };
-}
-function showPeriod(key){
-  if(!PERIODS[key]) return;
-  CURRENT_KEY=key;
-  const wb=XLSX.read(fromB64(PERIODS[key].b64),{type:'array'});
+function ingest(u8, name, ano){
+  const wb=XLSX.read(u8,{type:'array'});
   build(wb);
-  buildControls();
-}
-function loadPeriods(obj){
-  PERIODS = obj || {};
-  const keys=sortedKeys();
-  if(!keys.length) return false;
-  showPeriod(keys[0]);
-  return true;
+  setYear(ano);
 }
 
-// ===== upload (pergunta ano + semestre num modal) =====
-let _pending=null;
-function readFile(file){
-  const err=document.getElementById('err'); err.style.display='none';
-  const fr=new FileReader();
-  fr.onload=e=>{
-    const u8=new Uint8Array(e.target.result);
-    try{ XLSX.read(u8,{type:'array'}); }
-    catch(ex){ err.textContent='Não foi possível ler o arquivo (.xlsx inválido).'; err.style.display='block'; return; }
-    _pending={u8, name:file.name};
-    const m=document.getElementById('pubModal');
-    document.getElementById('pubFile').textContent=file.name;
-    document.getElementById('pubAno').value=(CURRENT_KEY && PERIODS[CURRENT_KEY] && PERIODS[CURRENT_KEY].ano) || String(new Date().getFullYear());
-    document.getElementById('pubSem').value='ALL';
-    m.hidden=false; document.getElementById('pubAno').focus();
-  };
-  fr.readAsArrayBuffer(file);
-}
-function closePubModal(){ document.getElementById('pubModal').hidden=true; _pending=null; }
-async function confirmPublish(){
-  if(!_pending) return;
-  const ano=String(document.getElementById('pubAno').value||'').trim();
-  const sem=document.getElementById('pubSem').value;
-  if(!/^\d{4}$/.test(ano)){ alert('Informe um ano válido (4 dígitos).'); return; }
-  const key=ano+'-'+sem;
-  PERIODS[key]={ano, sem, name:_pending.name, b64:toB64(_pending.u8)};
-  document.getElementById('pubModal').hidden=true;
-  cachePeriods();
-  showPeriod(key);
-  const p=PERIODS[key]; _pending=null;
+// publica a planilha no Worker (visível em qualquer dispositivo) — sem senha
+async function publishToWorker(u8, name, ano){
   if(!WORKER_URL){ showToast('Salvo neste navegador'); return; }
-  showToast('Publicando ' + periodLabel(ano,sem) + '…');
+  showToast('Publicando…');
   try{
     const res=await fetch(WORKER_URL,{ method:'PATCH',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ action:'savePerformance', data:{ key, ano:p.ano, sem:p.sem, name:p.name, b64:p.b64 } }) });
+      body: JSON.stringify({ action:'savePerformance', data:{ name, b64: toB64(u8), ano: ano||'' } }) });
     if(!res.ok){ showToast('Falha ao publicar'); return; }
     showToast('Publicado para todos os dispositivos');
   }catch(_){ showToast('Sem conexão — salvo só neste navegador'); }
 }
 
+function readFile(file){
+  const err=document.getElementById('err'); err.style.display='none';
+  const fr=new FileReader();
+  fr.onload=e=>{
+    const u8=new Uint8Array(e.target.result);
+    // pergunta o ano base ao importar
+    const sugestao = BASE_YEAR || String(new Date().getFullYear());
+    let ano = (prompt('Ano base destes dados (ex.: 2025):', sugestao)||'').trim();
+    if(!/^\d{4}$/.test(ano)) ano = sugestao; // se vazio/ inválido, usa a sugestão
+    try{ ingest(u8, file.name, ano); }
+    catch(ex){ err.textContent=ex.message||'Não foi possível ler o arquivo.'; err.style.display='block'; return; }
+    cacheLocal(u8, file.name, ano);
+    publishToWorker(u8, file.name, ano);
+  };
+  fr.readAsArrayBuffer(file);
+}
+
 // inputs
 const input=document.getElementById('fileInput');
 ['loadBtn','loadBtn2'].forEach(id=>document.getElementById(id).onclick=()=>input.click());
-input.onchange=()=>{ if(input.files[0]){ readFile(input.files[0]); input.value=''; } };
-document.getElementById('pubCancel').onclick=closePubModal;
-document.getElementById('pubOk').onclick=confirmPublish;
-document.getElementById('pubAno').addEventListener('keydown',e=>{ if(e.key==='Enter') confirmPublish(); });
+input.onchange=()=>{ if(input.files[0]) readFile(input.files[0]); };
 const drop=document.getElementById('empty');
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
@@ -556,7 +458,7 @@ document.querySelectorAll('[data-totop]').forEach(b=>b.onclick=goTop);
 window.addEventListener('scroll',()=>{ totop.classList.toggle('show', window.scrollY>500); });
 
 // carregamento inicial:
-// 1) Worker (todos os períodos)  2) cache local  3) planilha no repositório (período legado)  4) dropzone
+// 1) Worker (compartilhado entre dispositivos)  2) cache local  3) planilha no repositório  4) dropzone
 (async()=>{
   if(WORKER_URL){
     try{
@@ -564,20 +466,24 @@ window.addEventListener('scroll',()=>{ totop.classList.toggle('show', window.scr
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ action:'getPerformance' }) });
       if(res.ok){
-        const P=normalizePeriods(await res.json());
-        if(Object.keys(P).length){ loadPeriods(P); cachePeriods(); return; }
+        const j=await res.json();
+        if(j && j.b64){
+          const u8=fromB64(j.b64);
+          ingest(u8, j.name||'planilha.xlsx', j.ano||''); cacheLocal(u8, j.name||'planilha.xlsx', j.ano||''); return;
+        }
       }
     }catch(_){}
   }
   try{
-    const saved=localStorage.getItem(LS_PERIODS);
-    if(saved){ const P=JSON.parse(saved); if(Object.keys(P).length){ loadPeriods(P); return; } }
+    const saved=localStorage.getItem(LS_DATA);
+    if(saved){ const u8=fromB64(saved);
+      ingest(u8, localStorage.getItem(LS_NAME)||'planilha salva', localStorage.getItem(LS_ANO)||''); return; }
   }catch(_){}
   for(const name of ['Performance_de_Vendas.xlsx','dados.xlsx','data.xlsx']){
     try{
       const res=await fetch(name); if(!res.ok) continue;
       const buf=await res.arrayBuffer();
-      loadPeriods({ '2025-ALL': {ano:'2025', sem:'ALL', name, b64:toB64(new Uint8Array(buf))} }); return;
+      ingest(new Uint8Array(buf), name, ''); return;
     }catch(_){}
   }
 })();
