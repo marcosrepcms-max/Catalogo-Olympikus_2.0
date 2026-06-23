@@ -1445,7 +1445,7 @@
             id="busca-produto"
             inputmode="search"
             enterkeyhint="search"
-            placeholder="Produto, cor, GCI · separe por vírgula"
+            placeholder="Buscar produto…"
             autocomplete="off">
           <button class="search-clear" title="Limpar (ESC)">
             <i class="fa-solid fa-xmark"></i>
@@ -3691,13 +3691,19 @@ function abrirProdutoNaLoja(codigo, artigo, cor) {
 function obterPedidosFiltrados() {
   if (!APP.clienteAtual) return [];
   const todos = APP.clienteAtual.pedidos;
-  const termos = (APP.filtroProduto || '').split(',').map(normalizar).filter(Boolean).slice(0, 3);
+  const filtroNorm = normalizar(APP.filtroProduto);
 
   let resultado = todos.filter(p => {
     if (APP.focoProduto && (p.artigo !== APP.focoProduto.artigo || p.cor !== APP.focoProduto.cor)) return false;
-    if (termos.length) {
-      const hay = normalizar([p.descricao, p.artigo, p.cor, p.gci, p.ebm, p.ped_cliente].join(' '));
-      if (!termos.every(t => hay.includes(t))) return false;
+    if (filtroNorm) {
+      const casa =
+        normalizar(p.descricao).includes(filtroNorm) ||
+        normalizar(p.artigo).includes(filtroNorm) ||
+        normalizar(p.cor).includes(filtroNorm) ||
+        normalizar(p.gci).includes(filtroNorm) ||
+        normalizar(p.ebm).includes(filtroNorm) ||
+        normalizar(p.ped_cliente).includes(filtroNorm);
+      if (!casa) return false;
     }
     if (APP.filtros.ped_cliente && p.ped_cliente !== APP.filtros.ped_cliente) return false;
     if (APP.filtros.mes && mesAno(p.prev_fat) !== APP.filtros.mes) return false;
