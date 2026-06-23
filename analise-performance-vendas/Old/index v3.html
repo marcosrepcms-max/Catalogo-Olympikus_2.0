@@ -63,21 +63,6 @@
   .period select:hover{border-color:#CBD2DC}
   .plabel{display:inline-flex;align-items:center;gap:7px;font-family:"Space Grotesk",sans-serif;font-size:12.5px;
     font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
-  /* comparar com ano anterior */
-  .cmp-toggle{margin-top:16px;margin-left:12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;
-    font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;color:var(--slate);
-    background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 14px;transition:color .15s,border-color .15s}
-  .cmp-toggle .cmp-dot{width:9px;height:9px;border-radius:50%;background:#CBD2DC;transition:background .15s}
-  .cmp-toggle.on{color:var(--navy);border-color:var(--ftw)}
-  .cmp-toggle.on .cmp-dot{background:var(--ftw)}
-  .cmp-toggle[hidden]{display:none}
-  .selo{font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:600;margin-top:2px}
-  .selo-up{color:#0CA678}
-  .selo-down{color:#C92A2A}
-  .selo-new{color:var(--mute)}
-  .vkpi-cmp{font-family:"Space Grotesk",sans-serif;font-size:11px;color:var(--slate);margin-top:4px}
-  .ratio-rt{display:flex;flex-direction:column;align-items:flex-end;min-width:54px}
-  .ratio-cmp{font-family:"Space Grotesk",sans-serif;font-size:10.5px;font-weight:600;color:var(--slate);margin-top:1px}
   /* modal de publicação */
   .modal{position:fixed;inset:0;background:rgba(14,23,38,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
   .modal[hidden]{display:none}
@@ -251,7 +236,6 @@
   <header class="hero">
     <h1>Análise de Performance de Vendas</h1>
     <div class="period" id="period" hidden></div>
-    <button class="cmp-toggle" id="cmpToggle" type="button" aria-pressed="false" hidden><span class="cmp-dot"></span>Comparar com ano anterior</button>
   </header>
 
   <div id="empty" class="drop">
@@ -328,28 +312,21 @@ function parseSheet(rows){
   const cM = findCol(head,['marca'])>=0 ? findCol(head,['marca']) : 0;
   const cQ = findCol(head,['fatp_qtd','fatp qtd','qtd']);
   const cV = findCol(head,['fatp_vlr','fatp vlr','vlr','valor']);
-  const cQly = findCol(head,['fatp_qtd_ly']);
-  const cVly = findCol(head,['fatp_vlr_ly']);
   if(cV<0) return null;
-  const num=(r,c)=> c>=0 ? (Number(r[c])||0) : 0;
   const v={ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0,
-    q:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},
-    ly:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},      // valor ano anterior por faixa
-    total_v:0, total_q:0, total_v_ly:0};
+    q:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0}, total_v:0, total_q:0};
   let brand=null;
   for(let i=h+1;i<rows.length;i++){
     const r=rows[i]; if(!r) continue;
-    const n=norm(r[cM]); const val=num(r,cV); const qtd=num(r,cQ); const vly=num(r,cVly);
+    const n=norm(r[cM]); const val=Number(r[cV])||0; const qtd=cQ>=0?(Number(r[cQ])||0):0;
     if(n==='olympikus'){ brand='oly'; continue; }
-    if(n==='under armour'||n==='underarmour'){ brand='ua'; v.ua=val; v.q.ua=qtd; v.ly.ua=vly; continue; }
-    if(n==='total'){ v.total_v=val; v.total_q=qtd; v.total_v_ly=vly; continue; }
-    if(brand==='oly' && OLY_MAP[n]){ const k=OLY_MAP[n]; v[k]=val; v.q[k]=qtd; v.ly[k]=vly; }
+    if(n==='under armour'||n==='underarmour'){ brand='ua'; v.ua=val; v.q.ua=qtd; continue; }
+    if(n==='total'){ v.total_v=val; v.total_q=qtd; continue; }
+    if(brand==='oly' && OLY_MAP[n]){ const k=OLY_MAP[n]; v[k]=val; v.q[k]=qtd; }
   }
   if(!v.total_v) v.total_v=v.ftw+v.meias+v.acess+v.conf+v.chinelos+v.ua;
   if(!v.total_q) v.total_q=v.q.ftw+v.q.meias+v.q.acess+v.q.conf+v.q.chinelos+v.q.ua;
-  if(!v.total_v_ly) v.total_v_ly=v.ly.ftw+v.ly.meias+v.ly.acess+v.ly.conf+v.ly.chinelos+v.ly.ua;
   v.demais_v=v.total_v-v.ftw; v.demais_q=v.total_q-v.q.ftw; v.ratio=v.ftw?v.demais_v/v.ftw:0;
-  v.demais_v_ly=v.total_v_ly-v.ly.ftw; v.ratio_ly=v.ly.ftw?v.demais_v_ly/v.ly.ftw:0;
   return v;
 }
 function build(workbook){
@@ -362,34 +339,7 @@ function build(workbook){
   if(!vendors.length) throw new Error('Nenhuma aba válida encontrada. Confira se cada aba tem as colunas Marca / FatP_Qtd / FATP_VLR e as linhas OLYMPIKUS · Calcados.');
   render(vendors);
 }
-let CMP_ON=false;
-function fmtPctSigned(v){ const s=v*100; const t=Math.abs(s).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'; return (s>=0?'+':'−')+t; }
-// selo inline (valor atual vs ano anterior) — entra embaixo do número, sem coluna nova
-function valSelo(cur, prev, yl){
-  if(!CMP_ON) return '';
-  if((!prev) && cur>0) return `<div class="selo selo-new">novo ${yl}</div>`;
-  if(prev>0 && (!cur)) return `<div class="selo selo-down">▼ saiu ${yl}</div>`;
-  if(!prev) return '';
-  const d=(cur-prev)/prev, cls=d>=0?'selo-up':'selo-down', arr=d>=0?'▲':'▼';
-  return `<div class="selo ${cls}">${arr} ${fmtPctSigned(d)} ${yl}</div>`;
-}
-function ratioCmp(v, prevYear){
-  if(!CMP_ON) return '';
-  if(!v.ly.ftw) return `<div class="vkpi-cmp">sem base em ${prevYear}</div>`;
-  const dpp=(v.ratio-v.ratio_ly)*100, arr=dpp>=0?'▲':'▼';
-  const t=Math.abs(dpp).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
-  return `<div class="vkpi-cmp">${fmtPct(v.ratio_ly)} em ${prevYear} · ${arr} ${t} p.p.</div>`;
-}
-function ratioCmpShort(v){
-  if(!CMP_ON) return '';
-  if(!v.ly.ftw) return '<span class="ratio-cmp">novo</span>';
-  const dpp=(v.ratio-v.ratio_ly)*100, arr=dpp>=0?'▲':'▼';
-  return `<span class="ratio-cmp">${arr} ${Math.abs(dpp).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})} p.p.</span>`;
-}
 function render(vendors){
-  const _ano = (CURRENT_KEY && PERIODS[CURRENT_KEY]) ? PERIODS[CURRENT_KEY].ano : '';
-  const prevYear = (_ano && /^\d{4}$/.test(_ano)) ? ('vs '+(+_ano-1)) : 'vs ano anterior';
-  const prevYearShort = (_ano && /^\d{4}$/.test(_ano)) ? String(+_ano-1) : 'ano anterior';
   const maxRatio=Math.max(...vendors.map(v=>v.ratio),0.0001);
   const ranked=[...vendors].sort((a,b)=>b.ratio-a.ratio);
   let crows='';
@@ -400,7 +350,7 @@ function render(vendors){
       <td class="who"><span class="tag">${c.key}</span><span class="full">${c.nome}</span></td>
       <td class="num h-ftw">${fmtBRL(c.ftw)}</td>
       <td class="num h-demais">${fmtBRL(c.demais_v)}</td>
-      <td class="ratio-cell"><div class="ratio-track"><div class="ratio-fill" style="width:${bw.toFixed(1)}%"></div></div><div class="ratio-rt"><span class="ratio-val">${fmtPct(c.ratio)}</span>${ratioCmpShort(c)}</div></td>
+      <td class="ratio-cell"><div class="ratio-track"><div class="ratio-fill" style="width:${bw.toFixed(1)}%"></div></div><span class="ratio-val">${fmtPct(c.ratio)}</span></td>
     </tr>`;
   });
   let secs='';
@@ -415,7 +365,7 @@ function render(vendors){
         <div class="catlabel"><span class="dot dot-${f.cls}"></span><span class="cname">${f.label}</span><span class="csub">${f.sub}</span></div>
         <div class="cbar"><div class="cbar-track"><div class="cbar-fill fill-${f.cls}" style="width:${w.toFixed(1)}%"></div></div></div>
         <div class="cqtd">${fmtQtd(qtd)}</div>
-        <div class="cval">${fmtBRL(val)}${valSelo(val, v.ly[f.key], prevYear)}</div>
+        <div class="cval">${fmtBRL(val)}</div>
         <div class="crel ${isFtw?'is-base':''}">${isFtw?'— base —':fmtPct(rel)}</div>
         <div class="cmix">${fmtPct(mix)}</div>
       </div>`;
@@ -425,7 +375,7 @@ function render(vendors){
       <header class="vhead">
         <div class="vindex">${String(idx+1).padStart(2,'0')}</div>
         <div class="vtitle"><span class="vtag">${v.key}</span><h2>${v.nome}</h2></div>
-        <div class="vkpi"><div class="vkpi-label">Demais faixas&nbsp;/&nbsp;FTW</div><div class="vkpi-val">${fmtPct(v.ratio)}</div><div class="vkpi-note">${fmtBRL(v.demais_v)} sobre ${fmtBRL(v.ftw)}</div>${ratioCmp(v, prevYearShort)}</div>
+        <div class="vkpi"><div class="vkpi-label">Demais faixas&nbsp;/&nbsp;FTW</div><div class="vkpi-val">${fmtPct(v.ratio)}</div><div class="vkpi-note">${fmtBRL(v.demais_v)} sobre ${fmtBRL(v.ftw)}</div></div>
       </header>
       <div class="catgrid">
         <div class="catrow head">
@@ -441,7 +391,7 @@ function render(vendors){
           <div class="catlabel"><span class="dot dot-sum"></span><span class="cname">Todas as faixas somadas</span><span class="csub">exceto FTW</span></div>
           <div class="cbar"><div class="cbar-track"><div class="cbar-fill fill-sum" style="width:${sumW.toFixed(1)}%"></div></div></div>
           <div class="cqtd">${fmtQtd(v.demais_q)}</div>
-          <div class="cval">${fmtBRL(v.demais_v)}${valSelo(v.demais_v, v.demais_v_ly, prevYear)}</div>
+          <div class="cval">${fmtBRL(v.demais_v)}</div>
           <div class="crel is-base">${fmtPct(v.ratio)}</div>
           <div class="cmix">${fmtPct(v.total_v?v.demais_v/v.total_v:0)}</div>
         </div>
@@ -458,7 +408,6 @@ function render(vendors){
   document.getElementById('empty').style.display='none';
   document.getElementById('report').style.display='block';
   document.getElementById('footer').style.display='flex';
-  document.getElementById('cmpToggle').hidden=false;
 }
 
 let _toastT;
@@ -598,17 +547,6 @@ function applyAccent(key){
 }
 document.querySelectorAll('.swatch').forEach(s=> s.onclick=()=>applyAccent(s.dataset.accent));
 (function(){ let k='gold'; try{ k=localStorage.getItem(LS_ACCENT)||'gold'; }catch(_){} applyAccent(k); })();
-
-// comparar com ano anterior (camada opt-in)
-(function(){
-  const t=document.getElementById('cmpToggle');
-  t.addEventListener('click', function(){
-    CMP_ON=!CMP_ON;
-    t.classList.toggle('on', CMP_ON);
-    t.setAttribute('aria-pressed', CMP_ON?'true':'false');
-    if(CURRENT_KEY) showPeriod(CURRENT_KEY);
-  });
-})();
 
 // voltar ao topo
 const totop=document.getElementById('totop');
