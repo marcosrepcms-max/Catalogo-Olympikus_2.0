@@ -205,7 +205,7 @@ const FAIXAS = [
 const OLY_MAP = {calcados:'ftw', meias:'meias', acessorios:'acess', vestuario:'conf', chinelos:'chinelos'};
 const NOMES = {cms:'C M S', jorge:'Jorge Luiz das Neves', leandro:'Leandro de Paula',
   mariana:'Mariana Fernandes', rafael:'Rafael Lima Moreira', willame:'Willame Rocha Teixeira'};
-const LS_DATA='apv_xlsx_b64', LS_NAME='apv_xlsx_name', LS_TOKEN='apv_admin_token';
+const LS_DATA='apv_xlsx_b64', LS_NAME='apv_xlsx_name';
 
 // ==== Sincronização entre dispositivos (Cloudflare Worker) ====
 // URL do Worker. Deixe '' para desativar e usar só este navegador.
@@ -339,21 +339,14 @@ function ingest(u8, name, status){
   setChip(name, status);
 }
 
-// publica a planilha no Worker (visível em qualquer dispositivo)
+// publica a planilha no Worker (visível em qualquer dispositivo) — sem senha
 async function publishToWorker(u8, name){
   if(!WORKER_URL) return;
-  let token=''; try{ token=localStorage.getItem(LS_TOKEN)||''; }catch(_){}
-  if(!token){
-    token = prompt('Senha de admin (X-Admin-Token) para publicar para todos os dispositivos:') || '';
-    if(!token){ setChip(name,'salvo só neste navegador'); return; }
-    try{ localStorage.setItem(LS_TOKEN, token); }catch(_){}
-  }
   setChip(name,'publicando…');
   try{
     const res=await fetch(WORKER_URL,{ method:'PATCH',
-      headers:{ 'Content-Type':'application/json', 'X-Admin-Token':token },
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ action:'savePerformance', data:{ name, b64: toB64(u8) } }) });
-    if(res.status===401){ try{ localStorage.removeItem(LS_TOKEN); }catch(_){} setChip(name,'senha incorreta — não publicado'); return; }
     if(!res.ok){ setChip(name,'falha ao publicar'); return; }
     setChip(name,'publicado para todos');
   }catch(_){ setChip(name,'sem conexão — salvo só neste navegador'); }
