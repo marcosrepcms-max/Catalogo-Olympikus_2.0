@@ -2020,6 +2020,9 @@ function configurarCopiaAoSelecionar() {
   document.addEventListener('selectionchange', () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
+      // Nunca interfere quando o usuário está num campo (digitando ou colando)
+      const ativo = document.activeElement;
+      if (ativo && /^(INPUT|TEXTAREA|SELECT)$/.test(ativo.tagName)) return;
       const sel = window.getSelection();
       const texto = sel ? sel.toString().trim() : '';
       if (texto && texto.length > 0 && texto.length < 200) {
@@ -4201,6 +4204,7 @@ function configurarBuscaComX(inputId, wrapId, onChange) {
   }
 
   input.addEventListener('input', atualizar);
+  input.addEventListener('paste', () => setTimeout(atualizar, 0));
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       input.value = '';
