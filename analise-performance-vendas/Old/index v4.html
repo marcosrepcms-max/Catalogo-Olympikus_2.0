@@ -15,25 +15,6 @@
     --ftw:#E0A100; --ftw-lite:#F4C430; --meias:#4C6EF5; --acess:#15AABF; --conf:#7950F2;
     --chinelos:#0CA678; --ua:#2B2E33; --sum:#0E1726;
   }
-  [data-theme="dark"]{
-    --ink:#E8EBF1; --navy:#D6DDEA; --slate:#9AA4B5; --mute:#828DA0;
-    --paper:#0E131D; --card:#161B26; --line:#2A3242; --line-2:#222A37;
-    --ua:#6B7280; --sum:#8A93A3;
-  }
-  [data-theme="dark"] .btn.primary{background:var(--ftw);color:#23170A;border-color:var(--ftw)}
-  [data-theme="dark"] .who .tag{background:var(--ftw);color:#23170A}
-  [data-theme="dark"] .toast{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-  [data-theme="dark"] .tipbox{background:#222A37;color:#E8EBF1;border:1px solid #39435A}
-  [data-theme="dark"] .drop.drag{background:rgba(224,161,0,.10)}
-  [data-theme="dark"] .fill-sum{background:linear-gradient(90deg,#8A93A3,#5B6678)}
-  [data-theme="dark"] .swatch{border-color:var(--card)}
-  [data-theme="dark"] .selo-up,[data-theme="dark"] .vkpi-cmp.up{color:#34D399}
-  [data-theme="dark"] .selo-down,[data-theme="dark"] .vkpi-cmp.down{color:#F2868B}
-  [data-theme="dark"] .cms-logo{box-shadow:0 4px 14px rgba(124,58,237,.4)}
-  .theme-btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;
-    border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;
-    width:38px;height:38px;display:grid;place-items:center;padding:0}
-  .theme-btn:hover{border-color:#CBD2DC}
   *{box-sizing:border-box}
   body{margin:0;background:var(--paper);color:var(--ink);
     font-family:"Inter",system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -58,7 +39,7 @@
   .swatch.active{box-shadow:0 0 0 2px var(--ink)}
   .topbar .spacer{flex:1}
   .btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;
-    border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;padding:8px 14px}
+    border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 14px}
   .btn:hover{border-color:#CBD2DC}
   .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 
@@ -69,7 +50,7 @@
   .hero h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(30px,5vw,46px);
     line-height:1.05;letter-spacing:-.02em;margin:0 0 18px}
   .lede{color:var(--slate);max-width:64ch;margin:0;font-size:16px}
-  .lede code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 7px;
+  .lede code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 7px;
     font-family:"Space Grotesk",sans-serif;font-size:13px;color:var(--navy)}
   /* ano base (pill abaixo do título) */
   /* seletor de período (ano + semestre) */
@@ -78,14 +59,14 @@
   .pgroup{display:flex;align-items:center;gap:8px}
   .pgroup label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
   .period select{font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;color:var(--navy);
-    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
   .period select:hover{border-color:#CBD2DC}
   .plabel{display:inline-flex;align-items:center;gap:7px;font-family:"Space Grotesk",sans-serif;font-size:12.5px;
-    font-weight:600;color:var(--navy);background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 14px}
+    font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
   /* comparar com ano anterior */
   .cmp-toggle{margin-top:16px;margin-left:12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;
     font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;color:var(--slate);
-    background:var(--card);border:1px solid var(--line);border-radius:99px;padding:7px 14px;transition:color .15s,border-color .15s}
+    background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 14px;transition:color .15s,border-color .15s}
   .cmp-toggle .cmp-dot{width:9px;height:9px;border-radius:50%;background:#CBD2DC;transition:background .15s}
   .cmp-toggle.on{color:var(--navy);border-color:var(--ftw)}
   .cmp-toggle.on .cmp-dot{background:var(--ftw)}
@@ -95,9 +76,6 @@
   .selo-down{color:#C92A2A}
   .selo-new{color:var(--mute)}
   .vkpi-cmp{font-family:"Space Grotesk",sans-serif;font-size:11px;color:var(--slate);margin-top:4px}
-  .vkpi-cmp.up{color:#0CA678}
-  .vkpi-cmp.down{color:#C92A2A}
-  .vkpi-total .vkpi-val,.vkpi-pares .vkpi-val{color:var(--ftw);font-size:25px}
   .ratio-rt{display:flex;flex-direction:column;align-items:flex-end;min-width:54px}
   .ratio-cmp{font-family:"Space Grotesk",sans-serif;font-size:10.5px;font-weight:600;color:var(--slate);margin-top:1px}
   .vindex-sum{font-size:18px;font-weight:700}
@@ -110,13 +88,13 @@
   /* modal de publicação */
   .modal{position:fixed;inset:0;background:rgba(14,23,38,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
   .modal[hidden]{display:none}
-  .modal-card{background:var(--card);border-radius:16px;padding:24px 24px 20px;width:340px;max-width:100%;box-shadow:0 24px 64px rgba(16,23,38,.32)}
+  .modal-card{background:#fff;border-radius:16px;padding:24px 24px 20px;width:340px;max-width:100%;box-shadow:0 24px 64px rgba(16,23,38,.32)}
   .modal-card h3{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;margin:0 0 4px}
   .modal-sub{font-size:12px;color:var(--mute);margin:0 0 18px;word-break:break-all}
   .fld{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:var(--slate);
     text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
   .fld input,.fld select{font-family:"Inter",sans-serif;font-size:15px;font-weight:400;text-transform:none;letter-spacing:0;
-    color:var(--ink);padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+    color:var(--ink);padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
   /* toast (feedback de upload) */
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);
@@ -126,7 +104,7 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* dropzone */
-  .drop{margin:48px 0;border:2px dashed #CBD2DC;border-radius:18px;background:var(--card);
+  .drop{margin:48px 0;border:2px dashed #CBD2DC;border-radius:18px;background:#fff;
     padding:56px 28px;text-align:center;transition:border-color .15s,background .15s}
   .drop.drag{border-color:var(--ftw);background:#FFFBF0}
   .drop h2{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:20px;margin:0 0 8px}
@@ -145,7 +123,7 @@
     text-transform:uppercase;color:var(--mute);text-align:left;padding:0 14px 12px;border-bottom:1px solid var(--line)}
   .ctable thead th.r{text-align:right}
   .ctable tbody tr{border-bottom:1px solid var(--line-2)}
-  .ctable tbody tr:hover{background:var(--line-2)}
+  .ctable tbody tr:hover{background:#FBFCFD}
   .ctable td{padding:14px;vertical-align:middle}
   .rk{font-family:"Space Grotesk",sans-serif;color:var(--mute);font-weight:600;width:38px}
   .who .tag{display:inline-block;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:12px;
@@ -162,10 +140,8 @@
   .vend{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 30px;
     margin-top:22px;box-shadow:0 1px 2px rgba(16,23,38,.03)}
   .vhead{display:flex;align-items:center;gap:18px;margin-bottom:22px}
-  .vindex{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:13px;color:var(--ftw);
-    border:1px solid color-mix(in srgb, var(--ftw) 42%, transparent);
-    background:color-mix(in srgb, var(--ftw) 12%, transparent);
-    border-radius:8px;width:34px;height:34px;display:grid;place-items:center;flex:none}
+  .vindex{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:13px;color:var(--mute);
+    border:1px solid var(--line);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;flex:none}
   .vtitle{flex:1;min-width:0}
   .vtag{font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;
     text-transform:uppercase;color:var(--ftw)}
@@ -212,13 +188,13 @@
   footer b{color:var(--slate)}
   .foot-text{max-width:72ch}
   .totop-link{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;
-    border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;padding:9px 14px;
+    border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:9px 14px;
     white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
   .totop-link:hover{border-color:#CBD2DC}
 
   /* botão flutuante voltar ao topo */
   #totop{position:fixed;right:22px;bottom:22px;width:46px;height:46px;border-radius:13px;
-    border:1px solid var(--line);background:var(--card);color:var(--navy);font-size:20px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--navy);font-size:20px;cursor:pointer;
     box-shadow:0 8px 24px rgba(16,23,38,.14);opacity:0;pointer-events:none;
     transition:opacity .2s,transform .2s;transform:translateY(10px);z-index:30;display:grid;place-items:center}
   #totop.show{opacity:1;pointer-events:auto;transform:none}
@@ -275,7 +251,6 @@
       <button class="swatch" data-accent="gold" aria-label="Tema dourado"></button>
       <button class="swatch" data-accent="purple" aria-label="Tema roxo"></button>
     </div>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Alternar tema claro/escuro" title="Tema claro/escuro"></button>
     <button class="btn primary" id="loadBtn">Carregar planilha</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm" style="display:none">
   </div>
@@ -429,24 +404,6 @@ function ratioCmpShort(v, yWord){
   const tip=`Diversificação demais / FTW&#10;Atual: ${fmtPct(v.ratio)}&#10;${yWord}: ${fmtPct(v.ratio_ly)}&#10;Variação: ${ppText(dpp)}`;
   return `<span class="ratio-cmp" data-tip="${tip}">${arr} ${Math.abs(dpp).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})} p.p.</span>`;
 }
-function paresCmp(v, yWord){
-  if(!CMP_ON) return '';
-  const cur=v.total_q, prev=v.total_q_ly;
-  if(!prev) return `<div class="vkpi-cmp">sem base em ${yWord}</div>`;
-  const d=(cur-prev)/prev, dif=cur-prev, cls=d>=0?'up':'down', arr=d>=0?'▲':'▼';
-  const difStr=(dif>=0?'+':'−')+fmtQtd(Math.abs(dif))+' pares';
-  const tip=`Atual: ${fmtQtd(cur)} pares&#10;${yWord}: ${fmtQtd(prev)} pares&#10;Diferença: ${difStr}&#10;Variação: ${fmtPctSigned(d)}`;
-  return `<div class="vkpi-cmp ${cls}" data-tip="${tip}">${arr} ${fmtPctSigned(d)} vs ${yWord}</div>`;
-}
-function totalCmp(v, yWord){
-  if(!CMP_ON) return '';
-  const cur=v.total_v, prev=v.total_v_ly;
-  if(!prev) return `<div class="vkpi-cmp">sem base em ${yWord}</div>`;
-  const d=(cur-prev)/prev, dif=cur-prev, cls=d>=0?'up':'down', arr=d>=0?'▲':'▼';
-  const difStr=(dif>=0?'+':'−')+fmtBRL(Math.abs(dif));
-  const tip=`Atual: ${fmtBRL(cur)}&#10;${yWord}: ${fmtBRL(prev)}&#10;Diferença: ${difStr}&#10;Variação: ${fmtPctSigned(d)}`;
-  return `<div class="vkpi-cmp ${cls}" data-tip="${tip}">${arr} ${fmtPctSigned(d)} vs ${yWord}</div>`;
-}
 function aggregate(vendors){
   const KS=['ftw','meias','acess','conf','chinelos','ua'];
   const a={ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0,
@@ -493,8 +450,6 @@ function render(vendors){
       <header class="vhead">
         ${idx}
         <div class="vtitle"><span class="vtag">${v.key}</span><h2>${v.nome}</h2></div>
-        <div class="vkpi vkpi-total"><div class="vkpi-label">Faturamento total</div><div class="vkpi-val">${fmtBRL(v.total_v)}</div><div class="vkpi-note">FTW + demais faixas</div>${totalCmp(v, prevYearShort)}</div>
-        <div class="vkpi vkpi-pares"><div class="vkpi-label">Pares totais</div><div class="vkpi-val">${fmtQtd(v.total_q)}</div><div class="vkpi-note">pares no período</div>${paresCmp(v, prevYearShort)}</div>
         <div class="vkpi"><div class="vkpi-label">Demais faixas&nbsp;/&nbsp;FTW</div><div class="vkpi-val">${fmtPct(v.ratio)}</div><div class="vkpi-note">${fmtBRL(v.demais_v)} sobre ${fmtBRL(v.ftw)}</div>${ratioCmp(v, prevYearShort)}</div>
       </header>
       <div class="catgrid">
@@ -689,27 +644,6 @@ function applyAccent(key){
 }
 document.querySelectorAll('.swatch').forEach(s=> s.onclick=()=>applyAccent(s.dataset.accent));
 (function(){ let k='gold'; try{ k=localStorage.getItem(LS_ACCENT)||'gold'; }catch(_){} applyAccent(k); })();
-
-// tema claro/escuro (padrão: escuro)
-const LS_THEME='apv_theme';
-const ICON_MOON='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-const ICON_SUN='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
-function applyTheme(mode){
-  const dark = (mode==='dark');
-  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
-  const b=document.getElementById('themeBtn');
-  if(b) b.innerHTML = dark ? ICON_SUN : ICON_MOON;
-  try{ localStorage.setItem(LS_THEME, dark?'dark':'light'); }catch(_){}
-}
-(function(){
-  let m='dark'; try{ m=localStorage.getItem(LS_THEME)||'dark'; }catch(_){}
-  applyTheme(m);
-  const b=document.getElementById('themeBtn');
-  if(b) b.addEventListener('click', function(){
-    const cur=document.documentElement.getAttribute('data-theme')==='dark';
-    applyTheme(cur?'light':'dark');
-  });
-})();
 
 // comparar com ano anterior (camada opt-in)
 (function(){
