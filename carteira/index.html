@@ -3556,19 +3556,19 @@ function pedidoPorKey(key) {
   return APP.pedidos.find(p => keyPedido(p) === key);
 }
 
-// Prazo (dias) mais comum nos pedidos do cliente de destino
-function prazoCliente(cod) {
+// Condição (Cond. Pag) + campanha mais comuns nos pedidos do cliente de destino
+function condicaoCliente(cod) {
   const cont = {};
   for (const p of APP.pedidos) {
     if (p.cliente_cod !== cod) continue;
-    const v = String(p.prazo || '').trim();
-    if (!v) continue;
-    cont[v] = (cont[v] || 0) + 1;
+    const cp = String(p.cond_pag || '').trim();
+    const camp = String(p.campanha || '').trim();
+    if (!cp && !camp) continue;
+    const k = cp + '|' + camp;
+    (cont[k] = cont[k] || { cond_pag: cp, campanha: camp, n: 0 }).n++;
   }
-  const ent = Object.entries(cont);
-  if (!ent.length) return '';
-  ent.sort((a, b) => b[1] - a[1]);
-  return ent[0][0];
+  const arr = Object.values(cont).sort((a, b) => b.n - a.n);
+  return arr.length ? { cond_pag: arr[0].cond_pag, campanha: arr[0].campanha } : { cond_pag: '', campanha: '' };
 }
 
 function exportarRepassesXLSX() {
@@ -3579,12 +3579,13 @@ function exportarRepassesXLSX() {
   const pendentes = selecionados.length - finalizados.length;
   if (!finalizados.length) { toast('Os selecionados ainda não têm destino (pendentes)'); return; }
 
-  const cabecalho = ['Empresa', 'Prev.fat.', 'Enc.EBM', 'Enc.GCI', 'Cliente', 'Razão', 'Total de pares', 'Família', 'descrição', 'Artigo', 'Cor', 'Destino', 'Nome fantasia', 'Prazo'];
+  const cabecalho = ['Empresa', 'Prev.fat.', 'Enc.EBM', 'Enc.GCI', 'Cliente', 'Razão', 'Total de pares', 'Família', 'descrição', 'Artigo', 'Cor', 'Destino', 'Nome fantasia', 'Prazo', 'Campanha'];
   const linhas = [cabecalho];
   for (const p of finalizados) {
     const bs = boxSizeRepasse(p);
     for (const d of (p.repasse.destinos || [])) {
       const paresLinha = d.caixas ? d.caixas * bs : p.total;
+      const cond = condicaoCliente(d.codigo);
       linhas.push([
         p.empresa || '',
         formatarDataBR(p.prev_fat),
@@ -3599,13 +3600,14 @@ function exportarRepassesXLSX() {
         p.cor || '',
         d.codigo || '',
         nomeFantasiaDe(d.codigo) || '',
-        prazoCliente(d.codigo),
+        cond.cond_pag,
+        cond.campanha,
       ]);
     }
   }
 
   const ws = XLSX.utils.aoa_to_sheet(linhas);
-  ws['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 12 }, { wch: 8 }, { wch: 26 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 22 }, { wch: 8 }];
+  ws['!cols'] = [{ wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 12 }, { wch: 8 }, { wch: 26 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 22 }, { wch: 12 }, { wch: 10 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Repasses');
   const h = new Date();
