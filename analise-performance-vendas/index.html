@@ -343,21 +343,24 @@ function parseSheet(rows){
   const v={ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0,
     q:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},
     ly:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},      // valor ano anterior por faixa
-    total_v:0, total_q:0, total_v_ly:0};
+    qly:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},     // qtd ano anterior por faixa
+    total_v:0, total_q:0, total_v_ly:0, total_q_ly:0};
   let brand=null;
   for(let i=h+1;i<rows.length;i++){
     const r=rows[i]; if(!r) continue;
-    const n=norm(r[cM]); const val=num(r,cV); const qtd=num(r,cQ); const vly=num(r,cVly);
+    const n=norm(r[cM]); const val=num(r,cV); const qtd=num(r,cQ); const vly=num(r,cVly); const qly=num(r,cQly);
     if(n==='olympikus'){ brand='oly'; continue; }
-    if(n==='under armour'||n==='underarmour'){ brand='ua'; v.ua=val; v.q.ua=qtd; v.ly.ua=vly; continue; }
-    if(n==='total'){ v.total_v=val; v.total_q=qtd; v.total_v_ly=vly; continue; }
-    if(brand==='oly' && OLY_MAP[n]){ const k=OLY_MAP[n]; v[k]=val; v.q[k]=qtd; v.ly[k]=vly; }
+    if(n==='under armour'||n==='underarmour'){ brand='ua'; v.ua=val; v.q.ua=qtd; v.ly.ua=vly; v.qly.ua=qly; continue; }
+    if(n==='total'){ v.total_v=val; v.total_q=qtd; v.total_v_ly=vly; v.total_q_ly=qly; continue; }
+    if(brand==='oly' && OLY_MAP[n]){ const k=OLY_MAP[n]; v[k]=val; v.q[k]=qtd; v.ly[k]=vly; v.qly[k]=qly; }
   }
   if(!v.total_v) v.total_v=v.ftw+v.meias+v.acess+v.conf+v.chinelos+v.ua;
   if(!v.total_q) v.total_q=v.q.ftw+v.q.meias+v.q.acess+v.q.conf+v.q.chinelos+v.q.ua;
   if(!v.total_v_ly) v.total_v_ly=v.ly.ftw+v.ly.meias+v.ly.acess+v.ly.conf+v.ly.chinelos+v.ly.ua;
+  if(!v.total_q_ly) v.total_q_ly=v.qly.ftw+v.qly.meias+v.qly.acess+v.qly.conf+v.qly.chinelos+v.qly.ua;
   v.demais_v=v.total_v-v.ftw; v.demais_q=v.total_q-v.q.ftw; v.ratio=v.ftw?v.demais_v/v.ftw:0;
   v.demais_v_ly=v.total_v_ly-v.ly.ftw; v.ratio_ly=v.ly.ftw?v.demais_v_ly/v.ly.ftw:0;
+  v.demais_q_ly=v.total_q_ly-v.qly.ftw;
   return v;
 }
 function build(workbook){
@@ -374,16 +377,19 @@ let CMP_ON=false;
 let CONS_ON=false;
 function fmtPctSigned(v){ const s=v*100; const t=Math.abs(s).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'; return (s>=0?'+':'−')+t; }
 function ppText(dpp){ return (dpp>=0?'+':'−')+Math.abs(dpp).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' p.p.'; }
-// selo inline (valor atual vs ano anterior) — entra embaixo do número, sem coluna nova
-function valSelo(cur, prev, yl, yWord){
+// selo inline (atual vs ano anterior) — entra embaixo do número, sem coluna nova
+function deltaSelo(cur, prev, yl, yWord, fmt){
   if(!CMP_ON) return '';
-  if((!prev) && cur>0) return `<div class="selo selo-new" data-tip="Atual: ${fmtBRL(cur)}&#10;${yWord}: sem vendas">novo ${yl}</div>`;
-  if(prev>0 && (!cur)) return `<div class="selo selo-down" data-tip="Atual: sem vendas&#10;${yWord}: ${fmtBRL(prev)}&#10;Variação: −100%">▼ saiu ${yl}</div>`;
+  if((!prev) && cur>0) return `<div class="selo selo-new" data-tip="Atual: ${fmt(cur)}&#10;${yWord}: sem vendas">novo ${yl}</div>`;
+  if(prev>0 && (!cur)) return `<div class="selo selo-down" data-tip="Atual: sem vendas&#10;${yWord}: ${fmt(prev)}&#10;Variação: −100%">▼ saiu ${yl}</div>`;
   if(!prev) return '';
-  const d=(cur-prev)/prev, cls=d>=0?'selo-up':'selo-down', arr=d>=0?'▲':'▼';
-  const tip=`Atual: ${fmtBRL(cur)}&#10;${yWord}: ${fmtBRL(prev)}&#10;Variação: ${fmtPctSigned(d)}`;
+  const d=(cur-prev)/prev, dif=cur-prev, cls=d>=0?'selo-up':'selo-down', arr=d>=0?'▲':'▼';
+  const difStr=(dif>=0?'+':'−')+fmt(Math.abs(dif));
+  const tip=`Atual: ${fmt(cur)}&#10;${yWord}: ${fmt(prev)}&#10;Diferença: ${difStr}&#10;Variação: ${fmtPctSigned(d)}`;
   return `<div class="selo ${cls}" data-tip="${tip}">${arr} ${fmtPctSigned(d)} ${yl}</div>`;
 }
+function valSelo(cur, prev, yl, yWord){ return deltaSelo(cur, prev, yl, yWord, x=>fmtBRL(x)); }
+function qtySelo(cur, prev, yl, yWord){ return deltaSelo(cur, prev, yl, yWord, x=>fmtQtd(x)+' pares'); }
 function ratioCmp(v, prevYear){
   if(!CMP_ON) return '';
   if(!v.ly.ftw) return `<div class="vkpi-cmp">sem base em ${prevYear}</div>`;
@@ -403,13 +409,15 @@ function aggregate(vendors){
   const a={ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0,
     q:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},
     ly:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},
-    total_v:0,total_q:0,total_v_ly:0};
+    qly:{ftw:0,meias:0,acess:0,conf:0,chinelos:0,ua:0},
+    total_v:0,total_q:0,total_v_ly:0,total_q_ly:0};
   vendors.forEach(v=>{
-    KS.forEach(k=>{ a[k]+=v[k]||0; a.q[k]+=(v.q[k]||0); a.ly[k]+=(v.ly[k]||0); });
-    a.total_v+=v.total_v||0; a.total_q+=v.total_q||0; a.total_v_ly+=v.total_v_ly||0;
+    KS.forEach(k=>{ a[k]+=v[k]||0; a.q[k]+=(v.q[k]||0); a.ly[k]+=(v.ly[k]||0); a.qly[k]+=(v.qly?v.qly[k]||0:0); });
+    a.total_v+=v.total_v||0; a.total_q+=v.total_q||0; a.total_v_ly+=v.total_v_ly||0; a.total_q_ly+=v.total_q_ly||0;
   });
   a.demais_v=a.total_v-a.ftw; a.demais_q=a.total_q-a.q.ftw; a.ratio=a.ftw?a.demais_v/a.ftw:0;
   a.demais_v_ly=a.total_v_ly-a.ly.ftw; a.ratio_ly=a.ly.ftw?a.demais_v_ly/a.ly.ftw:0;
+  a.demais_q_ly=a.total_q_ly-a.qly.ftw;
   a.key='TODOS'; a.nome='Consolidado · todos os vendedores';
   return a;
 }
@@ -430,7 +438,7 @@ function render(vendors){
       rows+=`<div class="catrow${zero}">
         <div class="catlabel"><span class="dot dot-${f.cls}"></span><span class="cname">${f.label}</span><span class="csub">${f.sub}</span></div>
         <div class="cbar"><div class="cbar-track"><div class="cbar-fill fill-${f.cls}" style="width:${w.toFixed(1)}%"></div></div></div>
-        <div class="cqtd">${fmtQtd(qtd)}</div>
+        <div class="cqtd">${fmtQtd(qtd)}${qtySelo(qtd, v.qly[f.key], prevYear, prevYearShort)}</div>
         <div class="cval">${fmtBRL(val)}${valSelo(val, v.ly[f.key], prevYear, prevYearShort)}</div>
         <div class="crel ${isFtw?'is-base':''}">${isFtw?'— base —':fmtPct(rel)}</div>
         <div class="cmix">${fmtPct(mix)}</div>
@@ -457,7 +465,7 @@ function render(vendors){
         <div class="catrow sumrow">
           <div class="catlabel"><span class="dot dot-sum"></span><span class="cname">Todas as faixas somadas</span><span class="csub">exceto FTW</span></div>
           <div class="cbar"><div class="cbar-track"><div class="cbar-fill fill-sum" style="width:${sumW.toFixed(1)}%"></div></div></div>
-          <div class="cqtd">${fmtQtd(v.demais_q)}</div>
+          <div class="cqtd">${fmtQtd(v.demais_q)}${qtySelo(v.demais_q, v.demais_q_ly, prevYear, prevYearShort)}</div>
           <div class="cval">${fmtBRL(v.demais_v)}${valSelo(v.demais_v, v.demais_v_ly, prevYear, prevYearShort)}</div>
           <div class="crel is-base">${fmtPct(v.ratio)}</div>
           <div class="cmix">${fmtPct(v.total_v?v.demais_v/v.total_v:0)}</div>
