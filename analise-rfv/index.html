@@ -173,7 +173,7 @@
   @media(max-width:860px){
     .wrap{overflow-x:hidden}
     .vend{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .vfreeze{position:static}
+    .vfreeze,.rsm-head{position:static}
     .vfreeze,.rtable,.rrow{min-width:760px}
     .rsmwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
     .rsm-head,.rsm-row{min-width:740px}
@@ -844,6 +844,14 @@ const ICON_SUN='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stro
 function applyTheme(m){const dark=m==='dark';document.documentElement.setAttribute('data-theme',dark?'dark':'light');const b=document.getElementById('themeBtn');if(b)b.innerHTML=dark?ICON_SUN:ICON_MOON;try{localStorage.setItem(LS_THEME,dark?'dark':'light');}catch(_){}}
 (function(){let m='dark';try{m=localStorage.getItem(LS_THEME)||'dark';}catch(_){}applyTheme(m);
   document.getElementById('themeBtn').addEventListener('click',()=>{const cur=document.documentElement.getAttribute('data-theme')==='dark';applyTheme(cur?'light':'dark');});})();
+// --toph dinâmico: o cabeçalho congela logo abaixo da barra de topo, seja qual for a altura dela (mobile/tablet quebram em mais linhas)
+(function(){
+  const bar=document.querySelector('.topbar'); if(!bar) return;
+  const set=()=>document.documentElement.style.setProperty('--toph', bar.offsetHeight+'px');
+  set();
+  if(window.ResizeObserver){ new ResizeObserver(set).observe(bar); }
+  else { window.addEventListener('resize', set); window.addEventListener('load', set); }
+})();
 </script>
 </body>
 </html>
