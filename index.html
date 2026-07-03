@@ -9847,7 +9847,7 @@ function injectHomeCategoryImages(){
 // ═══════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO DE IMAGENS DAS CATEGORIAS (admin)
 // ═══════════════════════════════════════════════════════════════════
-const CAT_IMG_PWD = "cmsrepasse"; // senha simples (igual ao admin antigo)
+const CAT_IMG_PWD = "cmscatalogo"; // senha simples de configurações
 const CAT_IMG_CATEGORIES = [
   { id: "FTW",  nome: "Tênis",        icone: "👟", sub: "Corrida, treino e lifestyle" },
   { id: "CHI",  nome: "Chinelos",     icone: "👡", sub: "Conforto pra o dia a dia" },
@@ -9873,13 +9873,250 @@ function validarSenhaCategorias(){
   const v = $("catImgPwdInput").value.trim();
   if(v === CAT_IMG_PWD){
     fecharSenhaCategorias();
-    abrirModalImagensCategorias();
+    abrirMenuConfiguracoes();
   } else {
     $("catImgPwdError").classList.remove("hidden");
     $("catImgPwdInput").value = "";
     $("catImgPwdInput").focus();
   }
 }
+
+// ────── Menu de Configurações ──────
+function abrirMenuConfiguracoes(){
+  const m = $("configMenuModal");
+  if(!m) return;
+  m.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function fecharMenuConfiguracoes(){
+  $("configMenuModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+document.getElementById("configMenuClose")?.addEventListener("click", fecharMenuConfiguracoes);
+document.getElementById("configMenuBackdrop")?.addEventListener("click", fecharMenuConfiguracoes);
+document.getElementById("btnCfgImagens")?.addEventListener("click", ()=>{
+  fecharMenuConfiguracoes();
+  abrirModalImagensCategorias();
+});
+document.getElementById("btnCfgPrepostos")?.addEventListener("click", ()=>{
+  fecharMenuConfiguracoes();
+  abrirModalPrepostos();
+});
+
+// ────── Prepostos: estado + API ──────
+const PrepostosMgr = {
+  lista: [],           // [{codigo, nome}]
+  editandoCodigo: null // se está editando alguém
+};
+async function fetchPrepostos(){
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getPrepostos" })
+    });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch(e){
+    console.warn("fetchPrepostos falhou:", e);
+    return null; // sinaliza erro (diferente de "vazio")
+  }
+}
+async function savePrepostos(lista){
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Token": ADMIN_TOKEN },
+    body: JSON.stringify({ action: "savePrepostos", data: lista })
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(()=> "");
+    throw new Error("HTTP " + res.status + " " + txt);
+  }
+  return res.json();
+}
+
+async function abrirModalPrepostos(){
+  const m = $("prepostosModal");
+  if(!m) return;
+  m.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  _prepostosResetForm();
+  // Carrega lista remota
+  $("prepostosList").innerHTML = `<div class="text-xs text-oly-muted py-6 text-center">Carregando…</div>`;
+  const data = await fetchPrepostos();
+  if(data === null){
+    $("prepostosList").innerHTML = `<div class="text-xs py-6 text-center" style="color:#B91C1C">Erro ao carregar. Tente novamente.</div>`;
+    return;
+  }
+  // Se veio vazio do backend E ainda temos a lista hardcoded, migra na primeira abertura
+  if(data.length === 0 && Array.isArray(COMISSIONISTAS) && COMISSIONISTAS.length > 0){
+    PrepostosMgr.lista = COMISSIONISTAS.map(c => ({ codigo: c.codigo, nome: c.nome }));
+    try { await savePrepostos(PrepostosMgr.lista); } catch(e){ console.warn("Migração inicial falhou:", e); }
+  } else {
+    PrepostosMgr.lista = data;
+  }
+  _prepostosRender();
+  _sincronizaComissionistas();
+}
+function fecharModalPrepostos(){
+  $("prepostosModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+  _prepostosResetForm();
+}
+function _prepostosResetForm(){
+  PrepostosMgr.editandoCodigo = null;
+  $("prepostoCodigo").value = "";
+  $("prepostoNome").value = "";
+  $("prepostoFormLabel").textContent = "Novo preposto";
+  $("prepostoSaveLabel").textContent = "Adicionar";
+  $("prepostoCancelEditBtn").classList.add("hidden");
+  $("prepostoFormError").classList.add("hidden");
+  $("prepostoCodigo").disabled = false;
+}
+function _prepostosRender(){
+  const list = $("prepostosList");
+  const count = $("prepostosCount");
+  const total = PrepostosMgr.lista.length;
+  count.textContent = total + " preposto" + (total !== 1 ? "s" : "");
+  if(total === 0){
+    list.innerHTML = `<div class="text-xs text-oly-muted py-6 text-center">Nenhum preposto cadastrado.</div>`;
+    return;
+  }
+  const ordenado = [...PrepostosMgr.lista].sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  list.innerHTML = ordenado.map(p => `
+    <div class="rounded-xl border border-oly-border bg-white p-3 flex items-center gap-3">
+      <div class="min-w-0 flex-1">
+        <div class="text-[15px] font-extrabold text-oly-text truncate">${_mpEscape(p.nome)}</div>
+        <div class="text-xs text-oly-muted font-bold">Código: ${_mpEscape(p.codigo)}</div>
+      </div>
+      <button type="button" class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-prep-edit="${_mpEscape(p.codigo)}" title="Editar" aria-label="Editar">
+        <i class="fa-solid fa-pen text-oly-blue" style="font-size:12px"></i>
+      </button>
+      <button type="button" class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-prep-remove="${_mpEscape(p.codigo)}" title="Excluir" aria-label="Excluir">
+        <i class="fa-solid fa-trash" style="font-size:12px;color:#B91C1C"></i>
+      </button>
+    </div>
+  `).join("");
+}
+function _prepostoShowError(msg){
+  const el = $("prepostoFormError");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+async function _prepostoSalvar(){
+  const codigo = $("prepostoCodigo").value.trim();
+  const nome = $("prepostoNome").value.trim().toUpperCase();
+  $("prepostoFormError").classList.add("hidden");
+  if(!codigo || !nome){ _prepostoShowError("Preencha código e nome."); return; }
+  if(!/^\d+$/.test(codigo)){ _prepostoShowError("Código deve conter apenas números."); return; }
+  const isEdit = !!PrepostosMgr.editandoCodigo;
+  if(!isEdit){
+    // Novo: bloqueia duplicidade de código
+    if(PrepostosMgr.lista.some(p => p.codigo === codigo)){
+      _prepostoShowError("Já existe um preposto com esse código.");
+      return;
+    }
+    PrepostosMgr.lista.push({ codigo, nome });
+  } else {
+    // Editar: o código não muda (identificador estável); só o nome
+    const p = PrepostosMgr.lista.find(x => x.codigo === PrepostosMgr.editandoCodigo);
+    if(!p){ _prepostoShowError("Preposto não encontrado."); return; }
+    p.nome = nome;
+  }
+  const btn = $("prepostoSaveBtn");
+  btn.disabled = true;
+  try {
+    await savePrepostos(PrepostosMgr.lista);
+    _prepostosResetForm();
+    _prepostosRender();
+    _sincronizaComissionistas();
+    toast(isEdit ? "Preposto atualizado ✅" : "Preposto adicionado ✅");
+  } catch(e){
+    _prepostoShowError("Erro ao salvar: " + (e.message || "verifique a conexão"));
+  } finally {
+    btn.disabled = false;
+  }
+}
+function _prepostoIniciarEdicao(codigo){
+  const p = PrepostosMgr.lista.find(x => x.codigo === codigo);
+  if(!p) return;
+  PrepostosMgr.editandoCodigo = codigo;
+  $("prepostoCodigo").value = p.codigo;
+  $("prepostoCodigo").disabled = true; // código é imutável na edição
+  $("prepostoNome").value = p.nome;
+  $("prepostoFormLabel").textContent = "Editando: " + p.nome;
+  $("prepostoSaveLabel").textContent = "Salvar alterações";
+  $("prepostoCancelEditBtn").classList.remove("hidden");
+  $("prepostoFormError").classList.add("hidden");
+  $("prepostoNome").focus();
+}
+async function _prepostoRemover(codigo){
+  const p = PrepostosMgr.lista.find(x => x.codigo === codigo);
+  if(!p) return;
+  const ok = await appConfirm({
+    title: "Excluir preposto",
+    message: `Excluir <strong>${_mpEscape(p.nome)}</strong> (código ${_mpEscape(p.codigo)}) da lista?<br><br>O histórico de pedidos deste preposto <strong>não será apagado</strong>.`,
+    okText: "Excluir",
+    cancelText: "Cancelar",
+    tone: "danger"
+  });
+  if(!ok) return;
+  PrepostosMgr.lista = PrepostosMgr.lista.filter(x => x.codigo !== codigo);
+  try {
+    await savePrepostos(PrepostosMgr.lista);
+    _prepostosRender();
+    _sincronizaComissionistas();
+    toast("Preposto excluído ✅");
+  } catch(e){
+    toast("Erro ao excluir: " + (e.message || "verifique a conexão"));
+  }
+}
+// Sincroniza a lista global COMISSIONISTAS + dropdown do modal EBM
+function _sincronizaComissionistas(){
+  if(!Array.isArray(PrepostosMgr.lista) || PrepostosMgr.lista.length === 0) return;
+  // Substitui o array global (in-place pra manter a referência viva)
+  COMISSIONISTAS.length = 0;
+  for(const p of PrepostosMgr.lista) COMISSIONISTAS.push({ codigo: p.codigo, nome: p.nome });
+  // Atualiza o dropdown do modal EBM
+  const sel = document.getElementById("oxCommission");
+  if(sel){
+    const valorAtual = sel.value;
+    const ordenados = [...COMISSIONISTAS].sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    sel.innerHTML = `<option value="">— Selecione —</option>` +
+      ordenados.map(c => `<option value="${_mpEscape(c.codigo)}">${_mpEscape(c.codigo)} – ${_mpEscape(c.nome)}</option>`).join("");
+    // Preserva a seleção se ainda existe
+    if(valorAtual && ordenados.some(c => c.codigo === valorAtual)){
+      sel.value = valorAtual;
+    }
+  }
+}
+// Carrega prepostos do backend ao iniciar o app (background) para popular COMISSIONISTAS
+(async function _bootstrapPrepostos(){
+  const data = await fetchPrepostos();
+  if(Array.isArray(data) && data.length > 0){
+    PrepostosMgr.lista = data;
+    _sincronizaComissionistas();
+  }
+})();
+
+// Listeners do modal prepostos
+document.getElementById("prepostosClose")?.addEventListener("click", fecharModalPrepostos);
+document.getElementById("prepostosBackdrop")?.addEventListener("click", fecharModalPrepostos);
+document.getElementById("prepostoSaveBtn")?.addEventListener("click", _prepostoSalvar);
+document.getElementById("prepostoCancelEditBtn")?.addEventListener("click", _prepostosResetForm);
+document.getElementById("prepostoNome")?.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") _prepostoSalvar();
+});
+document.getElementById("prepostoCodigo")?.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") $("prepostoNome").focus();
+});
+document.getElementById("prepostosList")?.addEventListener("click", (e)=>{
+  const editBtn = e.target.closest("[data-prep-edit]");
+  const rmBtn = e.target.closest("[data-prep-remove]");
+  if(editBtn) _prepostoIniciarEdicao(editBtn.getAttribute("data-prep-edit"));
+  if(rmBtn) _prepostoRemover(rmBtn.getAttribute("data-prep-remove"));
+});
 
 function abrirModalImagensCategorias(){
   // Popula a lista
@@ -11275,6 +11512,84 @@ loadCatalog({ cacheBust:false });
 </div>
 
 <!-- ═══════════ MODAL UPLOAD IMAGENS CATEGORIAS ═══════════ -->
+<!-- ────── Menu de Configurações (depois da senha) ────── -->
+<div id="configMenuModal" class="hidden fixed inset-0 z-[91]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="configMenuBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="ci-sheet" style="max-width:520px">
+      <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-[.18em] text-oly-muted">Área restrita</div>
+          <div class="text-lg sm:text-xl font-extrabold text-oly-text">Configurações</div>
+        </div>
+        <button id="configMenuClose" type="button" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="Fechar" aria-label="Fechar">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button id="btnCfgImagens" type="button" class="focus-ring text-left rounded-2xl border border-oly-border bg-white hover:bg-oly-bg p-5 transition">
+          <div class="h-12 w-12 rounded-2xl flex items-center justify-center mb-3" style="background:linear-gradient(140deg,#F8FAFC 0%,#EFF6FF 55%,#DBEAFE 100%);box-shadow:0 1px 2px rgba(15,23,42,.05), inset 0 1px 0 rgba(255,255,255,.6);">
+            <i class="fa-solid fa-images" style="color:#1d4ed8;font-size:20px"></i>
+          </div>
+          <div class="font-extrabold text-oly-text text-[15px]">Imagens de Categorias</div>
+          <div class="text-xs text-oly-muted mt-1 leading-relaxed">Trocar as imagens exibidas nos cards de categoria da home.</div>
+        </button>
+        <button id="btnCfgPrepostos" type="button" class="focus-ring text-left rounded-2xl border border-oly-border bg-white hover:bg-oly-bg p-5 transition">
+          <div class="h-12 w-12 rounded-2xl flex items-center justify-center mb-3" style="background:linear-gradient(140deg,#FBF6FE 0%,#FDF4FF 55%,#F0ABFC 100%);box-shadow:0 1px 2px rgba(15,23,42,.05), inset 0 1px 0 rgba(255,255,255,.6);">
+            <i class="fa-solid fa-user-tie" style="color:#9333EA;font-size:20px"></i>
+          </div>
+          <div class="font-extrabold text-oly-text text-[15px]">Prepostos</div>
+          <div class="text-xs text-oly-muted mt-1 leading-relaxed">Cadastrar, editar e excluir comissionistas.</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────── Modal de Prepostos ────── -->
+<div id="prepostosModal" class="hidden fixed inset-0 z-[92]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="prepostosBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="ci-sheet" style="max-width:560px">
+      <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-[.18em] text-oly-muted">Cadastro</div>
+          <div class="text-lg sm:text-xl font-extrabold text-oly-text">Prepostos</div>
+        </div>
+        <button id="prepostosClose" type="button" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="Fechar" aria-label="Fechar">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+      <div class="ci-body">
+        <!-- Formulário de adicionar/editar -->
+        <div class="rounded-2xl border border-oly-border bg-oly-bg p-4 mb-4">
+          <div class="text-[11px] font-bold uppercase tracking-[.14em] text-oly-muted mb-2" id="prepostoFormLabel">Novo preposto</div>
+          <div class="grid grid-cols-1 sm:grid-cols-[1fr_1.8fr_auto] gap-2">
+            <input id="prepostoCodigo" type="text" inputmode="numeric" placeholder="Código" class="rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2" style="color:var(--text)">
+            <input id="prepostoNome" type="text" placeholder="Nome" class="rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2" style="color:var(--text)">
+            <div class="flex gap-2">
+              <button id="prepostoSaveBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold text-white flex-1 sm:flex-none" style="background:var(--primary)">
+                <i class="fa-solid fa-check"></i>
+                <span id="prepostoSaveLabel">Adicionar</span>
+              </button>
+              <button id="prepostoCancelEditBtn" type="button" class="focus-ring hidden inline-flex items-center justify-center rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold hover:bg-oly-bg" title="Cancelar edição">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <div id="prepostoFormError" class="hidden mt-2 text-xs font-bold" style="color:#B91C1C"></div>
+        </div>
+        <!-- Lista -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-bold uppercase tracking-[.14em] text-oly-muted">Lista atual</div>
+          <div id="prepostosCount" class="text-[11px] font-bold text-oly-muted"></div>
+        </div>
+        <div id="prepostosList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="catImgModal" class="hidden fixed inset-0 z-[91]">
   <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="catImgBackdrop"></div>
   <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
