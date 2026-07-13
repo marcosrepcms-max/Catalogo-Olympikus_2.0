@@ -6,7 +6,7 @@
 <title>Gerador de Catálogo — CMS Representações</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,7 +22,7 @@
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   body{
-    font-family:'Inter',system-ui,sans-serif;
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     background:var(--bg); color:var(--text);
     min-height:100vh;
   }
@@ -144,6 +144,11 @@
   /* Grade de tamanhos */
   .prev-grade{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .grade-mes{ margin-top:8px; }
+  .grade-mes .mes{
+    background:#f5f3ff; color:#7c3aed; border:1px solid #c4b5fd;
+    padding:2px 8px; border-radius:99px; font-size:11px; font-weight:800;
+    margin-right:6px; display:inline-block;
+  }
   .grade-cel{
     background:#f3f4f6; border-radius:8px; padding:3px 8px;
     text-align:center; min-width:30px;
