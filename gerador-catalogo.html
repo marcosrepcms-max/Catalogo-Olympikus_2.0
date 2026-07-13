@@ -983,20 +983,22 @@ async function gerarPDF(){
     const GRADE_CEL_W = 30;   // largura da pílula de tamanho
     const GRADE_CEL_H = 22;   // altura da pílula
     const GRADE_GAP = 5;      // espaço entre pílulas
+    const MES_GAP = 12;       // espaço extra entre blocos de mês (quando há mais de um faturamento)
 
     // Calcula a altura necessária do card conforme o conteúdo
     function calcCardH(c){
       // nome(13) + ref(14) + atributos(14)
       let texto = 13 + 13 + 14 + 14;
       if(!c.temBase) texto += 13;
-      for(const m of c.meses){
+      c.meses.forEach((m, i)=>{
+        if(i > 0) texto += MES_GAP;   // respiro extra entre um mês e o próximo
         texto += 14;   // linha do mês
         if(mostrarGradePDF && m.grade.length){
           const porLinha = Math.max(1, Math.floor(contentW * 0.62 / (GRADE_CEL_W + GRADE_GAP)));
           const linhasGrade = Math.ceil(m.grade.length / porLinha);
           texto += linhasGrade * (GRADE_CEL_H + 4) + 4;
         }
-      }
+      });
       texto += 8;                      // respiro final
       const conteudo = Math.max(IMG_SZ, texto, 100);
       return conteudo + CARD_PAD_Y * 2;
@@ -1060,7 +1062,8 @@ async function gerarPDF(){
       doc.setFontSize(9.5);
       const gradeAreaW = contentW * 0.62;  // largura disponível p/ pílulas
       const porLinha = Math.max(1, Math.floor(gradeAreaW / (GRADE_CEL_W + GRADE_GAP)));
-      for(const m of c.meses){
+      c.meses.forEach((m, mIdx)=>{
+        if(mIdx > 0) ty += MES_GAP;   // respiro extra antes de cada novo mês (além do primeiro)
         doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
         const mesW = doc.getTextWidth(m.nome) + 12;
         doc.setFillColor(245,243,255);
@@ -1092,7 +1095,7 @@ async function gerarPDF(){
           }
           ty = gy + GRADE_CEL_H - 4;
         }
-      }
+      });
 
       // ─── lado direito: PDV + total (opção D, PDV vivo) ───
       const rx = margin + contentW;
