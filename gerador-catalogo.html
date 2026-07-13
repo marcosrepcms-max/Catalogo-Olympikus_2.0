@@ -602,8 +602,12 @@ function recalcular(reset){
   });
 
   // Seleção: na primeira vez ou após mudança de filtro → marca todos visíveis
+  // (mas só os que têm imagem cadastrada na base — sem imagem já entra desmarcado,
+  // o usuário pode marcar manualmente se quiser incluir mesmo assim)
   if(reset){
-    selecionados = new Set(carteira.map(c=> c.chave));
+    selecionados = new Set(
+      carteira.filter(c=> c.temBase && c.imagem).map(c=> c.chave)
+    );
   }
 
   renderFiltros();
@@ -909,8 +913,8 @@ async function gerarPDF(){
   if(!carteira.length){ return; }
   const mostrarGradePDF = $("tgGrade").checked;
   // Só os marcados E visíveis (na carteira filtrada atual)
-  const itensPDF = carteira.filter(c => selecionados.has(c.chave));
-  if(!itensPDF.length){
+  const itensSelecionados = carteira.filter(c => selecionados.has(c.chave));
+  if(!itensSelecionados.length){
     setStatus($("genStatus"), "warn", `<i class="fa-solid fa-triangle-exclamation"></i> Nenhum item selecionado.`);
     return;
   }
@@ -929,10 +933,24 @@ async function gerarPDF(){
 
     // Pré-carrega imagens (só dos selecionados)
     const imgCache = {};
-    for(const c of itensPDF){
-      if(c.temBase && c.imagem && !imgCache[c.imagem]){
+    for(const c of itensSelecionados){
+      if(c.temBase && c.imagem && !(c.imagem in imgCache)){
         imgCache[c.imagem] = await carregarImg(c.imagem);
       }
+    }
+
+    // Checagem real: só entra no PDF quem tem imagem que de fato carregou
+    // (cobre tanto "não cadastrado na base" quanto "cadastrado mas o arquivo não existe/404")
+    const itensPDF = [];
+    const itensSemImagem = [];
+    for(const c of itensSelecionados){
+      const imgOk = c.temBase && c.imagem && imgCache[c.imagem] && imgCache[c.imagem].data;
+      (imgOk ? itensPDF : itensSemImagem).push(c);
+    }
+    if(!itensPDF.length){
+      setStatus($("genStatus"), "warn", `<i class="fa-solid fa-triangle-exclamation"></i> Nenhum item selecionado tem imagem disponível.`);
+      btn.disabled = false;
+      return;
     }
 
     // ─── Cabeçalho (Variação 1: roxo cheio + faixa laranja) ───
@@ -1255,7 +1273,13 @@ async function gerarPDF(){
     const nome = partes.join(" - ").replace(/[\\/:*?"<>|]/g, "").trim() + ".pdf";
     doc.save(nome);
 
-    setStatus($("genStatus"), "ok", `<i class="fa-solid fa-circle-check"></i> PDF gerado — ${carteira.length} produtos.`);
+    if(itensSemImagem.length){
+      const lista = itensSemImagem.map(c=> `${c.produto} (${c.ref}${c.cor?" · "+c.cor:""})`).join(", ");
+      setStatus($("genStatus"), "warn",
+        `<i class="fa-solid fa-triangle-exclamation"></i> PDF gerado com ${itensPDF.length} produto(s). ${itensSemImagem.length} ignorado(s) por falta de imagem: ${lista}`);
+    } else {
+      setStatus($("genStatus"), "ok", `<i class="fa-solid fa-circle-check"></i> PDF gerado — ${itensPDF.length} produtos.`);
+    }
 
     // Compartilhar (menu nativo — tablet/celular)
     try{
