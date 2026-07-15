@@ -215,6 +215,7 @@
     </div>
     <span class="spacer"></span>
     <div class="topbtns">
+      <button class="theme-btn" id="refreshBtn" type="button" title="Recarregar os dados mais recentes">↻ Atualizar</button>
       <button class="theme-btn" id="fsBtn" type="button" title="Ativar/sair da tela cheia" aria-label="Tela cheia"><span id="fsIcon">⛶</span> Tela cheia</button>
       <button class="theme-btn" id="themeBtn" type="button" title="Alternar tema claro/escuro" aria-label="Tema claro/escuro"><span id="themeIcon">◐</span> Tema</button>
     </div>
@@ -679,7 +680,9 @@ function wireItemCards(nodes, itens){
 
     card.addEventListener('click', e => {
       if(e.target.closest('button, input')) return;
-      card.classList.toggle('selected');
+      const wasSelected = card.classList.contains('selected');
+      document.querySelectorAll('.item.selected, .litem.selected').forEach(c => c.classList.remove('selected'));
+      if(!wasSelected) card.classList.add('selected');
     });
   });
 
@@ -897,6 +900,15 @@ $('statusFilter').querySelectorAll('[data-sf]').forEach(chip => {
     renderItems();
   };
 });
+
+$('refreshBtn').onclick = async () => {
+  $('refreshBtn').disabled = true;
+  $('refreshBtn').textContent = '↻ Atualizando…';
+  await load();
+  $('refreshBtn').disabled = false;
+  $('refreshBtn').innerHTML = '↻ Atualizar';
+  toast('Dados atualizados.');
+};
 
 load();
 </script>

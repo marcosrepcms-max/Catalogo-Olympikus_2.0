@@ -116,6 +116,8 @@
   .rhead{display:grid;column-gap:12px;align-items:center;min-width:760px;position:sticky;top:var(--theadtop,170px);z-index:6;background:var(--card);padding:13px 0;border-bottom:2px solid var(--line);font-family:"Space Grotesk",sans-serif;font-size:12.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
   .rtable-grid{display:grid;column-gap:12px;row-gap:14px;align-items:center;min-width:760px;padding-top:10px}
   .rrow{display:contents;font-size:13px}
+  .rrow.selected > *{background:color-mix(in srgb,var(--purple) 10%,var(--card))}
+  .rrow.selected .thumb{box-shadow:0 0 0 2px var(--purple)}
   .rdiv{grid-column:1/-1;height:1px;background:var(--line-2)}
   input[type=checkbox]{width:16px;height:16px;accent-color:var(--red);cursor:pointer}
   .rrow .thumb{position:relative;width:108px;height:108px;background:var(--line-2);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:8px;cursor:zoom-in}
@@ -584,6 +586,15 @@ function renderTabelaLoja(i, loja, marca){
 
   $('rt-'+i).querySelectorAll('.thumb').forEach(t => {
     t.onclick = () => openZoom(t.dataset.artigo, t.dataset.cor, t.dataset.cap);
+  });
+
+  $('rt-'+i).querySelectorAll('.rrow').forEach(row => {
+    row.addEventListener('click', e => {
+      if(e.target.closest('button, input, .thumb')) return;
+      const wasSelected = row.classList.contains('selected');
+      $('rt-'+i).querySelectorAll('.rrow.selected').forEach(r => r.classList.remove('selected'));
+      if(!wasSelected) row.classList.add('selected');
+    });
   });
 
   const checks = () => Array.from($('rt-'+i).querySelectorAll('.row-check'));
