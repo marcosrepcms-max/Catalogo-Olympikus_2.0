@@ -111,9 +111,9 @@
   .bulkbar.show{display:flex}
   .bulkbar span{font-size:13px;color:var(--navy);flex:1}
 
-  .rtable{width:100%;overflow-x:auto}
+  .rtable{width:100%}
   .rgrid-cols{grid-template-columns:28px 108px minmax(0,2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,.7fr) minmax(0,.7fr) 76px}
-  .rhead{display:grid;column-gap:12px;align-items:center;min-width:760px;position:sticky;top:var(--theadtop,170px);z-index:6;background:var(--card);padding:10px 0;border-bottom:2px solid var(--line);font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--navy)}
+  .rhead{display:grid;column-gap:12px;align-items:center;min-width:760px;position:sticky;top:var(--theadtop,170px);z-index:6;background:var(--card);padding:13px 0;border-bottom:2px solid var(--line);font-family:"Space Grotesk",sans-serif;font-size:12.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
   .rtable-grid{display:grid;column-gap:12px;row-gap:14px;align-items:center;min-width:760px;padding-top:10px}
   .rrow{display:contents;font-size:13px}
   .rdiv{grid-column:1/-1;height:1px;background:var(--line-2)}
@@ -334,10 +334,12 @@ function renderKpis(lojaFoco){
     const totalItensLoja = Object.values(lojaFoco.marcas||{}).reduce((s,arr)=>s+arr.length,0);
     const pendLoja = (DATA.pendentes||[]).filter(p => p.status === 'pendente' && p.lojaCodigo === lojaFoco.codigo).length;
     const vendaTotal = Object.values(lojaFoco.marcas||{}).reduce((s,arr)=>s+arr.reduce((s2,it)=>s2+(Number(it.venda)||0),0),0);
+    const estoqueTotal = Object.values(lojaFoco.marcas||{}).reduce((s,arr)=>s+arr.reduce((s2,it)=>s2+(Number(it.estoqueAtual)||0),0),0);
     $('kpis').innerHTML = `
       <div class="ksum"><div class="l">Loja em foco</div><div class="v" style="font-size:18px">${lojaFoco.nome}</div></div>
       <div class="ksum"><div class="l">Itens desta loja</div><div class="v tnum">${totalItensLoja}</div></div>
       <div class="ksum"><div class="l">Venda total (desta loja)</div><div class="v tnum">${vendaTotal}</div></div>
+      <div class="ksum"><div class="l">Estoque total (desta loja)</div><div class="v tnum">${estoqueTotal}</div></div>
       <div class="ksum ${pendLoja?'warn':''}"><div class="l">Pendências desta loja</div><div class="v tnum">${pendLoja}</div></div>
     `;
     return;
