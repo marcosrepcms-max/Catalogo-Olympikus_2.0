@@ -175,6 +175,7 @@
     <button class="pfchip" data-f="novo" title="Produtos que as lojas relataram fora da lista">Novo produto</button>
     <button class="pfchip" data-f="remocao" title="Produtos que as lojas marcaram como inexistentes">Não existe</button>
   </div>
+  <div id="pendToggleWrap"></div>
   <div id="pendBulkWrap"></div>
   <div id="pendList"></div>
 
@@ -215,6 +216,7 @@ const MARCA_LABELS = { 'OLY FTW': 'Olympikus Tênis', 'OLY CHI': 'Olympikus Chin
 
 let DATA = { lojas: [], pendentes: [] };
 let pendFilter = 'todos';
+let mostrarResolvidos = false;
 let pendingUploadTarget = null; // { artigo, cor, row }
 
 function $(id){ return document.getElementById(id); }
@@ -369,18 +371,24 @@ function renderPendentes(){
   $('pendBadge').hidden = abertos.length === 0;
   $('pendBadge').textContent = abertos.length;
 
-  const pend = pendFilter === 'todos' ? all : all.filter(p => (p.tipo || 'novo') === pendFilter);
+  let pend = pendFilter === 'todos' ? all : all.filter(p => (p.tipo || 'novo') === pendFilter);
+  const resolvidosNaLista = pend.filter(p => p.status !== 'pendente').length;
+  if(!mostrarResolvidos) pend = pend.filter(p => p.status === 'pendente');
+  const pendAbertosNaLista = pend.filter(p => p.status === 'pendente');
 
-  if(pendFilter === 'remocao'){
-    $('pendBulkWrap').innerHTML = `
-      <div class="pendbulk" id="pendBulkBar" style="display:none">
-        <input type="checkbox" id="pendSelectAll">
-        <span id="pendBulkCount">0 selecionado(s)</span>
-        <button class="btn danger" id="pendBulkDelete">Confirmar remoção dos selecionados</button>
-      </div>`;
-  }else{
-    $('pendBulkWrap').innerHTML = '';
-  }
+  $('pendToggleWrap').innerHTML = resolvidosNaLista ? `
+    <button class="pfchip" id="pendToggleResolvidos" style="margin-bottom:14px">${mostrarResolvidos ? '▾ Ocultar resolvidos' : '▸ Mostrar resolvidos'} (${resolvidosNaLista})</button>
+  ` : '';
+  const toggleBtn = $('pendToggleResolvidos');
+  if(toggleBtn) toggleBtn.onclick = () => { mostrarResolvidos = !mostrarResolvidos; renderPendentes(); };
+
+  $('pendBulkWrap').innerHTML = pendAbertosNaLista.length ? `
+    <div class="pendbulk" id="pendBulkBar" style="display:none">
+      <input type="checkbox" id="pendSelectAll">
+      <span id="pendBulkCount">0 selecionado(s)</span>
+      <button class="btn primary" id="pendBulkAprovar" title="Cadastros são marcados como cadastrados; sinalizações de \"não existe\" são removidas do catálogo">Aprovar selecionados</button>
+      <button class="btn" id="pendBulkRejeitar">Rejeitar selecionados</button>
+    </div>` : '';
 
   if(pend.length === 0){
     $('pendList').innerHTML = `<div class="empty">Nenhuma pendência ${pendFilter!=='todos' ? 'deste tipo' : ''} no momento.</div>`;
@@ -391,7 +399,7 @@ function renderPendentes(){
     const isRemocao = p.tipo === 'remocao';
     const marcaLabel = MARCA_LABELS[p.marca] || p.marca;
     const statusTxt = p.status === 'aprovado' ? (isRemocao ? 'Removido do catálogo' : 'Cadastrado') : 'Rejeitado';
-    const showCheckbox = pendFilter === 'remocao' && p.status === 'pendente';
+    const showCheckbox = p.status === 'pendente';
     return `
     <div class="pend tipo-${isRemocao?'remocao':'novo'} ${p.status!=='pendente'?'resolved':''}" data-id="${p.id}">
       ${showCheckbox ? `<input type="checkbox" class="pend-check" data-id="${p.id}">` : ''}
@@ -431,7 +439,7 @@ function renderPendentes(){
     };
   });
 
-  if(pendFilter === 'remocao'){
+  if(pendAbertosNaLista.length){
     const bar = $('pendBulkBar');
     const checks = () => Array.from($('pendList').querySelectorAll('.pend-check'));
     function updateBar(){
@@ -441,22 +449,37 @@ function renderPendentes(){
     }
     $('pendSelectAll').onchange = e => { checks().forEach(c => c.checked = e.target.checked); updateBar(); };
     checks().forEach(c => c.onchange = updateBar);
-    $('pendBulkDelete').onclick = async () => {
+
+    async function processarSelecionados(status){
       const ids = checks().filter(c => c.checked).map(c => c.dataset.id);
       if(!ids.length) return;
-      const ok = await askConfirm('Remover produtos selecionados', `Isso vai excluir ${ids.length} item(ns) do catálogo das lojas correspondentes. Confirma?`, 'Remover todos');
+      const selecionados = pend.filter(p => ids.includes(p.id));
+      const nNovo = selecionados.filter(p => p.tipo !== 'remocao').length;
+      const nRemocao = selecionados.filter(p => p.tipo === 'remocao').length;
+      let msg;
+      if(status === 'aprovado'){
+        const partes = [];
+        if(nNovo) partes.push(`${nNovo} produto(s) novo(s) marcado(s) como cadastrado(s)`);
+        if(nRemocao) partes.push(`${nRemocao} produto(s) removido(s) do catálogo (sinalizados como inexistentes)`);
+        msg = 'Isso vai processar: ' + partes.join(' e ') + '. Confirma?';
+      }else{
+        msg = `Isso vai rejeitar ${ids.length} pendência(s) selecionada(s), sem alterar o catálogo. Confirma?`;
+      }
+      const ok = await askConfirm(status === 'aprovado' ? 'Aprovar selecionados' : 'Rejeitar selecionados', msg, status === 'aprovado' ? 'Confirmar' : 'Rejeitar todos');
       if(!ok) return;
-      $('pendBulkDelete').disabled = true;
+      $('pendBulkAprovar').disabled = true; $('pendBulkRejeitar').disabled = true;
       try{
         for(const id of ids){
-          await callWorker({ action: 'resolverMatrizPendente', id, status: 'aprovado' });
+          await callWorker({ action: 'resolverMatrizPendente', id, status });
         }
         await load();
-        toast(ids.length + ' produto(s) removido(s).');
+        toast(ids.length + ' pendência(s) processada(s).');
       }catch(e){
         alert('Erro: ' + e.message);
       }
-    };
+    }
+    $('pendBulkAprovar').onclick = () => processarSelecionados('aprovado');
+    $('pendBulkRejeitar').onclick = () => processarSelecionados('rejeitado');
   }
 }
 
