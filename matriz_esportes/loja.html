@@ -93,10 +93,10 @@
   .item .preposto{font-size:11px;color:var(--slate)}
   .item .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
   .item.dirty{border:2px solid var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent);background:color-mix(in srgb,var(--purple) 4%,var(--card))}
-  .badge-updated{position:absolute;top:8px;left:8px;background:var(--green);color:#fff;font-family:"Space Grotesk",sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;z-index:2;display:flex;align-items:center;gap:3px}
-  .badge-flagged{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-family:"Space Grotesk",sans-serif;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;z-index:2;cursor:pointer;border:none;display:flex;align-items:center;gap:4px}
+  .badges-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+  .badge-updated{background:var(--green);color:#fff;font-family:"Space Grotesk",sans-serif;font-size:10px;font-weight:700;padding:4px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:3px;flex:none}
+  .badge-flagged{background:var(--red);color:#fff;font-family:"Space Grotesk",sans-serif;font-size:10px;font-weight:700;padding:4px 10px;border-radius:99px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:4px;flex:none}
   .badge-flagged:hover{filter:brightness(1.08)}
-  .litem .badge-flagged{position:static;margin-left:8px}
   .item.selected,.litem.selected{outline:2px solid var(--navy);outline-offset:2px}
 
   .qty label{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:5px}
@@ -157,6 +157,7 @@
   .p-suggest-item .txt span{color:var(--purple);font-size:11px}
   .p-suggest-empty{padding:10px;font-size:12px;color:var(--mute)}
   .p-preview{display:flex;align-items:center;gap:10px;background:var(--purple-soft);border:1px solid color-mix(in srgb,var(--purple) 30%,var(--line));border-radius:10px;padding:8px 10px;margin-bottom:12px}
+  .p-preview[hidden]{display:none}
   .p-preview img{width:44px;height:44px;object-fit:contain;background:var(--card);border-radius:7px;padding:4px;flex:none}
   .p-preview span{font-size:12px;color:var(--navy);font-weight:600;font-family:"Space Grotesk",sans-serif}
   .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
@@ -247,6 +248,14 @@
     <button class="addcta" id="addPendenteBtn" title="Registrar um produto que não está na sua lista">+ Produto não cadastrado</button>
   </div>
 
+  <div class="ctrls">
+    <div class="cat-tabs" id="statusFilter">
+      <button class="cat-tab on" data-sf="todos" title="Ver todos os produtos desta marca">Todos</button>
+      <button class="cat-tab" data-sf="pendente" title="Produtos que ainda não foram revisados">Não sinalizados</button>
+      <button class="cat-tab" data-sf="sinalizado" title="Produtos marcados como inexistentes, aguardando a CMS">Sinalizados</button>
+    </div>
+  </div>
+
   <div class="grid" id="grid"></div>
   <div class="list" id="list" style="display:none"></div>
 
@@ -269,7 +278,7 @@
 <div class="modal-bg" id="modalBg" hidden>
   <div class="modal">
     <h2>Produto não cadastrado</h2>
-    <p class="hint">Busque primeiro — o produto pode já existir em outra loja. Se não encontrar, preencha manualmente abaixo.</p>
+    <p class="hint">Digite o nome do produto — se já existir em alguma loja, selecione da lista pra preencher sozinho. Se não achar, preencha manualmente.</p>
     <div class="f">
       <label>Marca</label>
       <select id="pMarca">
@@ -279,8 +288,8 @@
       </select>
     </div>
     <div class="f" style="position:relative">
-      <label>Buscar produto (todas as lojas)</label>
-      <input id="pBusca" type="text" placeholder="Digite o nome do produto…" autocomplete="off">
+      <label>Descrição</label>
+      <input id="pDescricao" type="text" placeholder="Digite o nome do produto…" autocomplete="off">
       <div class="p-suggest" id="pSuggest" hidden></div>
     </div>
     <div class="p-preview" id="pPreview" hidden>
@@ -288,7 +297,6 @@
       <span id="pPreviewCap"></span>
     </div>
     <div class="f"><label>Artigo</label><input id="pArtigo" type="text" placeholder="Ex: 43720366"></div>
-    <div class="f"><label>Descrição</label><input id="pDescricao" type="text" placeholder="Ex: CORRE 4"></div>
     <div class="f"><label>Cor</label><input id="pCor" type="text" placeholder="Ex: PRETO"></div>
     <div class="row2">
       <div class="f"><label>Estoque atual</label><input id="pEstoque" type="number" min="0" value="0"></div>
@@ -330,7 +338,7 @@ const MARCA_LABELS = { 'OLY FTW': 'Olympikus Tênis', 'OLY CHI': 'Olympikus Chin
 const params = new URLSearchParams(location.search);
 const TOKEN = params.get('token') || '';
 
-let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade', flagged: new Set(), synced: new Set(), catalogoGlobal: {}, preFlagValues: new Map() };
+let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade', flagged: new Set(), synced: new Set(), catalogoGlobal: {}, preFlagValues: new Map(), statusFilter: 'todos' };
 
 function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); localStorage.setItem('matriz-theme', t); }
 (function initTheme(){
@@ -457,7 +465,9 @@ function render(){
 
 function getFiltered(){
   const loja = STATE.loja;
-  const itens = (loja.marcas[STATE.marcaAtiva] || []);
+  let itens = (loja.marcas[STATE.marcaAtiva] || []);
+  if(STATE.statusFilter === 'sinalizado') itens = itens.filter(it => STATE.flagged.has(it.id));
+  else if(STATE.statusFilter === 'pendente') itens = itens.filter(it => !STATE.flagged.has(it.id));
   const q = $('search').value.trim().toLowerCase();
   return q ? itens.filter(it =>
     (it.descricao||'').toLowerCase().includes(q) ||
@@ -515,10 +525,9 @@ function renderGrid(filtered){
     const flagged = badgeFlaggedHtml(it);
     return `
     <div class="item${dirty}" data-id="${it.id}">
-      ${updated}
-      ${flagged}
       <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="body">
+        ${(updated || flagged) ? `<div class="badges-row">${updated}${flagged}</div>` : ''}
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta"><span>${it.cor || ''}</span><span class="tnum">${it.artigo || ''}</span></div>
         ${it.preposto ? `<div class="preposto">Vendedor: ${it.preposto}</div>` : ''}
@@ -544,10 +553,10 @@ function renderList(filtered){
     const flagged = badgeFlaggedHtml(it);
     return `
     <div class="litem${dirty}" data-id="${it.id}">
-      ${updated}
       <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="info">
-        <div class="desc">${it.descricao || ''} ${flagged}</div>
+        ${(updated || flagged) ? `<div class="badges-row">${updated}${flagged}</div>` : ''}
+        <div class="desc">${it.descricao || ''}</div>
         <div class="meta">${it.cor || ''} · Artigo ${it.artigo || ''}${it.preposto ? ' · Vendedor: '+it.preposto : ''}</div>
         ${flagBtnHtml(it)}
       </div>
@@ -796,7 +805,7 @@ function updatePreview(){
 }
 
 function renderSugestoes(){
-  const q = $('pBusca').value.trim().toLowerCase();
+  const q = $('pDescricao').value.trim().toLowerCase();
   const mapa = (STATE.catalogoGlobal && STATE.catalogoGlobal[$('pMarca').value]) || new Map();
   if(!q){ $('pSuggest').hidden = true; return; }
   const itens = Array.from(mapa.values()).filter(it =>
@@ -804,7 +813,7 @@ function renderSugestoes(){
   ).slice(0, 8);
 
   if(itens.length === 0){
-    $('pSuggest').innerHTML = `<div class="p-suggest-empty">Nenhum produto encontrado — preencha manualmente abaixo.</div>`;
+    $('pSuggest').innerHTML = `<div class="p-suggest-empty">Nenhum produto encontrado — preencha artigo e cor manualmente abaixo.</div>`;
   }else{
     $('pSuggest').innerHTML = itens.map(it => `
       <div class="p-suggest-item" data-artigo="${it.artigo}" data-cor="${it.cor}" data-desc="${it.descricao}">
@@ -817,7 +826,6 @@ function renderSugestoes(){
         $('pArtigo').value = row.dataset.artigo;
         $('pDescricao').value = row.dataset.desc;
         $('pCor').value = row.dataset.cor;
-        $('pBusca').value = row.dataset.desc + ' — ' + row.dataset.cor;
         $('pSuggest').hidden = true;
         updatePreview();
       };
@@ -826,16 +834,15 @@ function renderSugestoes(){
   $('pSuggest').hidden = false;
 }
 
-$('pBusca').oninput = renderSugestoes;
-$('pMarca').onchange = () => { $('pBusca').value = ''; $('pSuggest').hidden = true; };
+$('pDescricao').oninput = () => { renderSugestoes(); updatePreview(); };
+$('pMarca').onchange = () => { $('pSuggest').hidden = true; renderSugestoes(); };
 document.addEventListener('click', e => {
   if(!$('pSuggest').hidden && !e.target.closest('.f') ) $('pSuggest').hidden = true;
 });
-['pArtigo','pDescricao','pCor'].forEach(id => $(id).oninput = updatePreview);
+['pArtigo','pCor'].forEach(id => $(id).oninput = updatePreview);
 
 function openModal(){
   $('pMarca').value = STATE.marcaAtiva || 'OLY FTW';
-  $('pBusca').value = '';
   $('pSuggest').hidden = true;
   $('pPreview').hidden = true;
   $('pArtigo').value = ''; $('pDescricao').value = ''; $('pCor').value = '';
@@ -879,6 +886,15 @@ $('fsBtn').onclick = () => {
 };
 document.addEventListener('fullscreenchange', () => {
   $('fsIcon').textContent = document.fullscreenElement ? '⛝' : '⛶';
+});
+
+$('statusFilter').querySelectorAll('[data-sf]').forEach(chip => {
+  chip.onclick = () => {
+    STATE.statusFilter = chip.dataset.sf;
+    $('statusFilter').querySelectorAll('[data-sf]').forEach(c => c.classList.remove('on'));
+    chip.classList.add('on');
+    renderItems();
+  };
 });
 
 load();
