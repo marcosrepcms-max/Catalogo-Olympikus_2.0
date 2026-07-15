@@ -83,7 +83,7 @@
   .vseg-btn.on{background:var(--navy);color:#fff}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px}
-  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
   .item .img{aspect-ratio:1/1;background:var(--line-2);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
   .item .img img{width:100%;height:100%;object-fit:contain}
   .item .img .ph{color:var(--mute);font-size:11px;font-family:"Space Grotesk",sans-serif;text-align:center}
@@ -92,7 +92,8 @@
   .item .meta{font-size:11.5px;color:var(--purple);font-weight:600;display:flex;justify-content:space-between;gap:6px}
   .item .preposto{font-size:11px;color:var(--slate)}
   .item .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
-  .item.dirty{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent)}
+  .item.dirty{border:2px solid var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent);background:color-mix(in srgb,var(--purple) 4%,var(--card))}
+  .badge-updated{position:absolute;top:8px;left:8px;background:var(--green);color:#fff;font-family:"Space Grotesk",sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;z-index:2;display:flex;align-items:center;gap:3px}
 
   .qty label{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:5px}
   .qty-row{display:flex;align-items:stretch;border:1.5px solid color-mix(in srgb,var(--purple) 35%,var(--line));border-radius:8px;overflow:hidden;background:var(--purple-soft)}
@@ -103,7 +104,8 @@
 
   .list{display:flex;flex-direction:column;gap:8px;margin-top:18px}
   .litem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px}
-  .litem.dirty{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent)}
+  .litem.dirty{border:2px solid var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent);background:color-mix(in srgb,var(--purple) 4%,var(--card))}
+  .litem{position:relative}
   .litem .img{width:150px;height:150px;flex:none;background:var(--line-2);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
   .litem .img img{width:100%;height:100%;object-fit:contain}
   .litem .img .ph{font-size:9px;color:var(--mute);font-family:"Space Grotesk",sans-serif;text-align:center}
@@ -148,6 +150,13 @@
   .zoombtn{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(15,15,20,.55);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .zoombtn:hover{background:rgba(15,15,20,.8)}
   .item .img,.litem .img{position:relative}
+
+  .cf-bg{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:center;justify-content:center;z-index:130;padding:20px}
+  .cf-bg[hidden]{display:none}
+  .cf-box{background:var(--card);border-radius:16px;max-width:400px;width:100%;padding:24px;border:1px solid var(--line)}
+  .cf-box h2{font-family:"Space Grotesk",sans-serif;font-size:17px;margin:0 0 8px}
+  .cf-box p{font-size:13.5px;color:var(--slate);margin:0}
+  .cf-box .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 
   .zoom-bg{position:fixed;inset:0;background:rgba(10,14,22,.75);display:flex;align-items:center;justify-content:center;z-index:120;padding:30px}
   .zoom-bg[hidden]{display:none}
@@ -276,6 +285,17 @@
   </div>
 </div>
 
+<div class="cf-bg" id="cfBg" hidden>
+  <div class="cf-box">
+    <h2 id="cfTitle">Confirmar</h2>
+    <p id="cfMsg"></p>
+    <div class="actions">
+      <button class="btn" id="cfCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="cfOk" type="button">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -286,7 +306,7 @@ const MARCA_LABELS = { 'OLY FTW': 'Olympikus Tênis', 'OLY CHI': 'Olympikus Chin
 const params = new URLSearchParams(location.search);
 const TOKEN = params.get('token') || '';
 
-let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade', flagged: new Set() };
+let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade', flagged: new Set(), synced: new Set() };
 
 function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); localStorage.setItem('matriz-theme', t); }
 (function initTheme(){
@@ -461,16 +481,18 @@ function renderGrid(filtered){
   }
   $('grid').innerHTML = filtered.map(it => {
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
+    const updated = (!dirty && STATE.synced.has(it.id)) ? `<span class="badge-updated">✓ Atualizado</span>` : '';
     return `
     <div class="item${dirty}" data-id="${it.id}">
+      ${updated}
       <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="body">
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta"><span>${it.cor || ''}</span><span class="tnum">${it.artigo || ''}</span></div>
         ${it.preposto ? `<div class="preposto">Vendedor: ${it.preposto}</div>` : ''}
         <div class="fields">
-          ${qtyRow('f-estoque', it.estoqueAtual)}
           ${qtyRow('f-venda', it.venda)}
+          ${qtyRow('f-estoque', it.estoqueAtual)}
         </div>
         ${flagBtnHtml(it)}
       </div>
@@ -486,8 +508,10 @@ function renderList(filtered){
   }
   $('list').innerHTML = filtered.map(it => {
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
+    const updated = (!dirty && STATE.synced.has(it.id)) ? `<span class="badge-updated">✓ Atualizado</span>` : '';
     return `
     <div class="litem${dirty}" data-id="${it.id}">
+      ${updated}
       <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="info">
         <div class="desc">${it.descricao || ''}</div>
@@ -495,8 +519,8 @@ function renderList(filtered){
         ${flagBtnHtml(it)}
       </div>
       <div class="fields">
-        ${qtyRow('f-estoque', it.estoqueAtual)}
         ${qtyRow('f-venda', it.venda)}
+        ${qtyRow('f-estoque', it.estoqueAtual)}
       </div>
     </div>`;
   }).join('');
@@ -511,8 +535,29 @@ function openZoom(it){
 $('zoomClose').onclick = () => { $('zoomBg').hidden = true; };
 $('zoomBg').onclick = e => { if(e.target === $('zoomBg')) $('zoomBg').hidden = true; };
 
+function askConfirm(title, msg, okLabel){
+  return new Promise(resolve => {
+    $('cfTitle').textContent = title;
+    $('cfMsg').textContent = msg;
+    $('cfOk').textContent = okLabel || 'Confirmar';
+    $('cfBg').hidden = false;
+    const cleanup = (result) => {
+      $('cfBg').hidden = true;
+      $('cfOk').onclick = null; $('cfCancel').onclick = null;
+      resolve(result);
+    };
+    $('cfOk').onclick = () => cleanup(true);
+    $('cfCancel').onclick = () => cleanup(false);
+  });
+}
+
 async function flagInexistente(it, btn){
-  if(!confirm(`Confirma que "${it.descricao} — ${it.cor}" não existe na sua loja?\n\nIsso vai avisar a CMS para remover esse produto da sua lista.`)) return;
+  const ok = await askConfirm(
+    'Produto não existe na loja?',
+    `Confirma que "${it.descricao} — ${it.cor}" não existe na sua loja? Isso vai avisar a CMS para remover esse produto da sua lista.`,
+    'Sim, não existe'
+  );
+  if(!ok) return;
   btn.disabled = true;
   btn.textContent = 'Enviando…';
   try{
@@ -570,7 +615,10 @@ function recomputeKpis(){
 
 function markDirty(id, card){
   STATE.dirty.add(id);
+  STATE.synced.delete(id);
   card.classList.add('dirty');
+  const badge = card.querySelector('.badge-updated');
+  if(badge) badge.remove();
   updateSaveBar();
 }
 function updateSaveBar(){
@@ -604,11 +652,14 @@ async function saveNow(trigger){
     $('saveStatus').textContent = 'Salvando…';
   }
   try{
+    const savedIds = Array.from(STATE.dirty);
     await callWorker({ action: 'saveMatrizLoja', token: TOKEN, marcas: STATE.loja.marcas });
     STATE.dirty.clear();
+    savedIds.forEach(id => STATE.synced.add(id));
     STATE.loja.ultimaAtualizacaoLoja = new Date().toISOString();
     clearDraftLocal();
     document.querySelectorAll('.item.dirty,.litem.dirty').forEach(c => c.classList.remove('dirty'));
+    renderItems();
     btn.classList.remove('dirty');
     btn.classList.add('saved');
     btn.textContent = '✓ Salvo!';
