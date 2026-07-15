@@ -34,7 +34,7 @@
   .brand-name{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
   .brand-sub{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}
   .spacer{flex:1}
-  .theme-btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;padding:0}
+  .theme-btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;height:38px;display:inline-flex;align-items:center;gap:7px;padding:0 14px;white-space:nowrap}
   .theme-btn:hover{filter:brightness(.98)}
 
   .hero{padding:36px 0 22px;border-bottom:1px solid var(--line)}
@@ -156,7 +156,8 @@
   .zoom-box .cap{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;margin-top:10px}
   .zoom-box .close{margin-top:14px}
 
-  .totop{position:fixed;right:22px;bottom:96px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--navy);font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:40}
+  .totop{position:fixed;right:22px;bottom:96px;height:44px;border-radius:999px;border:none;background:var(--purple);color:#fff;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;box-shadow:0 4px 14px rgba(124,58,237,.35);cursor:pointer;display:none;align-items:center;gap:7px;padding:0 16px;z-index:40}
+  .totop:hover{filter:brightness(1.06)}
   .totop.show{display:flex}
 
   .flagbtn{margin-top:6px;width:100%;font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:600;color:var(--red);background:transparent;border:1px dashed color-mix(in srgb,var(--red) 45%,var(--line));border-radius:7px;padding:6px;cursor:pointer}
@@ -189,8 +190,8 @@
     </div>
     <span class="spacer"></span>
     <div class="topbtns">
-      <button class="theme-btn" id="fsBtn" type="button" aria-label="Tela cheia">⛶</button>
-      <button class="theme-btn" id="themeBtn" type="button" aria-label="Tema claro/escuro">◐</button>
+      <button class="theme-btn" id="fsBtn" type="button" title="Ativar/sair da tela cheia" aria-label="Tela cheia"><span id="fsIcon">⛶</span> Tela cheia</button>
+      <button class="theme-btn" id="themeBtn" type="button" title="Alternar tema claro/escuro" aria-label="Tema claro/escuro"><span id="themeIcon">◐</span> Tema</button>
     </div>
   </div>
 
@@ -203,35 +204,35 @@
 
   <div class="stickybar">
     <div class="kpis">
-      <div class="kpi"><div class="l">Estoque total (nesta aba)</div><div class="v tnum" id="kpiEstoque">0</div></div>
-      <div class="kpi venda"><div class="l">Venda total (nesta aba)</div><div class="v tnum" id="kpiVenda">0</div></div>
+      <div class="kpi"><div class="l">Estoque total</div><div class="v tnum" id="kpiEstoque">0</div></div>
+      <div class="kpi venda"><div class="l">Venda total</div><div class="v tnum" id="kpiVenda">0</div></div>
     </div>
     <div class="searchwrap">
       <input class="search" id="search" type="text" placeholder="Buscar por descrição, cor ou artigo…">
-      <button class="search-clear" id="searchClear" type="button" aria-label="Limpar busca">✕</button>
+      <button class="search-clear" id="searchClear" type="button" title="Limpar busca" aria-label="Limpar busca">✕</button>
     </div>
     <span class="spacer"></span>
     <div class="viewseg">
-      <button class="vseg-btn on" id="viewGrade" type="button">Grade</button>
-      <button class="vseg-btn" id="viewLista" type="button">Lista</button>
+      <button class="vseg-btn on" id="viewGrade" type="button" title="Ver como grade de cartões">Grade</button>
+      <button class="vseg-btn" id="viewLista" type="button" title="Ver como lista, com imagens maiores">Lista</button>
     </div>
   </div>
 
   <div class="ctrls">
     <div class="cat-tabs" id="tabs"></div>
-    <button class="addcta" id="addPendenteBtn">+ Produto não cadastrado</button>
+    <button class="addcta" id="addPendenteBtn" title="Registrar um produto que não está na sua lista">+ Produto não cadastrado</button>
   </div>
 
   <div class="grid" id="grid"></div>
   <div class="list" id="list" style="display:none"></div>
 
-  <button class="totop" id="totopBtn" type="button" aria-label="Voltar ao topo">↑</button>
+  <button class="totop" id="totopBtn" type="button" title="Voltar ao topo da página" aria-label="Voltar ao topo">↑ Voltar ao topo</button>
 
   <div class="savebar">
     <div class="savebar-in">
 
       <span class="status" id="saveStatus">Nenhuma alteração pendente.</span>
-      <button class="savebtn" id="saveBtn" disabled>Salvar alterações</button>
+      <button class="savebtn" id="saveBtn" disabled title="Salvar as alterações agora">Salvar alterações</button>
     </div>
   </div>
 </div>
@@ -261,8 +262,8 @@
       <div class="f"><label>Venda</label><input id="pVenda" type="number" min="0" value="0"></div>
     </div>
     <div class="actions">
-      <button class="btn" id="pCancel" type="button">Cancelar</button>
-      <button class="btn primary" id="pSubmit" type="button">Registrar</button>
+      <button class="btn" id="pCancel" type="button" title="Fechar sem registrar">Cancelar</button>
+      <button class="btn primary" id="pSubmit" type="button" title="Enviar este produto para a CMS">Registrar</button>
     </div>
   </div>
 </div>
@@ -271,7 +272,7 @@
   <div class="zoom-box">
     <img id="zoomImg" src="" alt="">
     <div class="cap" id="zoomCap"></div>
-    <button class="btn close" id="zoomClose" type="button">Fechar</button>
+    <button class="btn close" id="zoomClose" type="button" title="Fechar imagem ampliada">Fechar</button>
   </div>
 </div>
 
@@ -399,7 +400,7 @@ function render(){
   $('tabs').innerHTML = marcas.map(m => {
     const n = (loja.marcas[m] || []).length;
     const label = MARCA_LABELS[m] || m;
-    return `<button class="cat-tab ${m===STATE.marcaAtiva?'on':''}" data-marca="${m}">${label}<span class="n">${n}</span></button>`;
+    return `<button class="cat-tab ${m===STATE.marcaAtiva?'on':''}" data-marca="${m}" title="Ver produtos de ${label}">${label}<span class="n">${n}</span></button>`;
   }).join('');
 
   $('tabs').querySelectorAll('[data-marca]').forEach(btn => {
@@ -441,16 +442,16 @@ function qtyRow(cls, value){
   return `<div class="qty">
     <label>${cls==='f-estoque'?'Estoque atual':'Venda'}</label>
     <div class="qty-row">
-      <button type="button" class="qminus" data-cls="${cls}">−</button>
+      <button type="button" class="qminus" data-cls="${cls}" title="Diminuir">−</button>
       <input type="number" min="0" class="${cls}" value="${value ?? 0}">
-      <button type="button" class="qplus" data-cls="${cls}">+</button>
+      <button type="button" class="qplus" data-cls="${cls}" title="Aumentar">+</button>
     </div>
   </div>`;
 }
 
 function flagBtnHtml(it){
   const flagged = STATE.flagged.has(it.id);
-  return `<button type="button" class="flagbtn" data-flag="${it.id}" ${flagged?'disabled':''}>${flagged ? 'Já sinalizado — aguardando CMS' : 'Não tenho esse produto'}</button>`;
+  return `<button type="button" class="flagbtn" data-flag="${it.id}" ${flagged?'disabled':''} title="${flagged ? 'A CMS já foi avisada' : 'Avisar que este produto não existe na sua loja'}">${flagged ? 'Já sinalizado — aguardando CMS' : 'Não tenho esse produto'}</button>`;
 }
 
 function renderGrid(filtered){
@@ -462,7 +463,7 @@ function renderGrid(filtered){
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
     return `
     <div class="item${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" aria-label="Ampliar imagem">🔍</button></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="body">
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta"><span>${it.cor || ''}</span><span class="tnum">${it.artigo || ''}</span></div>
@@ -487,7 +488,7 @@ function renderList(filtered){
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
     return `
     <div class="litem${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" aria-label="Ampliar imagem">🔍</button></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="info">
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta">${it.cor || ''} · Artigo ${it.artigo || ''}${it.preposto ? ' · Vendedor: '+it.preposto : ''}</div>
@@ -687,7 +688,7 @@ $('fsBtn').onclick = () => {
   else{ document.exitFullscreen().catch(()=>{}); }
 };
 document.addEventListener('fullscreenchange', () => {
-  $('fsBtn').textContent = document.fullscreenElement ? '⛝' : '⛶';
+  $('fsIcon').textContent = document.fullscreenElement ? '⛝' : '⛶';
 });
 
 load();
