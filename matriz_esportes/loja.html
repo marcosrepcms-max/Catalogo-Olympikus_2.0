@@ -377,9 +377,18 @@ function toast(msg, isErr){
   t.className = 'toast show' + (isErr ? ' err' : '');
   setTimeout(() => t.classList.remove('show'), 2800);
 }
-function imgUrl(artigo, cor){
+function imgUrlExt(artigo, cor, ext){
   const corArquivo = String(cor || '').replace(/\//g, '_');
-  return IMG_BASE + encodeURIComponent(artigo) + '_' + encodeURIComponent(corArquivo) + '.jpg';
+  return IMG_BASE + encodeURIComponent(artigo) + '_' + encodeURIComponent(corArquivo) + '.' + ext;
+}
+function imgUrl(artigo, cor){ return imgUrlExt(artigo, cor, 'jpg'); }
+function imgFallback(imgEl, artigo, cor){
+  if(imgEl.dataset.fb !== '1'){
+    imgEl.dataset.fb = '1';
+    imgEl.src = imgUrlExt(artigo, cor, 'jpeg');
+  }else{
+    imgEl.parentElement.innerHTML = '<div class="ph">Sem imagem</div>';
+  }
 }
 function fmtData(iso){
   if(!iso) return null;
@@ -557,7 +566,7 @@ function renderGrid(filtered){
     const flagged = badgeFlaggedHtml(it);
     return `
     <div class="item${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="imgFallback(this, '${it.artigo}', '${it.cor}')"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="body">
         ${(updated || flagged) ? `<div class="badges-row">${updated}${flagged}</div>` : ''}
         <div class="desc">${it.descricao || ''}</div>
@@ -585,7 +594,7 @@ function renderList(filtered){
     const flagged = badgeFlaggedHtml(it);
     return `
     <div class="litem${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="imgFallback(this, '${it.artigo}', '${it.cor}')"><button type="button" class="zoombtn" data-zoom="${it.id}" title="Ampliar imagem" aria-label="Ampliar imagem">🔍</button></div>
       <div class="info">
         ${(updated || flagged) ? `<div class="badges-row">${updated}${flagged}</div>` : ''}
         <div class="desc">${it.descricao || ''}</div>
@@ -602,7 +611,13 @@ function renderList(filtered){
 }
 
 function openZoom(it){
-  $('zoomImg').src = imgUrl(it.artigo, it.cor);
+  const img = $('zoomImg');
+  img.dataset.fb = ''; img.style.display = '';
+  img.onerror = () => {
+    if(img.dataset.fb !== '1'){ img.dataset.fb = '1'; img.src = imgUrlExt(it.artigo, it.cor, 'jpeg'); }
+    else{ img.style.display = 'none'; }
+  };
+  img.src = imgUrl(it.artigo, it.cor);
   $('zoomCap').textContent = (it.descricao || '') + ' · ' + (it.cor || '') + ' · Artigo ' + (it.artigo || '');
   $('zoomBg').hidden = false;
 }
