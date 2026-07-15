@@ -46,10 +46,20 @@
   .lastupd.ok .dot{background:var(--green)}
 
   .kpis{display:flex;gap:12px;margin:18px 0 0;flex-wrap:wrap}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:140px}
+  .kpi{background:var(--card);border:1.5px solid color-mix(in srgb,var(--purple) 45%,var(--line));border-radius:12px;padding:12px 18px;min-width:140px;animation:kpiGlow 2.6s ease-in-out infinite}
   .kpi .l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
-  .kpi .v{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:700;margin-top:2px}
+  .kpi .v{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:700;margin-top:2px;color:var(--purple)}
   .kpi.venda .v{color:var(--green)}
+  .kpi.venda{border-color:color-mix(in srgb,var(--green) 45%,var(--line))}
+  .kpi.venda{animation-name:kpiGlowGreen}
+  @keyframes kpiGlow{
+    0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.18)}
+    50%{box-shadow:0 0 0 6px rgba(124,58,237,0)}
+  }
+  @keyframes kpiGlowGreen{
+    0%,100%{box-shadow:0 0 0 0 rgba(12,166,120,.18)}
+    50%{box-shadow:0 0 0 6px rgba(12,166,120,0)}
+  }
 
   .ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:24px 0 4px}
   .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;flex:1}
@@ -76,29 +86,29 @@
   .item .img .ph{color:var(--mute);font-size:11px;font-family:"Space Grotesk",sans-serif;text-align:center}
   .item .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
   .item .desc{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13.5px;color:var(--ink);line-height:1.25}
-  .item .meta{font-size:11.5px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
+  .item .meta{font-size:11.5px;color:var(--purple);font-weight:600;display:flex;justify-content:space-between;gap:6px}
   .item .preposto{font-size:11px;color:var(--slate)}
   .item .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
-  .item.dirty{border-color:var(--acc)}
+  .item.dirty{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent)}
 
-  .qty label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:4px}
-  .qty-row{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--paper)}
-  .qty-row button{width:26px;flex:none;border:none;background:var(--line-2);color:var(--navy);font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px;cursor:pointer}
-  .qty-row button:hover{background:var(--line)}
-  .qty-row input{width:100%;min-width:0;border:none;background:transparent;text-align:center;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13.5px;color:var(--ink);padding:6px 2px}
+  .qty label{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:5px}
+  .qty-row{display:flex;align-items:stretch;border:1.5px solid color-mix(in srgb,var(--purple) 35%,var(--line));border-radius:8px;overflow:hidden;background:var(--purple-soft)}
+  .qty-row button{width:28px;flex:none;border:none;background:transparent;color:var(--purple);font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:16px;cursor:pointer}
+  .qty-row button:hover{background:color-mix(in srgb,var(--purple) 18%,transparent)}
+  .qty-row input{width:100%;min-width:0;border:none;background:transparent;text-align:center;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;color:var(--ink);padding:7px 2px}
   .qty-row input:focus{outline:none}
 
   .list{display:flex;flex-direction:column;gap:8px;margin-top:18px}
   .litem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px}
-  .litem.dirty{border-color:var(--acc)}
-  .litem .img{width:76px;height:76px;flex:none;background:var(--line-2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:6px}
+  .litem.dirty{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent)}
+  .litem .img{width:112px;height:112px;flex:none;background:var(--line-2);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px}
   .litem .img img{width:100%;height:100%;object-fit:contain}
   .litem .img .ph{font-size:9px;color:var(--mute);font-family:"Space Grotesk",sans-serif;text-align:center}
   .litem .info{flex:1;min-width:0}
-  .litem .desc{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px}
-  .litem .meta{font-size:12px;color:var(--mute);margin-top:2px}
-  .litem .fields{display:flex;gap:10px;flex:none}
-  .litem .qty-row{width:100px}
+  .litem .desc{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px}
+  .litem .meta{font-size:12.5px;color:var(--purple);font-weight:600;margin-top:4px}
+  .litem .fields{display:flex;gap:12px;flex:none}
+  .litem .qty-row{width:112px}
 
   .empty{color:var(--mute);font-size:13.5px;padding:40px 0;text-align:center}
 
@@ -108,9 +118,15 @@
   .savebar .status.ok{color:var(--green);font-weight:600}
   .btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:9px;padding:10px 18px}
   .btn.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
-  .savebtn{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;cursor:pointer;border:none;background:var(--acc);color:var(--acc-ink);border-radius:11px;padding:15px 30px;box-shadow:0 4px 14px rgba(224,161,0,.35)}
-  .savebtn:disabled{opacity:.4;cursor:default;box-shadow:none}
-  .savebtn.saved{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(12,166,120,.35)}
+  .savebtn{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;cursor:pointer;border:none;background:var(--purple);color:#fff;border-radius:11px;padding:15px 30px;box-shadow:0 4px 14px rgba(124,58,237,.35)}
+  .savebtn:disabled{opacity:.4;cursor:default;box-shadow:none;animation:none}
+  .savebtn.dirty{animation:savePulse 1.6s ease-in-out infinite}
+  .savebtn.saved{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(12,166,120,.35);animation:none}
+  @keyframes savePulse{
+    0%,100%{box-shadow:0 4px 14px rgba(124,58,237,.35),0 0 0 0 rgba(124,58,237,.4)}
+    50%{box-shadow:0 4px 14px rgba(124,58,237,.35),0 0 0 8px rgba(124,58,237,0)}
+  }
+  .autosave-note{font-size:11.5px;color:var(--mute);display:block;margin-top:2px}
   .btn:hover:not(:disabled){filter:brightness(.98)}
 
   .modal-bg{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
@@ -271,6 +287,19 @@ async function callWorker(body){
   return data;
 }
 
+function draftKey(){ return 'matriz-draft-' + TOKEN; }
+function saveDraftLocal(){
+  try{ localStorage.setItem(draftKey(), JSON.stringify({ marcas: STATE.loja.marcas, editedAt: new Date().toISOString() })); }catch(_){}
+}
+function clearDraftLocal(){ try{ localStorage.removeItem(draftKey()); }catch(_){} }
+function loadDraftLocal(){
+  try{ const raw = localStorage.getItem(draftKey()); return raw ? JSON.parse(raw) : null; }catch(_){ return null; }
+}
+
+window.addEventListener('beforeunload', e => {
+  if(STATE.dirty.size > 0){ e.preventDefault(); e.returnValue = ''; }
+});
+
 async function load(){
   if(!TOKEN){ showNotFound(); return; }
   try{
@@ -279,6 +308,31 @@ async function load(){
     if(!loja){ showNotFound(); return; }
     STATE.loja = loja;
     STATE.marcaAtiva = Object.keys(loja.marcas || {})[0] || null;
+
+    const draft = loadDraftLocal();
+    if(draft && draft.marcas){
+      let restored = 0;
+      Object.entries(draft.marcas).forEach(([marca, itens]) => {
+        const atuais = loja.marcas[marca];
+        if(!atuais) return;
+        itens.forEach(dit => {
+          const alvo = atuais.find(i => i.id === dit.id);
+          if(alvo && (alvo.estoqueAtual !== dit.estoqueAtual || alvo.venda !== dit.venda)){
+            alvo.estoqueAtual = dit.estoqueAtual;
+            alvo.venda = dit.venda;
+            STATE.dirty.add(dit.id);
+            restored++;
+          }
+        });
+      });
+      if(restored > 0){
+        toast('Restauramos ' + restored + ' alteração(ões) não sincronizada(s).');
+        scheduleAutosave();
+      }else{
+        clearDraftLocal();
+      }
+    }
+
     render();
     $('app').hidden = false;
   }catch(e){
@@ -413,6 +467,7 @@ function wireItemCards(nodes, itens){
       estInput.value = item.estoqueAtual; vndInput.value = item.venda;
       markDirty(id, card);
       recomputeKpis();
+      scheduleAutosave();
     }
     estInput.oninput = commit; vndInput.oninput = commit;
     card.querySelectorAll('.qminus').forEach(b => b.onclick = () => {
@@ -444,10 +499,61 @@ function markDirty(id, card){
 function updateSaveBar(){
   const n = STATE.dirty.size;
   $('saveBtn').disabled = n === 0;
-  $('saveBtn').classList.remove('saved');
-  $('saveBtn').textContent = 'Salvar alterações';
-  $('saveStatus').classList.remove('ok');
-  $('saveStatus').textContent = n === 0 ? 'Nenhuma alteração pendente.' : `${n} item(ns) alterado(s), ainda não salvo.`;
+  $('saveBtn').classList.toggle('dirty', n > 0);
+  if(n === 0){
+    $('saveStatus').classList.remove('ok');
+    $('saveStatus').textContent = 'Nenhuma alteração pendente.';
+  }else{
+    $('saveStatus').classList.remove('ok');
+    $('saveStatus').textContent = `${n} item(ns) alterado(s) — salvando automaticamente em instantes…`;
+  }
+}
+
+let autosaveTimer = null;
+function scheduleAutosave(){
+  saveDraftLocal();
+  updateSaveBar();
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => saveNow('auto'), 2000);
+}
+
+async function saveNow(trigger){
+  if(STATE.dirty.size === 0) return;
+  clearTimeout(autosaveTimer);
+  const btn = $('saveBtn');
+  if(trigger === 'manual'){
+    btn.disabled = true;
+    btn.classList.remove('dirty');
+    $('saveStatus').textContent = 'Salvando…';
+  }
+  try{
+    await callWorker({ action: 'saveMatrizLoja', token: TOKEN, marcas: STATE.loja.marcas });
+    STATE.dirty.clear();
+    STATE.loja.ultimaAtualizacaoLoja = new Date().toISOString();
+    clearDraftLocal();
+    document.querySelectorAll('.item.dirty,.litem.dirty').forEach(c => c.classList.remove('dirty'));
+    btn.classList.remove('dirty');
+    btn.classList.add('saved');
+    btn.textContent = '✓ Salvo!';
+    btn.disabled = true;
+    $('saveStatus').classList.add('ok');
+    $('saveStatus').textContent = 'Estoque atualizado com sucesso — ' + fmtData(STATE.loja.ultimaAtualizacaoLoja) + '.';
+    const lu = $('lastUpd');
+    lu.classList.add('ok');
+    lu.querySelector('span:last-child').textContent = 'Último envio: ' + fmtData(STATE.loja.ultimaAtualizacaoLoja);
+    toast(trigger === 'manual' ? 'Estoque salvo com sucesso!' : 'Estoque sincronizado automaticamente.');
+    setTimeout(() => { btn.classList.remove('saved'); btn.textContent = 'Salvar alterações'; }, 3000);
+  }catch(e){
+    console.error(e);
+    if(trigger === 'manual'){
+      toast('Erro ao salvar: ' + e.message, true);
+      btn.disabled = false;
+      btn.classList.add('dirty');
+      $('saveStatus').textContent = STATE.dirty.size + ' item(ns) alterado(s), ainda não salvo.';
+    }else{
+      autosaveTimer = setTimeout(() => saveNow('auto'), 6000);
+    }
+  }
 }
 
 $('search').oninput = () => {
@@ -462,30 +568,7 @@ $('searchClear').onclick = () => { $('search').value = ''; $('searchClear').clas
 $('viewGrade').onclick = () => { STATE.view = 'grade'; $('viewGrade').classList.add('on'); $('viewLista').classList.remove('on'); renderItems(); };
 $('viewLista').onclick = () => { STATE.view = 'lista'; $('viewLista').classList.add('on'); $('viewGrade').classList.remove('on'); renderItems(); };
 
-$('saveBtn').onclick = async () => {
-  $('saveBtn').disabled = true;
-  $('saveStatus').textContent = 'Salvando…';
-  try{
-    await callWorker({ action: 'saveMatrizLoja', token: TOKEN, marcas: STATE.loja.marcas });
-    STATE.dirty.clear();
-    STATE.loja.ultimaAtualizacaoLoja = new Date().toISOString();
-    document.querySelectorAll('.item.dirty,.litem.dirty').forEach(c => c.classList.remove('dirty'));
-    $('saveBtn').classList.add('saved');
-    $('saveBtn').textContent = '✓ Salvo!';
-    $('saveStatus').classList.add('ok');
-    $('saveStatus').textContent = 'Estoque atualizado com sucesso — ' + fmtData(STATE.loja.ultimaAtualizacaoLoja) + '.';
-    const lu = $('lastUpd');
-    lu.classList.add('ok');
-    lu.querySelector('span:last-child').textContent = 'Último envio: ' + fmtData(STATE.loja.ultimaAtualizacaoLoja);
-    toast('Estoque salvo com sucesso!');
-    setTimeout(() => { $('saveBtn').classList.remove('saved'); $('saveBtn').textContent = 'Salvar alterações'; }, 3000);
-  }catch(e){
-    console.error(e);
-    toast('Erro ao salvar: ' + e.message, true);
-    $('saveBtn').disabled = false;
-    $('saveStatus').textContent = STATE.dirty.size + ' item(ns) alterado(s), ainda não salvo.';
-  }
-};
+$('saveBtn').onclick = () => saveNow('manual');
 
 function openModal(){
   $('pMarca').value = STATE.marcaAtiva || 'OLY FTW';
