@@ -45,7 +45,10 @@
   .lastupd .dot{width:7px;height:7px;border-radius:50%;background:var(--mute)}
   .lastupd.ok .dot{background:var(--green)}
 
-  .kpis{display:flex;gap:12px;margin:18px 0 0;flex-wrap:wrap}
+  .topbtns{display:flex;align-items:center;gap:8px}
+
+  .stickybar{position:sticky;top:var(--toph);z-index:19;background:var(--paper);padding:14px 0 12px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .kpis{display:flex;gap:12px;flex-wrap:wrap}
   .kpi{background:var(--card);border:1.5px solid color-mix(in srgb,var(--purple) 45%,var(--line));border-radius:12px;padding:12px 18px;min-width:140px;animation:kpiGlow 2.6s ease-in-out infinite}
   .kpi .l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
   .kpi .v{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:700;margin-top:2px;color:var(--purple)}
@@ -70,7 +73,7 @@
   .addcta:hover{filter:brightness(1.05)}
 
   .searchwrap{position:relative;flex:1;max-width:280px;min-width:180px}
-  .search{width:100%;font-family:"Inter",sans-serif;font-size:13.5px;color:var(--navy);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 32px 9px 12px}
+  .search{width:100%;font-family:"Inter",sans-serif;font-size:13.5px;color:var(--navy);background:var(--card);border:1.5px solid var(--purple);border-radius:8px;padding:9px 32px 9px 12px}
   .search:focus{outline:none;border-color:var(--acc)}
   .search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;border:none;background:var(--line-2);color:var(--slate);cursor:pointer;font-size:13px;line-height:1;display:none;align-items:center;justify-content:center}
   .search-clear.show{display:flex}
@@ -101,7 +104,7 @@
   .list{display:flex;flex-direction:column;gap:8px;margin-top:18px}
   .litem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px}
   .litem.dirty{border-color:var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 16%,transparent)}
-  .litem .img{width:112px;height:112px;flex:none;background:var(--line-2);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px}
+  .litem .img{width:150px;height:150px;flex:none;background:var(--line-2);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
   .litem .img img{width:100%;height:100%;object-fit:contain}
   .litem .img .ph{font-size:9px;color:var(--mute);font-family:"Space Grotesk",sans-serif;text-align:center}
   .litem .info{flex:1;min-width:0}
@@ -142,6 +145,25 @@
   .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
   .modal .actions .btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
 
+  .zoombtn{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(15,15,20,.55);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .zoombtn:hover{background:rgba(15,15,20,.8)}
+  .item .img,.litem .img{position:relative}
+
+  .zoom-bg{position:fixed;inset:0;background:rgba(10,14,22,.75);display:flex;align-items:center;justify-content:center;z-index:120;padding:30px}
+  .zoom-bg[hidden]{display:none}
+  .zoom-box{max-width:520px;width:100%;background:var(--card);border-radius:16px;padding:16px;text-align:center}
+  .zoom-box img{max-width:100%;max-height:60vh;object-fit:contain}
+  .zoom-box .cap{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;margin-top:10px}
+  .zoom-box .close{margin-top:14px}
+
+  .totop{position:fixed;right:22px;bottom:96px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--navy);font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.15);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:40}
+  .totop.show{display:flex}
+
+  .flagbtn{margin-top:6px;width:100%;font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:600;color:var(--red);background:transparent;border:1px dashed color-mix(in srgb,var(--red) 45%,var(--line));border-radius:7px;padding:6px;cursor:pointer}
+  .flagbtn:hover{background:color-mix(in srgb,var(--red) 8%,transparent)}
+  .flagbtn:disabled{color:var(--mute);border-color:var(--line);cursor:default;background:transparent}
+  .litem .flagbtn{width:auto;padding:6px 10px}
+
   .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;padding:11px 20px;border-radius:99px;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
   .toast.err{background:var(--red)}
@@ -166,7 +188,10 @@
       <div class="brand-txt"><span class="brand-name">CMS Representações</span><span class="brand-sub">Estoque Virtual · Matriz Esportes</span></div>
     </div>
     <span class="spacer"></span>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Tema claro/escuro">◐</button>
+    <div class="topbtns">
+      <button class="theme-btn" id="fsBtn" type="button" aria-label="Tela cheia">⛶</button>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Tema claro/escuro">◐</button>
+    </div>
   </div>
 
   <header class="hero">
@@ -174,17 +199,13 @@
     <h1 id="lojaNome">—</h1>
     <p class="lede" id="lojaCidade">Informe abaixo o estoque atual e as vendas de cada produto.</p>
     <div class="lastupd" id="lastUpd"><span class="dot"></span><span>Ainda não enviado</span></div>
+  </header>
+
+  <div class="stickybar">
     <div class="kpis">
       <div class="kpi"><div class="l">Estoque total (nesta aba)</div><div class="v tnum" id="kpiEstoque">0</div></div>
       <div class="kpi venda"><div class="l">Venda total (nesta aba)</div><div class="v tnum" id="kpiVenda">0</div></div>
     </div>
-  </header>
-
-  <div class="ctrls">
-    <div class="cat-tabs" id="tabs"></div>
-    <button class="addcta" id="addPendenteBtn">+ Produto não cadastrado</button>
-  </div>
-  <div class="ctrls">
     <div class="searchwrap">
       <input class="search" id="search" type="text" placeholder="Buscar por descrição, cor ou artigo…">
       <button class="search-clear" id="searchClear" type="button" aria-label="Limpar busca">✕</button>
@@ -196,11 +217,19 @@
     </div>
   </div>
 
+  <div class="ctrls">
+    <div class="cat-tabs" id="tabs"></div>
+    <button class="addcta" id="addPendenteBtn">+ Produto não cadastrado</button>
+  </div>
+
   <div class="grid" id="grid"></div>
   <div class="list" id="list" style="display:none"></div>
 
+  <button class="totop" id="totopBtn" type="button" aria-label="Voltar ao topo">↑</button>
+
   <div class="savebar">
     <div class="savebar-in">
+
       <span class="status" id="saveStatus">Nenhuma alteração pendente.</span>
       <button class="savebtn" id="saveBtn" disabled>Salvar alterações</button>
     </div>
@@ -238,6 +267,14 @@
   </div>
 </div>
 
+<div class="zoom-bg" id="zoomBg" hidden>
+  <div class="zoom-box">
+    <img id="zoomImg" src="" alt="">
+    <div class="cap" id="zoomCap"></div>
+    <button class="btn close" id="zoomClose" type="button">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -248,7 +285,7 @@ const MARCA_LABELS = { 'OLY FTW': 'Olympikus Tênis', 'OLY CHI': 'Olympikus Chin
 const params = new URLSearchParams(location.search);
 const TOKEN = params.get('token') || '';
 
-let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade' };
+let STATE = { loja: null, marcaAtiva: null, dirty: new Set(), view: 'grade', flagged: new Set() };
 
 function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); localStorage.setItem('matriz-theme', t); }
 (function initTheme(){
@@ -308,6 +345,9 @@ async function load(){
     if(!loja){ showNotFound(); return; }
     STATE.loja = loja;
     STATE.marcaAtiva = Object.keys(loja.marcas || {})[0] || null;
+    (data.pendentes || []).forEach(p => {
+      if(p.tipo === 'remocao' && p.lojaCodigo === loja.codigo && p.status === 'pendente') STATE.flagged.add(p.itemId);
+    });
 
     const draft = loadDraftLocal();
     if(draft && draft.marcas){
@@ -408,6 +448,11 @@ function qtyRow(cls, value){
   </div>`;
 }
 
+function flagBtnHtml(it){
+  const flagged = STATE.flagged.has(it.id);
+  return `<button type="button" class="flagbtn" data-flag="${it.id}" ${flagged?'disabled':''}>${flagged ? 'Já sinalizado — aguardando CMS' : 'Não tenho esse produto'}</button>`;
+}
+
 function renderGrid(filtered){
   if(filtered.length === 0){
     $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1">Nenhum item encontrado.</div>`;
@@ -417,7 +462,7 @@ function renderGrid(filtered){
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
     return `
     <div class="item${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" aria-label="Ampliar imagem">🔍</button></div>
       <div class="body">
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta"><span>${it.cor || ''}</span><span class="tnum">${it.artigo || ''}</span></div>
@@ -426,6 +471,7 @@ function renderGrid(filtered){
           ${qtyRow('f-estoque', it.estoqueAtual)}
           ${qtyRow('f-venda', it.venda)}
         </div>
+        ${flagBtnHtml(it)}
       </div>
     </div>`;
   }).join('');
@@ -441,10 +487,11 @@ function renderList(filtered){
     const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
     return `
     <div class="litem${dirty}" data-id="${it.id}">
-      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"></div>
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"><button type="button" class="zoombtn" data-zoom="${it.id}" aria-label="Ampliar imagem">🔍</button></div>
       <div class="info">
         <div class="desc">${it.descricao || ''}</div>
         <div class="meta">${it.cor || ''} · Artigo ${it.artigo || ''}${it.preposto ? ' · Vendedor: '+it.preposto : ''}</div>
+        ${flagBtnHtml(it)}
       </div>
       <div class="fields">
         ${qtyRow('f-estoque', it.estoqueAtual)}
@@ -453,6 +500,30 @@ function renderList(filtered){
     </div>`;
   }).join('');
   wireItemCards(document.querySelectorAll('#list .litem'), filtered);
+}
+
+function openZoom(it){
+  $('zoomImg').src = imgUrl(it.artigo, it.cor);
+  $('zoomCap').textContent = (it.descricao || '') + ' · ' + (it.cor || '') + ' · Artigo ' + (it.artigo || '');
+  $('zoomBg').hidden = false;
+}
+$('zoomClose').onclick = () => { $('zoomBg').hidden = true; };
+$('zoomBg').onclick = e => { if(e.target === $('zoomBg')) $('zoomBg').hidden = true; };
+
+async function flagInexistente(it, btn){
+  if(!confirm(`Confirma que "${it.descricao} — ${it.cor}" não existe na sua loja?\n\nIsso vai avisar a CMS para remover esse produto da sua lista.`)) return;
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try{
+    await callWorker({ action: 'flagMatrizRemocao', token: TOKEN, marca: STATE.marcaAtiva, itemId: it.id });
+    STATE.flagged.add(it.id);
+    btn.textContent = 'Já sinalizado — aguardando CMS';
+    toast('Produto sinalizado para remoção.');
+  }catch(e){
+    btn.disabled = false;
+    btn.textContent = 'Não tenho esse produto';
+    toast('Erro ao sinalizar: ' + e.message, true);
+  }
 }
 
 function wireItemCards(nodes, itens){
@@ -480,7 +551,12 @@ function wireItemCards(nodes, itens){
       input.value = (Number(input.value)||0) + 1;
       commit();
     });
+    const zoomBtn = card.querySelector('.zoombtn');
+    if(zoomBtn) zoomBtn.onclick = () => openZoom(item);
+    const flagBtn = card.querySelector('.flagbtn');
+    if(flagBtn && !flagBtn.disabled) flagBtn.onclick = () => flagInexistente(item, flagBtn);
   });
+
 }
 
 function recomputeKpis(){
@@ -600,6 +676,19 @@ $('pSubmit').onclick = async () => {
     $('pSubmit').disabled = false;
   }
 };
+
+window.addEventListener('scroll', () => {
+  $('totopBtn').classList.toggle('show', window.scrollY > 420);
+});
+$('totopBtn').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+$('fsBtn').onclick = () => {
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
+  else{ document.exitFullscreen().catch(()=>{}); }
+};
+document.addEventListener('fullscreenchange', () => {
+  $('fsBtn').textContent = document.fullscreenElement ? '⛝' : '⛶';
+});
 
 load();
 </script>
