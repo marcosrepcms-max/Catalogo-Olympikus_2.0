@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque Virtual · Matriz Esportes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1726; --navy:#15233B; --slate:#5B6678; --mute:#8A93A3;
+    --paper:#F6F7F9; --card:#FFFFFF; --line:#E7EAEF; --line-2:#EFF1F5;
+    --acc:#E0A100; --acc-ink:#23170A;
+    --green:#0CA678; --amber:#E0A100; --red:#C92A2A;
+    --toph:82px;
+  }
+  [data-theme="dark"]{
+    --ink:#E8EBF1; --navy:#D6DDEA; --slate:#9AA4B5; --mute:#828DA0;
+    --paper:#0E131D; --card:#161B26; --line:#2A3242; --line-2:#222A37;
+    --green:#34D399; --amber:#F4C430; --red:#F2868B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 120px}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  .topbar{display:flex;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);z-index:20}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .cms-logo{width:46px;height:46px;border-radius:14px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,#9B6BF0,#7C3AED);color:#fff;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 12px rgba(124,58,237,.25)}
+  .brand-txt{display:flex;flex-direction:column;line-height:1.18;min-width:0}
+  .brand-name{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
+  .brand-sub{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}
+  .spacer{flex:1}
+  .theme-btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;padding:0}
+  .theme-btn:hover{filter:brightness(.98)}
+
+  .hero{padding:36px 0 24px;border-bottom:1px solid var(--line)}
+  .hero .eyebrow{font-family:"Space Grotesk",sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+  .hero h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(24px,3.6vw,34px);line-height:1.1;letter-spacing:-.02em;margin:8px 0 6px}
+  .hero .lede{color:var(--slate);margin:0;font-size:14.5px}
+  .lastupd{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mute);font-family:"Space Grotesk",sans-serif}
+  .lastupd .dot{width:7px;height:7px;border-radius:50%;background:var(--mute)}
+  .lastupd.ok .dot{background:var(--green)}
+
+  .ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:24px 0 4px}
+  .cat-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .cat-tab{font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;padding:8px 15px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--slate);cursor:pointer}
+  .cat-tab.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+  .cat-tab .n{opacity:.75;margin-left:4px;font-weight:400}
+  .search{font-family:"Inter",sans-serif;font-size:13.5px;color:var(--navy);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:220px;flex:1;max-width:320px}
+  .search:focus{outline:none;border-color:var(--acc)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:18px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .item .img{aspect-ratio:1/1;background:var(--line-2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .item .img img{width:100%;height:100%;object-fit:cover}
+  .item .img .ph{color:var(--mute);font-size:11px;font-family:"Space Grotesk",sans-serif;text-align:center;padding:10px}
+  .item .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .item .desc{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13.5px;color:var(--ink);line-height:1.25}
+  .item .meta{font-size:11.5px;color:var(--mute);display:flex;justify-content:space-between;gap:6px}
+  .item .preposto{font-size:11px;color:var(--slate)}
+  .item .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+  .fld label{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:4px}
+  .fld input{width:100%;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:7px 8px;text-align:center}
+  .fld input:focus{outline:none;border-color:var(--acc)}
+  .item.dirty{border-color:var(--acc)}
+
+  .empty{color:var(--mute);font-size:13.5px;padding:40px 0;text-align:center}
+
+  .addcard{border:2px dashed var(--line);border-radius:14px;background:transparent;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--slate);cursor:pointer;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;min-height:150px}
+  .addcard:hover{border-color:var(--acc);color:var(--acc)}
+  .addcard .plus{font-size:26px;line-height:1}
+
+  .savebar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:14px;justify-content:center;z-index:30}
+  .savebar-in{max-width:1180px;width:100%;display:flex;align-items:center;gap:14px}
+  .savebar .status{font-size:13px;color:var(--slate);flex:1}
+  .btn{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:9px;padding:10px 18px}
+  .btn.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+  .btn.primary:disabled{opacity:.5;cursor:default}
+  .btn:hover:not(:disabled){filter:brightness(.98)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .modal-bg[hidden]{display:none}
+  .modal{background:var(--card);border-radius:16px;max-width:420px;width:100%;padding:24px;border:1px solid var(--line)}
+  .modal h2{font-family:"Space Grotesk",sans-serif;font-size:17px;margin:0 0 4px}
+  .modal p.hint{font-size:12.5px;color:var(--slate);margin:0 0 18px}
+  .modal .f{margin-bottom:12px}
+  .modal .f label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:5px}
+  .modal .f input,.modal .f select{width:100%;font-family:"Inter",sans-serif;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+  .modal .f input:focus,.modal .f select:focus{outline:none;border-color:var(--acc)}
+  .modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:600;padding:11px 20px;border-radius:99px;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+  .toast.err{background:var(--red)}
+
+  .notfound{padding:80px 20px;text-align:center;color:var(--slate)}
+  .notfound h1{font-family:"Space Grotesk",sans-serif;color:var(--ink)}
+
+  @media(max-width:560px){
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+    .savebar-in{flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="cms-logo">CMS</div>
+      <div class="brand-txt"><span class="brand-name">CMS Representações</span><span class="brand-sub">Estoque Virtual · Matriz Esportes</span></div>
+    </div>
+    <span class="spacer"></span>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Tema claro/escuro">◐</button>
+  </div>
+
+  <header class="hero">
+    <div class="eyebrow">Loja</div>
+    <h1 id="lojaNome">—</h1>
+    <p class="lede" id="lojaCidade">Informe abaixo o estoque atual e as vendas de cada produto.</p>
+    <div class="lastupd" id="lastUpd"><span class="dot"></span><span>Ainda não enviado</span></div>
+  </header>
+
+  <div class="ctrls">
+    <div class="cat-tabs" id="tabs"></div>
+    <input class="search" id="search" type="text" placeholder="Buscar por descrição, cor ou artigo…">
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="savebar">
+    <div class="savebar-in">
+      <span class="status" id="saveStatus">Nenhuma alteração pendente.</span>
+      <button class="btn primary" id="saveBtn" disabled>Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<div class="notfound" id="notfound" hidden>
+  <h1>Loja não encontrada</h1>
+  <p>O link usado não corresponde a nenhuma loja cadastrada. Confira com a CMS Representações se o endereço está correto.</p>
+</div>
+
+<!-- Modal: produto não cadastrado -->
+<div class="modal-bg" id="modalBg" hidden>
+  <div class="modal">
+    <h2>Produto não cadastrado</h2>
+    <p class="hint">Não achou o produto na sua lista? Registre aqui — a CMS vai cadastrar corretamente em seguida.</p>
+    <div class="f">
+      <label>Marca</label>
+      <select id="pMarca">
+        <option value="OLY FTW">Olympikus · Calçados (OLY FTW)</option>
+        <option value="OLY CHI">Olympikus · Chinelos (OLY CHI)</option>
+        <option value="UA FTW">Under Armour · Calçados (UA FTW)</option>
+      </select>
+    </div>
+    <div class="f"><label>Artigo</label><input id="pArtigo" type="text" placeholder="Ex: 43720366"></div>
+    <div class="f"><label>Descrição</label><input id="pDescricao" type="text" placeholder="Ex: CORRE 4"></div>
+    <div class="f"><label>Cor</label><input id="pCor" type="text" placeholder="Ex: PRETO"></div>
+    <div class="row2">
+      <div class="f"><label>Estoque atual</label><input id="pEstoque" type="number" min="0" value="0"></div>
+      <div class="f"><label>Venda</label><input id="pVenda" type="number" min="0" value="0"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="pCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="pSubmit" type="button">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WORKER_URL = 'https://repasse-worker-cms.marcosrep-cms.workers.dev';
+const IMG_BASE = '../imagens_olympikus/';
+
+const params = new URLSearchParams(location.search);
+const TOKEN = params.get('token') || '';
+
+let STATE = { loja: null, marcaAtiva: null, dirty: new Set() };
+
+// ---------- tema ----------
+function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); localStorage.setItem('matriz-theme', t); }
+(function initTheme(){
+  const saved = localStorage.getItem('matriz-theme');
+  applyTheme(saved || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+})();
+document.getElementById('themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+};
+
+// ---------- util ----------
+function $(id){ return document.getElementById(id); }
+function toast(msg, isErr){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+function imgUrl(artigo, cor){
+  return IMG_BASE + encodeURIComponent(artigo) + '_' + encodeURIComponent(cor) + '.jpg';
+}
+function fmtData(iso){
+  if(!iso) return null;
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ---------- worker ----------
+async function callWorker(body){
+  const res = await fetch(WORKER_URL, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok || data.success === false) throw new Error(data.error || ('Erro ' + res.status));
+  return data;
+}
+
+// ---------- carregar ----------
+async function load(){
+  if(!TOKEN){ showNotFound(); return; }
+  try{
+    const { data } = await callWorker({ action: 'getMatrizEstoque' });
+    const loja = (data.lojas || []).find(l => l.token === TOKEN);
+    if(!loja){ showNotFound(); return; }
+    STATE.loja = loja;
+    STATE.marcaAtiva = Object.keys(loja.marcas || {})[0] || null;
+    render();
+    $('app').hidden = false;
+  }catch(e){
+    console.error(e);
+    toast('Não foi possível carregar os dados. Recarregue a página.', true);
+  }
+}
+
+function showNotFound(){
+  $('notfound').hidden = false;
+}
+
+function render(){
+  const loja = STATE.loja;
+  $('lojaNome').textContent = loja.nome;
+  $('lojaCidade').textContent = (loja.cidade ? loja.cidade + ' · ' : '') + 'Informe abaixo o estoque atual e as vendas de cada produto.';
+  const lu = $('lastUpd');
+  if(loja.ultimaAtualizacaoLoja){
+    lu.classList.add('ok');
+    lu.querySelector('span:last-child').textContent = 'Último envio: ' + fmtData(loja.ultimaAtualizacaoLoja);
+  }else{
+    lu.classList.remove('ok');
+    lu.querySelector('span:last-child').textContent = 'Ainda não enviado';
+  }
+
+  const marcas = Object.keys(loja.marcas || {});
+  $('tabs').innerHTML = marcas.map(m => {
+    const n = (loja.marcas[m] || []).length;
+    return `<button class="cat-tab ${m===STATE.marcaAtiva?'on':''}" data-marca="${m}">${m}<span class="n">${n}</span></button>`;
+  }).join('') + `<button class="cat-tab" id="addPendenteBtn" style="border-style:dashed">+ Produto não cadastrado</button>`;
+
+  $('tabs').querySelectorAll('[data-marca]').forEach(btn => {
+    btn.onclick = () => { STATE.marcaAtiva = btn.dataset.marca; render(); };
+  });
+  $('addPendenteBtn').onclick = openModal;
+
+  renderGrid();
+}
+
+function renderGrid(){
+  const loja = STATE.loja;
+  const itens = (loja.marcas[STATE.marcaAtiva] || []);
+  const q = $('search').value.trim().toLowerCase();
+  const filtered = q ? itens.filter(it =>
+    (it.descricao||'').toLowerCase().includes(q) ||
+    (it.cor||'').toLowerCase().includes(q) ||
+    (it.artigo||'').toLowerCase().includes(q)
+  ) : itens;
+
+  if(filtered.length === 0){
+    $('grid').innerHTML = `<div class="empty" style="grid-column:1/-1">Nenhum item encontrado.</div>`;
+    return;
+  }
+
+  $('grid').innerHTML = filtered.map(it => {
+    const dirty = STATE.dirty.has(it.id) ? ' dirty' : '';
+    return `
+    <div class="item${dirty}" data-id="${it.id}">
+      <div class="img"><img src="${imgUrl(it.artigo, it.cor)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph&quot;>Sem imagem</div>'"></div>
+      <div class="body">
+        <div class="desc">${it.descricao || ''}</div>
+        <div class="meta"><span>${it.cor || ''}</span><span class="tnum">${it.artigo || ''}</span></div>
+        ${it.preposto ? `<div class="preposto">Vendedor: ${it.preposto}</div>` : ''}
+        <div class="fields">
+          <div class="fld"><label>Estoque atual</label><input type="number" min="0" class="f-estoque" value="${it.estoqueAtual ?? 0}"></div>
+          <div class="fld"><label>Venda</label><input type="number" min="0" class="f-venda" value="${it.venda ?? 0}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('grid').querySelectorAll('.item').forEach(card => {
+    const id = card.dataset.id;
+    const item = itens.find(i => i.id === id);
+    card.querySelector('.f-estoque').oninput = e => { item.estoqueAtual = Number(e.target.value) || 0; markDirty(id, card); };
+    card.querySelector('.f-venda').oninput = e => { item.venda = Number(e.target.value) || 0; markDirty(id, card); };
+  });
+}
+
+function markDirty(id, card){
+  STATE.dirty.add(id);
+  card.classList.add('dirty');
+  updateSaveBar();
+}
+
+function updateSaveBar(){
+  const n = STATE.dirty.size;
+  $('saveBtn').disabled = n === 0;
+  $('saveStatus').textContent = n === 0 ? 'Nenhuma alteração pendente.' : `${n} item(ns) alterado(s), ainda não salvo.`;
+}
+
+$('search').oninput = renderGrid;
+
+$('saveBtn').onclick = async () => {
+  $('saveBtn').disabled = true;
+  $('saveStatus').textContent = 'Salvando…';
+  try{
+    await callWorker({ action: 'saveMatrizLoja', token: TOKEN, marcas: STATE.loja.marcas });
+    STATE.dirty.clear();
+    STATE.loja.ultimaAtualizacaoLoja = new Date().toISOString();
+    render();
+    toast('Estoque salvo com sucesso!');
+  }catch(e){
+    console.error(e);
+    toast('Erro ao salvar: ' + e.message, true);
+    $('saveBtn').disabled = false;
+    $('saveStatus').textContent = STATE.dirty.size + ' item(ns) alterado(s), ainda não salvo.';
+  }
+};
+
+// ---------- modal produto não cadastrado ----------
+function openModal(){
+  $('pMarca').value = STATE.marcaAtiva || 'OLY FTW';
+  $('pArtigo').value = ''; $('pDescricao').value = ''; $('pCor').value = '';
+  $('pEstoque').value = 0; $('pVenda').value = 0;
+  $('modalBg').hidden = false;
+}
+$('pCancel').onclick = () => { $('modalBg').hidden = true; };
+$('modalBg').onclick = e => { if(e.target === $('modalBg')) $('modalBg').hidden = true; };
+$('pSubmit').onclick = async () => {
+  const artigo = $('pArtigo').value.trim();
+  const descricao = $('pDescricao').value.trim();
+  const cor = $('pCor').value.trim();
+  if(!artigo || !descricao || !cor){ toast('Preencha artigo, descrição e cor.', true); return; }
+  $('pSubmit').disabled = true;
+  try{
+    await callWorker({
+      action: 'addMatrizPendente', token: TOKEN,
+      marca: $('pMarca').value, artigo, descricao, cor,
+      estoqueAtual: Number($('pEstoque').value) || 0,
+      venda: Number($('pVenda').value) || 0
+    });
+    $('modalBg').hidden = true;
+    toast('Produto registrado! A CMS vai cadastrar em breve.');
+  }catch(e){
+    toast('Erro ao registrar: ' + e.message, true);
+  }finally{
+    $('pSubmit').disabled = false;
+  }
+};
+
+load();
+</script>
+</body>
+</html>
