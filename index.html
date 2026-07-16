@@ -9200,6 +9200,8 @@ $("btnGradeLater").addEventListener("click", ()=>{
       tam: item.tam || "",
       precoNum,
       precoFmt: moneyBR(precoNum),
+      // 🔧 Bugfix: preserva precosPrazo pra não perder Custo por prazo no PDF depois.
+      precosPrazo: item.precosPrazo || null,
       qty: 0,
       grade: {},
       gradeResume: "",
@@ -11074,6 +11076,9 @@ function _mpPedidoItemToCartItem(it){
     precoRaw: precoFinal,
     precoNum: precoFinal,
     precoFmt: (typeof moneyBR === "function") ? moneyBR(precoFinal) : `R$ ${precoFinal.toFixed(2).replace(".",",")}`,
+    // 🔧 Bugfix: preserva precosPrazo do histórico; se ausente, recai no catálogo atual.
+    // Sem isso, PDF cai no fallback do PDV (mostra R$ 259,99 em vez do custo por prazo).
+    precosPrazo: it.precosPrazo || original?.precosPrazo || null,
     linhaId: it.linhaId || undefined,
     dataDesejada: it.dataDesejada || ""
   };
