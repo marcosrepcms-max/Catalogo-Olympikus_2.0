@@ -84,8 +84,10 @@
   .pend.resolved{opacity:.5}
   .empty{color:var(--mute);font-size:13.5px;padding:16px 0}
 
-  .vend{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-top:16px;transition:border-color .15s,box-shadow .15s}
-  .vend.open{border:2px solid var(--purple);box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 14%,transparent)}
+  .vend{background:var(--card);border:2px solid color-mix(in srgb,var(--purple) 45%,var(--line));border-radius:16px;padding:22px 24px;margin-top:16px;transition:border-color .2s,box-shadow .2s}
+  .vend.recente{border-color:var(--green)}
+  .vend.open{box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 14%,transparent)}
+  .vend.open.recente{box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 14%,transparent)}
   .vhead{display:flex;align-items:center;gap:16px;margin-bottom:6px;flex-wrap:wrap;cursor:pointer}
   .vindex{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:13px;color:var(--purple);border:1px solid color-mix(in srgb,var(--purple) 42%,transparent);background:color-mix(in srgb,var(--purple) 12%,transparent);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;flex:none}
   .vtitle{flex:1;min-width:160px}
@@ -525,8 +527,9 @@ function renderLojas(){
     const totalItens = Object.values(l.marcas||{}).reduce((s,arr)=>s+arr.length,0);
     const link = new URL(LOJA_PAGE, location.href).toString() + '?token=' + encodeURIComponent(l.token);
     const marcas = Object.keys(l.marcas || {});
+    const recente = l.ultimaAtualizacaoLoja && (Date.now() - new Date(l.ultimaAtualizacaoLoja).getTime()) < 24*60*60*1000;
     return `
-    <div class="vend" id="vend-${i}">
+    <div class="vend ${recente?'recente':''}" id="vend-${i}">
       <div class="vhead" data-toggle="${i}" title="Clique para expandir/recolher os produtos desta loja">
         <div class="vindex tnum">${String(i+1).padStart(2,'0')}</div>
         <div class="vtitle"><h2>${l.nome}</h2><div class="sub">${l.cidade || ''}</div></div>
