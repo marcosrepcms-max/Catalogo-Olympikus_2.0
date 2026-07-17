@@ -1089,9 +1089,9 @@
     #homeScreen { background: var(--bg, #F9FAFB); min-height: 100vh; }
     .dark-mode #homeScreen { background: var(--bg, #111827); }
 
-    .home-hero { position:relative; width:100%; height:130px; overflow:hidden; flex-shrink:0; border-radius: 0 0 24px 24px; }
-    @media(min-width:480px){ .home-hero { height:160px; } }
-    @media(min-width:1024px){ .home-hero { height:200px; } }
+    .home-hero { position:relative; width:100%; height:90px; overflow:hidden; flex-shrink:0; border-radius: 0 0 24px 24px; }
+    @media(min-width:480px){ .home-hero { height:110px; } }
+    @media(min-width:1024px){ .home-hero { height:130px; } }
     .home-hero-grid { display:grid; grid-template-columns:1fr 1fr 1fr; height:100%; gap:2px; }
     .home-hero-cell { overflow:hidden; background:#111; position:relative; }
     .home-hero-cell-img { width:100%; height:100%; object-fit:cover; object-position:center 20%; display:block; transition:transform 0.6s cubic-bezier(.2,.7,.2,1); }
@@ -1108,25 +1108,58 @@
       box-shadow: inset 0 0 80px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.04);
       border-radius: inherit;
     }
-    .home-hero-content { position:absolute; bottom:0; left:0; right:0; padding:14px 16px 18px; z-index:1; }
+    .home-hero-content { position:absolute; bottom:0; left:0; right:0; padding:12px 16px 14px; z-index:1; }
     .home-hero-title {
-      font-size:24px; font-weight:900; color:#fff; line-height:1.05;
+      font-size:22px; font-weight:900; color:#fff; line-height:1.05;
       text-shadow:0 2px 12px rgba(0,0,0,.55), 0 0 1px rgba(0,0,0,.5);
       letter-spacing:-0.6px;
     }
-    @media (min-width:768px){ .home-hero-title { font-size: 30px; } }
+    @media (min-width:768px){ .home-hero-title { font-size: 26px; } }
     .home-hero-sub {
-      font-size:12.5px; font-weight:600; color:rgba(255,255,255,0.92); margin-top:4px;
+      font-size:12px; font-weight:600; color:rgba(255,255,255,0.92); margin-top:3px;
       text-shadow:0 1px 6px rgba(0,0,0,.55);
       letter-spacing:.005em;
     }
 
-    .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:14px 16px; cursor:pointer; transition:transform 0.15s ease,box-shadow 0.15s ease,border-color 0.15s ease; text-align:left; box-shadow:0 1px 3px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
-    .home-cat-card:active { transform:scale(0.98); box-shadow:none; }
-    .home-cat-card:hover { border-color:var(--primary,var(--primary)); box-shadow:0 4px 16px rgba(var(--primary-rgb),0.1); }
+    /* ═══ V1: Grid 2 colunas das categorias ═══ */
+    .home-cat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    /* Em 2 colunas, a miniatura à direita é bem compacta (não pode dominar o card) */
+    .home-cat-grid > .home-cat-card .home-cat-img-wrap {
+      width: 48px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    /* Seta chevron some pra dar respiro ao texto */
+    .home-cat-grid > .home-cat-card .home-cat-arrow { display: none; }
+    /* Descrição menor pra caber sem estourar */
+    .home-cat-grid > .home-cat-card .home-cat-sub {
+      font-size: 10.5px;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .home-cat-grid > .home-cat-card .home-cat-name { font-size: 14px; }
+    /* Info empacota melhor no card estreito */
+    .home-cat-grid > .home-cat-card .home-cat-info { gap: 10px; flex: 1; min-width: 0; }
+    .home-cat-grid > .home-cat-card .home-cat-label { min-width: 0; }
+
+    .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:12px 14px; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.22s ease,border-color 0.18s ease; text-align:left; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 20px rgba(15,23,42,.06); position:relative; overflow:hidden; }
+    .home-cat-card:active { transform:scale(0.98); box-shadow:0 1px 2px rgba(15,23,42,.06); }
+    @media (hover: hover){
+      .home-cat-card:hover { transform: translateY(-2px); border-color:rgba(124,58,237,.20); box-shadow:0 4px 8px rgba(15,23,42,.06), 0 18px 36px rgba(15,23,42,.12); }
+    }
     .home-cat-all { border-style:dashed; border-color:var(--primary,var(--primary)); background:rgba(var(--primary-rgb),0.03); }
-    .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; }
+    .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; box-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.35); }
     .dark-mode .home-cat-all { background:rgba(var(--primary-rgb),0.08); }
+    .dark-mode .home-cat-card:hover { border-color:rgba(167,139,250,.35); }
     .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
     .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     /* ─── Ícones de categoria com brilho radial sutil (premium) ─── */
@@ -1155,46 +1188,148 @@
     .home-cat-arrow { font-size:12px; color:var(--muted,#9CA3AF); margin-left:4px; flex-shrink:0; }
 
     /* ── SELETOR DE COLEÇÃO ── */
-    .colecao-selector { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+    .colecao-selector { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
     .colecao-selector-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       color: var(--muted, #6B7280);
       letter-spacing: 0.6px;
       text-transform: uppercase;
       padding-left: 4px;
     }
-    .colecao-selector-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    /* Barra inline: coleção pílulas + classificação pílulas na mesma linha (desktop/tablet paisagem) */
+    .home-filters-inline {
+      display: flex;
+      align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
+      padding: 4px 0;
     }
-    .colecao-card {
+    .home-filters-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+    .home-filters-group-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted, #6B7280);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding-right: 2px;
+    }
+    /* Pílulas de coleção (novo — compacto, igual tier-pill) */
+    .colecao-pill {
       background: var(--card-bg, #fff);
       border: 1.5px solid var(--border, #E5E7EB);
-      border-radius: 18px;
-      padding: 18px 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: transform .12s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 800;
       color: var(--primary, var(--primary));
+      cursor: pointer;
+      transition: transform .12s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
       user-select: none;
+      letter-spacing: -0.2px;
     }
-    .colecao-card:active { transform: scale(.97); }
-    .colecao-card:hover { border-color: var(--primary, var(--primary)); }
-    .colecao-card-name { font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
-    .colecao-card.active {
+    .colecao-pill:active { transform: scale(.96); }
+    .colecao-pill:hover { border-color: var(--primary); }
+    .colecao-pill.active {
       background: var(--primary, var(--primary));
       border-color: var(--primary, var(--primary));
       color: #fff;
-      box-shadow: 0 6px 14px rgba(var(--primary-rgb),.22);
+      box-shadow: 0 4px 10px rgba(var(--primary-rgb),.22);
     }
-    .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #a78bfa; }
-    .dark-mode .colecao-card.active { background: #a78bfa; border-color: #a78bfa; color: #fff; box-shadow: 0 6px 14px rgba(167,139,250,.3); }
+    .dark-mode .colecao-pill { background: #1F2937; border-color: #374151; color: #a78bfa; }
+    .dark-mode .colecao-pill.active { background: #a78bfa; border-color: #a78bfa; color: #fff; }
+    /* Em tablet retrato: quebra em 2 linhas (coleção em cima, classificação embaixo) */
+    @media (max-width: 900px){
+      .home-filters-inline { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .home-filters-group { flex-wrap: wrap; }
+    }
 
     /* ── BAR DE CLASSIFICAÇÃO TIER ── */
-    .tier-bar-wrap { display:none; margin-top:6px; }
-    .tier-bar-wrap.show { display:block; }
+    .tier-bar-wrap { display:none; }
+    /* Quando ativa (2S26 selecionada), aparece como flex inline com a coleção */
+    .tier-bar-wrap.show { display:flex; align-items:center; gap:6px; }
+    /* Botão-popover (novo layout compacto) */
+    .tier-popover-wrap { position: relative; }
+    .tier-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1.5px solid var(--border, #E5E7EB);
+      border-radius: 999px;
+      padding: 6px 12px 6px 11px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--muted, #6B7280);
+      cursor: pointer;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .tier-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .tier-toggle-btn.has-filter {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(124,58,237,.06);
+    }
+    .tier-toggle-btn.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+    }
+    .tier-toggle-label { font-weight: 700; opacity: .8; }
+    .tier-toggle-value {
+      font-weight: 900;
+      color: var(--text);
+    }
+    .tier-toggle-btn.has-filter .tier-toggle-value { color: var(--primary); }
+    .tier-toggle-chevron { transition: transform .18s ease; }
+    .tier-toggle-btn.open .tier-toggle-chevron { transform: rotate(180deg); }
+    /* Popover propriamente */
+    .tier-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 280px;
+      max-width: 92vw;
+      background: #fff;
+      border: 1px solid var(--border, #E5E7EB);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(15,23,42,.12), 0 2px 4px rgba(15,23,42,.05);
+      padding: 12px;
+      z-index: 40;
+      display: none;
+      animation: tierPopIn .18s cubic-bezier(.2,.7,.2,1) both;
+    }
+    .tier-popover.show { display: block; }
+    @keyframes tierPopIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .tier-popover-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 0 4px 8px;
+    }
+    .tier-popover .tier-bar {
+      flex-wrap: wrap;
+      overflow: visible;
+      padding: 4px;
+    }
+    @media (prefers-reduced-motion: reduce){
+      .tier-popover { animation: none; }
+    }
+    /* Em mobile, popover ancora à esquerda pra não sair da tela */
+    @media (max-width: 500px){
+      .tier-popover { left: 0; right: auto; }
+    }
     .tier-bar-label {
       font-size: 11px; font-weight: 800;
       color: var(--muted, #6B7280);
@@ -1408,6 +1543,50 @@
     }
     .mp-periodo-pill:hover { border-color:var(--primary); color:var(--primary); }
     .mp-periodo-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 2px 6px rgba(var(--primary-rgb),.25); }
+    /* Barra inline (novo layout compacto) */
+    .mp-filters-inline {
+      display:flex; align-items:center; gap:8px;
+      flex-wrap:wrap;
+    }
+    .mp-filter-inline-select {
+      flex: 0 1 220px;
+      min-width: 160px;
+      padding: 7px 30px 7px 12px;
+    }
+    .mp-filter-search-wrap {
+      position: relative;
+      flex: 1 1 220px;
+      min-width: 180px;
+      display:flex;
+      align-items:center;
+    }
+    .mp-filter-search-icon {
+      position:absolute;
+      left:12px;
+      color: var(--muted);
+      font-size:12px;
+      pointer-events:none;
+    }
+    .mp-filter-inline-search {
+      width: 100%;
+      padding: 7px 12px 7px 32px;
+      background-image: none !important;
+    }
+    .mp-filter-inline-pills {
+      flex: 0 0 auto;
+      display:flex; gap:4px;
+      flex-wrap: nowrap;
+    }
+    .mp-filter-inline-pills .mp-periodo-pill {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    @media (max-width: 600px){
+      .mp-filter-inline-select { flex: 1 1 100%; min-width: 100%; }
+      .mp-filter-search-wrap { flex: 1 1 100%; min-width: 100%; }
+      .mp-filter-inline-pills { flex: 1 1 100%; justify-content: space-between; }
+      .mp-filter-inline-pills .mp-periodo-pill { flex: 1; text-align: center; }
+    }
     .mp-empty {
       text-align:center; padding:40px 20px;
       color:var(--muted); font-size:13px;
@@ -1696,36 +1875,49 @@
         <div class="home-hero-sub">Escolha uma categoria para começar</div>
       </div>
     </div>
-    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-4 flex flex-col gap-3">
-      <!-- ═══════════ SELETOR DE COLEÇÃO ═══════════ -->
+    <div class="flex-1 mx-auto w-full max-w-lg sm:max-w-2xl px-4 py-3 flex flex-col gap-2">
+      <!-- ═══════════ SELETOR DE COLEÇÃO + CLASSIFICAÇÃO (compacto inline) ═══════════ -->
       <div class="colecao-selector">
-        <div class="colecao-selector-label">Coleção</div>
-        <div class="colecao-selector-grid">
-          <button type="button" class="colecao-card focus-ring" data-colecao="1S26">
-            <div class="colecao-card-name">1S26</div>
-          </button>
-          <button type="button" class="colecao-card focus-ring" data-colecao="2S26">
-            <div class="colecao-card-name">2S26</div>
-          </button>
-        </div>
+        <div class="home-filters-inline">
+          <div class="home-filters-group">
+            <span class="home-filters-group-label">Coleção</span>
+            <button type="button" class="colecao-pill colecao-card focus-ring" data-colecao="1S26">
+              <span class="colecao-card-name">1S26</span>
+            </button>
+            <button type="button" class="colecao-pill colecao-card focus-ring" data-colecao="2S26">
+              <span class="colecao-card-name">2S26</span>
+            </button>
+          </div>
 
-        <!-- Bar de classificação por canal/tier (só visível em 2S26) -->
-        <div id="tierBarWrap" class="tier-bar-wrap">
-          <div class="tier-bar-label">Classificação do cliente</div>
-          <div class="tier-bar" id="tierBar">
-            <button type="button" class="tier-pill active" data-tier="">Todos</button>
-            <div class="tier-bar-divider"></div>
-            <button type="button" class="tier-pill" data-tier="sg1" data-tip="Sporting Goods · Tier 1">SG·1</button>
-            <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
-            <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
-            <div class="tier-bar-divider"></div>
-            <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FF·1</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FF·2</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FF·3</button>
+          <!-- Classificação por tier: botão que abre popover (só visível em 2S26) -->
+          <div id="tierBarWrap" class="tier-bar-wrap home-filters-group tier-popover-wrap">
+            <button type="button" id="tierToggleBtn" class="tier-toggle-btn focus-ring" aria-haspopup="true" aria-expanded="false" title="Filtrar por classificação do cliente">
+              <i class="fa-solid fa-filter" style="font-size:11px;opacity:.7"></i>
+              <span class="tier-toggle-label">Classificação:</span>
+              <span class="tier-toggle-value" id="tierToggleValue">Todos</span>
+              <i class="fa-solid fa-chevron-down tier-toggle-chevron" style="font-size:9px;opacity:.6"></i>
+            </button>
+            <!-- Popover invisível por padrão; abre ao clicar no botão -->
+            <div id="tierPopover" class="tier-popover" role="menu" aria-labelledby="tierToggleBtn">
+              <div class="tier-popover-title">Classificação do cliente</div>
+              <div class="tier-bar" id="tierBar">
+                <button type="button" class="tier-pill active" data-tier="">Todos</button>
+                <div class="tier-bar-divider"></div>
+                <button type="button" class="tier-pill" data-tier="sg1" data-tip="Sporting Goods · Tier 1">SG·1</button>
+                <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
+                <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
+                <div class="tier-bar-divider"></div>
+                <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FF·1</button>
+                <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FF·2</button>
+                <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FF·3</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- Grid 2 colunas das categorias (V1) — "Todos" ocupa linha inteira -->
+      <div class="home-cat-grid">
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
           <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#F8FAFC 0%,#EFF6FF 55%,#DBEAFE 100%);"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
@@ -1788,6 +1980,7 @@
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
       </button>
+      </div><!-- /home-cat-grid -->
     </div>
   </div>
   <!-- /HOME SCREEN -->
@@ -2711,7 +2904,7 @@
     </div>
 
     <!-- Modal genérico de confirmação (reaproveitável) -->
-    <div id="confirmModal" class="hidden fixed inset-0 z-[90]">
+    <div id="confirmModal" class="hidden fixed inset-0 z-[95]">
       <div class="absolute inset-0 bg-black/50" id="confirmBackdrop"></div>
       <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-[420px] bg-white rounded-2xl shadow-lift overflow-hidden" style="background:var(--card-bg,#fff);color:var(--text)">
         <div class="px-5 pt-5 pb-2">
@@ -2733,7 +2926,7 @@
     </div>
 
     <!-- Modal genérico de seleção de data (reaproveitável) -->
-    <div id="datePickModal" class="hidden fixed inset-0 z-[90]">
+    <div id="datePickModal" class="hidden fixed inset-0 z-[95]">
       <div class="absolute inset-0 bg-black/50" id="datePickBackdrop"></div>
       <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-[380px] bg-white rounded-2xl shadow-lift overflow-hidden" style="background:var(--card-bg,#fff);color:var(--text)">
         <div class="px-5 pt-5 pb-2">
@@ -2758,7 +2951,7 @@
     </div>
 
     <!-- Modal genérico de entrada de texto (reaproveitável) -->
-    <div id="textPromptModal" class="hidden fixed inset-0 z-[90]">
+    <div id="textPromptModal" class="hidden fixed inset-0 z-[95]">
       <div class="absolute inset-0 bg-black/50" id="textPromptBackdrop"></div>
       <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-[400px] bg-white rounded-2xl shadow-lift overflow-hidden" style="background:var(--card-bg,#fff);color:var(--text)">
         <div class="px-5 pt-5 pb-2">
@@ -3036,7 +3229,7 @@ const WORKER_URL = "https://repasse-worker-cms.marcosrep-cms.workers.dev";
 // Token de admin para writes protegidas no Worker (igual ao do admin de Disponibilidades)
 const ADMIN_TOKEN = "1b489c97-7bc7-466a-a675-f559e1226371d9bea53d-a920-4059-a31c-6bc0b6d8c4c8";
 // URL base das imagens de categorias (Worker salva no repo Catalogo-Olympikus, não no _2.0)
-const CAT_IMG_BASE = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/imagens_olympikus/categorias/"
+const CAT_IMG_BASE = "https://cms-representacoes.github.io/apps-oly/imagens_olympikus/categorias/"
   + (MARCA_ATUAL.id === "ua" ? "ua/" : "");
 
 const state = {
@@ -3991,7 +4184,51 @@ function syncTierBar(){
   document.querySelectorAll(".tier-pill").forEach(btn => {
     btn.classList.toggle("active", (btn.dataset.tier || "") === state.filters.tier);
   });
+  // Sincroniza o botão-toggle: mostra o filtro ativo
+  const btnToggle = document.getElementById("tierToggleBtn");
+  const valueEl = document.getElementById("tierToggleValue");
+  if(btnToggle && valueEl){
+    const tier = state.filters.tier || "";
+    if(tier){
+      // Label curto: SG-1, FF-2, etc (formato humano do dataset)
+      const btnAtiva = document.querySelector(`.tier-pill[data-tier="${tier}"]`);
+      const rotulo = btnAtiva ? btnAtiva.textContent.trim() : tier;
+      valueEl.textContent = rotulo;
+      btnToggle.classList.add("has-filter");
+    } else {
+      valueEl.textContent = "Todos";
+      btnToggle.classList.remove("has-filter");
+    }
+  }
 }
+// Abre/fecha popover de classificação
+function _tierPopoverToggle(force){
+  const pop = document.getElementById("tierPopover");
+  const btn = document.getElementById("tierToggleBtn");
+  if(!pop || !btn) return;
+  const abrir = force === true ? true : (force === false ? false : !pop.classList.contains("show"));
+  pop.classList.toggle("show", abrir);
+  btn.classList.toggle("open", abrir);
+  btn.setAttribute("aria-expanded", String(abrir));
+}
+// Listeners via delegação (à prova de reordenação do HTML)
+document.addEventListener("click", (e) => {
+  const trg = e.target;
+  // Toggle no botão
+  if(trg.closest("#tierToggleBtn")){
+    e.stopPropagation();
+    _tierPopoverToggle();
+    return;
+  }
+  // Clique dentro do popover — não fecha (as pílulas cuidam do fechamento)
+  if(trg.closest("#tierPopover")) return;
+  // Clique fora fecha
+  _tierPopoverToggle(false);
+});
+// Esc fecha popover
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape") _tierPopoverToggle(false);
+});
 const TIER_LABELS = {
   sg1: "Sporting Goods · Tier 1",
   sg2: "Sporting Goods · Tier 2",
@@ -4003,7 +4240,10 @@ const TIER_LABELS = {
 document.querySelectorAll(".tier-pill").forEach(btn => {
   btn.addEventListener("click", () => {
     const sel = btn.dataset.tier || "";
-    if(state.filters.tier === sel) return;
+    if(state.filters.tier === sel){
+      _tierPopoverToggle(false);
+      return;
+    }
     state.filters.tier = sel;
     syncTierBar();
     if(typeof toast === "function"){
@@ -4011,6 +4251,7 @@ document.querySelectorAll(".tier-pill").forEach(btn => {
       else toast("Mostrando todos");
     }
     if(typeof refreshView === "function") refreshView(true);
+    _tierPopoverToggle(false);
   });
 });
 syncTierBar();
@@ -6990,6 +7231,20 @@ function flashPendingCartItems(items){
 async function openOrderExportModal(opts = {}){
   if(state.cart.size === 0){ toast("Sacola vazia ✅"); return; }
 
+  // ⚡ Sempre sincroniza a lista de prepostos com o backend antes de abrir o modal.
+  // Isso garante que o dropdown Comissionista reflete adições/edições/exclusões
+  // feitas em outros dispositivos ou anteriormente na mesma sessão.
+  try {
+    const dataPrep = await fetchPrepostos();
+    if(Array.isArray(dataPrep) && dataPrep.length > 0){
+      PrepostosMgr.lista = dataPrep;
+      _sincronizaComissionistas();
+    }
+  } catch(e){
+    console.warn("Sincronização de prepostos ao abrir modal falhou:", e);
+    // Sem bloquear: se falhou, segue com a lista em memória.
+  }
+
   // Gate de grade: só vale pra FINALIZAR pedido.
   // Quando aberto para salvar rascunho, não exige grade (rascunho pode ser completado depois).
   const modoRascunho = !!opts.paraRascunho;
@@ -8628,6 +8883,58 @@ function appConfirm(opts = {}){
 }
 
 /**
+ * Modal de sucesso premium (reusa a estrutura do confirmModal).
+ * appSuccess({ title, message, okText, autoClose }) -> Promise<void>
+ */
+function appSuccess(opts = {}){
+  return new Promise((resolve)=>{
+    const modal   = document.getElementById("confirmModal");
+    const okBtn   = document.getElementById("confirmOkBtn");
+    const cancel  = document.getElementById("confirmCancelBtn");
+    const backd   = document.getElementById("confirmBackdrop");
+    const titleEl = document.getElementById("confirmTitle");
+    const msgEl   = document.getElementById("confirmMessage");
+    const iconWrap= document.getElementById("confirmIconWrap");
+    const iconEl  = document.getElementById("confirmIcon");
+    if(!modal || !okBtn){ resolve(); return; }
+
+    titleEl.textContent = opts.title || "Concluído";
+    msgEl.innerHTML = opts.message || "Operação realizada com sucesso.";
+    okBtn.textContent = opts.okText || "OK";
+    if(cancel) cancel.classList.add("hidden");
+    iconWrap.setAttribute("style", "background:rgba(34,197,94,.14);color:#16a34a");
+    iconEl.className = "fa-solid fa-circle-check text-lg";
+    okBtn.setAttribute("style", "background:#16a34a");
+
+    modal.classList.remove("hidden");
+    setTimeout(()=> okBtn.focus(), 30);
+
+    let timer = null;
+    const cleanup = () => {
+      modal.classList.add("hidden");
+      if(cancel) cancel.classList.remove("hidden");
+      iconWrap.setAttribute("style", "background:rgba(124,58,237,.1);color:var(--primary)");
+      iconEl.className = "fa-solid fa-circle-question text-lg";
+      okBtn.setAttribute("style", "background:var(--primary)");
+      okBtn.removeEventListener("click", onOk);
+      backd.removeEventListener("click", onOk);
+      document.removeEventListener("keydown", onKey);
+      if(timer) clearTimeout(timer);
+      resolve();
+    };
+    const onOk = () => cleanup();
+    const onKey = (e) => { if(e.key === "Escape" || e.key === "Enter") cleanup(); };
+
+    okBtn.addEventListener("click", onOk);
+    backd.addEventListener("click", onOk);
+    document.addEventListener("keydown", onKey);
+    if(opts.autoClose && opts.autoClose > 0){
+      timer = setTimeout(cleanup, opts.autoClose);
+    }
+  });
+}
+
+/**
  * Modal reutilizável para escolher uma data.
  * appDatePick({ title, message, initial, okText, cancelText }) -> Promise<string|null>
  *   resolve com a data ISO (YYYY-MM-DD) ou null se cancelar.
@@ -9134,6 +9441,8 @@ $("btnGradeLater").addEventListener("click", ()=>{
       tam: item.tam || "",
       precoNum,
       precoFmt: moneyBR(precoNum),
+      // 🔧 Bugfix: preserva precosPrazo pra não perder Custo por prazo no PDF depois.
+      precosPrazo: item.precosPrazo || null,
       qty: 0,
       grade: {},
       gradeResume: "",
@@ -9847,7 +10156,7 @@ function injectHomeCategoryImages(){
 // ═══════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO DE IMAGENS DAS CATEGORIAS (admin)
 // ═══════════════════════════════════════════════════════════════════
-const CAT_IMG_PWD = "cmsrepasse"; // senha simples (igual ao admin antigo)
+const CAT_IMG_PWD = "cmscatalogo"; // senha simples de configurações
 const CAT_IMG_CATEGORIES = [
   { id: "FTW",  nome: "Tênis",        icone: "👟", sub: "Corrida, treino e lifestyle" },
   { id: "CHI",  nome: "Chinelos",     icone: "👡", sub: "Conforto pra o dia a dia" },
@@ -9873,13 +10182,272 @@ function validarSenhaCategorias(){
   const v = $("catImgPwdInput").value.trim();
   if(v === CAT_IMG_PWD){
     fecharSenhaCategorias();
-    abrirModalImagensCategorias();
+    abrirMenuConfiguracoes();
   } else {
     $("catImgPwdError").classList.remove("hidden");
     $("catImgPwdInput").value = "";
     $("catImgPwdInput").focus();
   }
 }
+
+// ────── Menu de Configurações ──────
+function abrirMenuConfiguracoes(){
+  const m = $("configMenuModal");
+  if(!m) return;
+  m.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function fecharMenuConfiguracoes(){
+  $("configMenuModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+// ── Delegação de eventos: funciona mesmo que o HTML dos modais seja
+//    carregado APÓS este script (é o caso aqui — script está antes do HTML).
+document.addEventListener("click", (e)=>{
+  if(e.target.closest("#configMenuClose") || e.target.closest("#configMenuBackdrop")){
+    fecharMenuConfiguracoes();
+  } else if(e.target.closest("#btnCfgImagens")){
+    fecharMenuConfiguracoes();
+    abrirModalImagensCategorias();
+  } else if(e.target.closest("#btnCfgPrepostos")){
+    fecharMenuConfiguracoes();
+    abrirModalPrepostos();
+  }
+});
+
+// ────── Prepostos: estado + API ──────
+const PrepostosMgr = {
+  lista: [],           // [{codigo, nome}]
+  editandoCodigo: null // se está editando alguém
+};
+async function fetchPrepostos(){
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getPrepostos" })
+    });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch(e){
+    console.warn("fetchPrepostos falhou:", e);
+    return null; // sinaliza erro (diferente de "vazio")
+  }
+}
+async function savePrepostos(lista){
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Token": ADMIN_TOKEN },
+    body: JSON.stringify({ action: "savePrepostos", data: lista })
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(()=> "");
+    throw new Error("HTTP " + res.status + " " + txt);
+  }
+  return res.json();
+}
+
+async function abrirModalPrepostos(){
+  const m = $("prepostosModal");
+  if(!m) return;
+  m.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  _prepostosResetForm();
+  // Carrega lista remota
+  $("prepostosList").innerHTML = `<div class="text-xs text-oly-muted py-6 text-center">Carregando…</div>`;
+  const data = await fetchPrepostos();
+  if(data === null){
+    $("prepostosList").innerHTML = `<div class="text-xs py-6 text-center" style="color:#B91C1C">Erro ao carregar. Tente novamente.</div>`;
+    return;
+  }
+  // Se veio vazio do backend E ainda temos a lista hardcoded, migra na primeira abertura
+  if(data.length === 0 && Array.isArray(COMISSIONISTAS) && COMISSIONISTAS.length > 0){
+    PrepostosMgr.lista = COMISSIONISTAS.map(c => ({ codigo: c.codigo, nome: c.nome }));
+    try { await savePrepostos(PrepostosMgr.lista); } catch(e){ console.warn("Migração inicial falhou:", e); }
+  } else {
+    PrepostosMgr.lista = data;
+  }
+  _prepostosRender();
+  _sincronizaComissionistas();
+}
+function fecharModalPrepostos(){
+  $("prepostosModal")?.classList.add("hidden");
+  document.body.style.overflow = "";
+  _prepostosResetForm();
+}
+function _prepostosResetForm(){
+  PrepostosMgr.editandoCodigo = null;
+  $("prepostoCodigo").value = "";
+  $("prepostoNome").value = "";
+  $("prepostoFormLabel").textContent = "Novo preposto";
+  $("prepostoSaveLabel").textContent = "Adicionar";
+  $("prepostoCancelEditBtn").classList.add("hidden");
+  $("prepostoFormError").classList.add("hidden");
+  $("prepostoCodigo").disabled = false;
+}
+function _prepostosRender(){
+  const list = $("prepostosList");
+  const count = $("prepostosCount");
+  const total = PrepostosMgr.lista.length;
+  count.textContent = total + " preposto" + (total !== 1 ? "s" : "");
+  if(total === 0){
+    list.innerHTML = `<div class="text-xs text-oly-muted py-6 text-center">Nenhum preposto cadastrado.</div>`;
+    return;
+  }
+  const ordenado = [...PrepostosMgr.lista].sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  list.innerHTML = ordenado.map(p => `
+    <div class="rounded-xl border border-oly-border bg-white p-3 flex items-center gap-3">
+      <div class="min-w-0 flex-1">
+        <div class="text-[15px] font-extrabold text-oly-text truncate">${_mpEscape(p.nome)}</div>
+        <div class="text-xs text-oly-muted font-bold">Código: ${_mpEscape(p.codigo)}</div>
+      </div>
+      <button type="button" class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-prep-edit="${_mpEscape(p.codigo)}" title="Editar" aria-label="Editar">
+        <i class="fa-solid fa-pen text-oly-blue" style="font-size:12px"></i>
+      </button>
+      <button type="button" class="focus-ring h-9 w-9 rounded-full border border-oly-border hover:bg-oly-bg" data-prep-remove="${_mpEscape(p.codigo)}" title="Excluir" aria-label="Excluir">
+        <i class="fa-solid fa-trash" style="font-size:12px;color:#B91C1C"></i>
+      </button>
+    </div>
+  `).join("");
+}
+function _prepostoShowError(msg){
+  const el = $("prepostoFormError");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+async function _prepostoSalvar(){
+  const codigo = $("prepostoCodigo").value.trim();
+  const nome = $("prepostoNome").value.trim().toUpperCase();
+  $("prepostoFormError").classList.add("hidden");
+  if(!codigo || !nome){ _prepostoShowError("Preencha código e nome."); return; }
+  if(!/^\d+$/.test(codigo)){ _prepostoShowError("Código deve conter apenas números."); return; }
+  const isEdit = !!PrepostosMgr.editandoCodigo;
+  if(!isEdit){
+    // Novo: bloqueia duplicidade de código
+    if(PrepostosMgr.lista.some(p => p.codigo === codigo)){
+      _prepostoShowError("Já existe um preposto com esse código.");
+      return;
+    }
+    PrepostosMgr.lista.push({ codigo, nome });
+  } else {
+    // Editar: o código não muda (identificador estável); só o nome
+    const p = PrepostosMgr.lista.find(x => x.codigo === PrepostosMgr.editandoCodigo);
+    if(!p){ _prepostoShowError("Preposto não encontrado."); return; }
+    p.nome = nome;
+  }
+  const btn = $("prepostoSaveBtn");
+  btn.disabled = true;
+  try {
+    await savePrepostos(PrepostosMgr.lista);
+    _prepostosResetForm();
+    _prepostosRender();
+    _sincronizaComissionistas();
+    await appSuccess({
+      title: isEdit ? "Preposto atualizado" : "Preposto cadastrado",
+      message: isEdit
+        ? `O preposto <strong>${_mpEscape(nome)}</strong> foi atualizado com sucesso.`
+        : `O preposto <strong>${_mpEscape(nome)}</strong> (código ${_mpEscape(codigo)}) foi cadastrado com sucesso.`,
+      okText: "OK",
+      autoClose: 2500
+    });
+  } catch(e){
+    _prepostoShowError("Erro ao salvar: " + (e.message || "verifique a conexão"));
+  } finally {
+    btn.disabled = false;
+  }
+}
+function _prepostoIniciarEdicao(codigo){
+  const p = PrepostosMgr.lista.find(x => x.codigo === codigo);
+  if(!p) return;
+  PrepostosMgr.editandoCodigo = codigo;
+  $("prepostoCodigo").value = p.codigo;
+  $("prepostoCodigo").disabled = true; // código é imutável na edição
+  $("prepostoNome").value = p.nome;
+  $("prepostoFormLabel").textContent = "Editando: " + p.nome;
+  $("prepostoSaveLabel").textContent = "Salvar alterações";
+  $("prepostoCancelEditBtn").classList.remove("hidden");
+  $("prepostoFormError").classList.add("hidden");
+  $("prepostoNome").focus();
+}
+async function _prepostoRemover(codigo){
+  const p = PrepostosMgr.lista.find(x => x.codigo === codigo);
+  if(!p) return;
+  const ok = await appConfirm({
+    title: "Excluir preposto",
+    message: `Excluir <strong>${_mpEscape(p.nome)}</strong> (código ${_mpEscape(p.codigo)}) da lista?<br><br>O histórico de pedidos deste preposto <strong>não será apagado</strong>.`,
+    okText: "Excluir",
+    cancelText: "Cancelar",
+    tone: "danger"
+  });
+  if(!ok) return;
+  PrepostosMgr.lista = PrepostosMgr.lista.filter(x => x.codigo !== codigo);
+  try {
+    await savePrepostos(PrepostosMgr.lista);
+    _prepostosRender();
+    _sincronizaComissionistas();
+    await appSuccess({
+      title: "Preposto excluído",
+      message: `<strong>${_mpEscape(p.nome)}</strong> foi removido da lista.`,
+      okText: "OK",
+      autoClose: 2500
+    });
+  } catch(e){
+    toast("Erro ao excluir: " + (e.message || "verifique a conexão"));
+  }
+}
+// Sincroniza a lista global COMISSIONISTAS + dropdown do modal EBM
+function _sincronizaComissionistas(){
+  if(!Array.isArray(PrepostosMgr.lista) || PrepostosMgr.lista.length === 0) return;
+  // Substitui o array global (in-place pra manter a referência viva)
+  COMISSIONISTAS.length = 0;
+  for(const p of PrepostosMgr.lista) COMISSIONISTAS.push({ codigo: p.codigo, nome: p.nome });
+  // Atualiza o dropdown do modal EBM
+  const sel = document.getElementById("oxCommission");
+  if(sel){
+    const valorAtual = sel.value;
+    const ordenados = [...COMISSIONISTAS].sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    sel.innerHTML = `<option value="">— Selecione —</option>` +
+      ordenados.map(c => `<option value="${_mpEscape(c.codigo)}">${_mpEscape(c.codigo)} – ${_mpEscape(c.nome)}</option>`).join("");
+    // Preserva a seleção se ainda existe
+    if(valorAtual && ordenados.some(c => c.codigo === valorAtual)){
+      sel.value = valorAtual;
+    }
+  }
+}
+// Carrega prepostos do backend ao iniciar o app (background) para popular COMISSIONISTAS
+(async function _bootstrapPrepostos(){
+  const data = await fetchPrepostos();
+  if(Array.isArray(data) && data.length > 0){
+    PrepostosMgr.lista = data;
+    _sincronizaComissionistas();
+  }
+})();
+
+// Listeners do modal prepostos — via delegação (funciona antes/depois do DOM)
+document.addEventListener("click", (e)=>{
+  if(e.target.closest("#prepostosClose") || e.target.closest("#prepostosBackdrop")){
+    fecharModalPrepostos();
+  } else if(e.target.closest("#prepostoSaveBtn")){
+    _prepostoSalvar();
+  } else if(e.target.closest("#prepostoCancelEditBtn")){
+    _prepostosResetForm();
+  }
+  // Delegação da lista (editar/remover)
+  const editBtn = e.target.closest("[data-prep-edit]");
+  const rmBtn = e.target.closest("[data-prep-remove]");
+  if(editBtn && document.getElementById("prepostosList")?.contains(editBtn)){
+    _prepostoIniciarEdicao(editBtn.getAttribute("data-prep-edit"));
+  }
+  if(rmBtn && document.getElementById("prepostosList")?.contains(rmBtn)){
+    _prepostoRemover(rmBtn.getAttribute("data-prep-remove"));
+  }
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key !== "Enter") return;
+  if(e.target.id === "prepostoNome"){ _prepostoSalvar(); }
+  else if(e.target.id === "prepostoCodigo"){ document.getElementById("prepostoNome")?.focus(); }
+});
 
 function abrirModalImagensCategorias(){
   // Popula a lista
@@ -10123,6 +10691,9 @@ function buildPedidoSnapshot(cfg){
       qty: Number(it.qty) || 0,
       totalQty,
       preco,
+      // 🔧 Preserva precosPrazo pra que o PDF do histórico calcule o Custo por prazo depois.
+      // Sem esse campo, ao restaurar da lista de "Meus Pedidos", o PDF cai no fallback do PDV.
+      precosPrazo: it.precosPrazo || null,
       colecao: it.colecao || "",
       imagem: it.imagem || "",
       imgSrc: it.imgSrc || "",
@@ -10406,6 +10977,8 @@ function _mpRenderFinalizados(){
   const empty = $("mpEmpty");
   const loading = $("mpLoading");
   loading.classList.add("hidden");
+  // Sincroniza visibilidade do botão Limpar tudo
+  _mpAtualizarBotaoLimpar();
 
   if(!filtrados.length){
     ul.classList.add("hidden");
@@ -10577,12 +11150,23 @@ function _mpTrocarAba(aba){
   // Filtro de período só faz sentido pra finalizados
   const filtrosPeriodo = document.querySelector(".mp-periodo-pills");
   if(filtrosPeriodo){
-    filtrosPeriodo.closest(".mp-filter-row").style.display = (aba === "finalizados") ? "" : "none";
+    // Novo layout: pílulas ficam inline, esconde só o container das pílulas
+    filtrosPeriodo.style.display = (aba === "finalizados") ? "" : "none";
   }
   $("mpCustomDates")?.classList.add("hidden");
   renderListaPedidos();
   // Entrar na aba rascunhos desliga o pulse (vendedor já viu)
   _mpAtualizarPulseRascunhos();
+  // Botão "Limpar tudo" só na aba Finalizados (e só quando há pedidos — controlado no render)
+  _mpAtualizarBotaoLimpar();
+}
+// Atualiza visibilidade do botão Limpar tudo
+function _mpAtualizarBotaoLimpar(){
+  const btn = document.getElementById("mpBtnClearHistorico");
+  if(!btn) return;
+  const naAbaFin = MP.abaAtiva === "finalizados";
+  const temPedidos = naAbaFin && ((MP.pedidosCache[MP.filtroComissionista] || []).length > 0);
+  btn.classList.toggle("hidden", !temPedidos);
 }
 
 // Carrega item de rascunho de volta pra sacola (reaproveita conversor de pedido)
@@ -10749,6 +11333,9 @@ function _mpPedidoItemToCartItem(it){
     precoRaw: precoFinal,
     precoNum: precoFinal,
     precoFmt: (typeof moneyBR === "function") ? moneyBR(precoFinal) : `R$ ${precoFinal.toFixed(2).replace(".",",")}`,
+    // 🔧 Bugfix: preserva precosPrazo do histórico; se ausente, recai no catálogo atual.
+    // Sem isso, PDF cai no fallback do PDV (mostra R$ 259,99 em vez do custo por prazo).
+    precosPrazo: it.precosPrazo || original?.precosPrazo || null,
     linhaId: it.linhaId || undefined,
     dataDesejada: it.dataDesejada || ""
   };
@@ -10830,6 +11417,63 @@ function mpBaixarExcel(id){
   toast("Excel gerado do histórico ✅");
 }
 
+// Limpa TODOS os pedidos finalizados do comissionista atual (com backup automático no Worker)
+async function mpLimparHistorico(){
+  const com = MP.filtroComissionista;
+  if(!com){ toast("Selecione um comissionista antes"); return; }
+  const lista = MP.pedidosCache[com] || [];
+  const totalAtual = lista.length;
+  if(totalAtual === 0){ toast("Nada para limpar ✅"); return; }
+  const nomeCom = getComissionistaNome(com) || com;
+  const ok = await appConfirm({
+    title: "Limpar histórico",
+    message: `Vai apagar <strong>TODOS os ${totalAtual} pedidos finalizados</strong> de <strong>${_mpEscape(nomeCom)}</strong>.<br><br>Um backup é criado automaticamente antes da limpeza. Esta ação é permanente na lista, mas os pedidos podem ser recuperados do backup em caso de erro.`,
+    okText: "Apagar tudo",
+    cancelText: "Cancelar",
+    tone: "danger"
+  });
+  if(!ok) return;
+  const btn = document.getElementById("mpBtnClearHistorico");
+  if(btn){ btn.disabled = true; const sp = btn.querySelector("span"); if(sp) sp.textContent = "Limpando..."; }
+  try {
+    // Tenta POST primeiro. Se falhar, tenta PATCH (algumas versões antigas do Worker).
+    let data = null;
+    let ok2 = false;
+    for(const method of ["POST", "PATCH"]){
+      try {
+        const res = await fetch(WORKER_URL, {
+          method,
+          headers: { "Content-Type": "application/json", "X-Admin-Token": ADMIN_TOKEN },
+          body: JSON.stringify({ action: "clearPedidosHistorico", comissionista: com })
+        });
+        data = await res.json().catch(()=> null);
+        if(res.ok && data && data.success){ ok2 = true; break; }
+      } catch(_){}
+    }
+    if(!ok2) throw new Error((data && data.error) || "Erro no servidor");
+    // Sucesso: limpa cache local e re-renderiza
+    MP.pedidosCache[com] = [];
+    _mpAtualizarBotaoLimpar();
+    renderListaPedidos();
+    const cf = $("mpCountFinalizados");
+    if(cf) cf.textContent = "0";
+    await appSuccess({
+      title: "Histórico limpo",
+      message: `<strong>${data.cleared || totalAtual} pedidos</strong> foram apagados.<br><br>Um backup foi criado em <code>data/backups/catalogo-historico/</code> caso precise recuperar.`,
+      okText: "OK",
+      autoClose: 3500
+    });
+  } catch(e){
+    toast("Erro ao limpar: " + (e.message || "verifique a conexão"));
+  } finally {
+    if(btn){ btn.disabled = false; const sp = btn.querySelector("span"); if(sp) sp.textContent = "Limpar tudo"; }
+  }
+}
+// Listener do botão via delegação (o botão está dentro de modal, o script executa antes do HTML)
+document.addEventListener("click", (e)=>{
+  if(e.target.closest("#mpBtnClearHistorico")) mpLimparHistorico();
+});
+
 // Baixar PDF: usa "Reordenar silencioso" + chama o PDF da sacola
 function mpBaixarPDF(id){
   if(state.cart.size !== 0){
@@ -10848,12 +11492,39 @@ function mpBaixarPDF(id){
       grade: it.grade ? { ...it.grade } : null
     });
   }
-  // Aciona o PDF da sacola (deve existir uma função no app)
-  const btnPdf = document.querySelector("[data-action='export-pdf'], #btnExportPdf, #btnSacolaPdf");
+  // 🔧 Restaura o cfg histórico do pedido (payment, priceTable, campaign, etc)
+  // Sem isso, o PDF cai no fallback do PDV. Guarda o cfg anterior pra restaurar depois.
+  const cfgAnterior = state.lastOrderCfg;
+  state.lastOrderCfg = {
+    commission: pedido.comissionista || "",
+    clientCode: pedido.clientCode || "",
+    payment: pedido.payment || "",
+    priceTable: pedido.priceTable || "",
+    campaign: pedido.campaign || "",
+    pedidoCliente: pedido.pedidoCliente || "",
+    _generatedAt: pedido.createdAt ? Date.parse(pedido.createdAt) : Date.now(),
+    _restauradoDoHistorico: true
+  };
   closeMeusPedidosModal();
-  setTimeout(() => {
-    if(btnPdf) btnPdf.click();
-    else toast("Função PDF não encontrada — abra a sacola e exporte manualmente");
+  // 🔧 Chama exportOrderPdf DIRETAMENTE (não clica no btnExportPdf, que só abre um menu dropdown).
+  setTimeout(async () => {
+    try {
+      if(typeof exportOrderPdf === "function"){
+        await exportOrderPdf(true); // true = com grade
+      } else {
+        toast("Função de PDF não encontrada");
+      }
+    } catch(e){
+      toast("Erro ao gerar PDF: " + (e.message || ""));
+    } finally {
+      // Restaura o cfg anterior (não polui a sessão do vendedor)
+      state.lastOrderCfg = cfgAnterior;
+      // Limpa a sacola (pedido histórico não deve virar sacola ativa)
+      state.cart.clear();
+      if(typeof saveCartToStorage === "function") saveCartToStorage();
+      if(typeof renderCartUI === "function") renderCartUI();
+      if(typeof updateCartBadge === "function") updateCartBadge();
+    }
   }, 300);
 }
 
@@ -10864,11 +11535,14 @@ function openMeusPedidosModal(){
   sel.innerHTML = '<option value="">— Selecione —</option>' +
     COMISSIONISTAS.map(c => `<option value="${c.codigo}">${c.codigo} - ${c.nome}</option>`).join("");
 
-  // Tenta usar último comissionista salvo no localStorage (do export anterior)
+  // Tenta usar último comissionista escolhido em "Meus Pedidos" (dedicado); depois cai no do modal EBM
   let lastCom = "";
   try{
-    const cfg = JSON.parse(localStorage.getItem("orderExportConfig") || "{}");
-    if(cfg.commission) lastCom = String(cfg.commission);
+    lastCom = String(localStorage.getItem("mpLastComissionista") || "");
+    if(!lastCom){
+      const cfg = JSON.parse(localStorage.getItem("orderExportConfig") || "{}");
+      if(cfg.commission) lastCom = String(cfg.commission);
+    }
   }catch(_){}
   if(lastCom && COMISSIONISTAS.some(c => c.codigo === lastCom)){
     sel.value = lastCom;
@@ -10992,6 +11666,11 @@ async function _onSalvarRascunho(){
 document.addEventListener("change", (e) => {
   if(e.target.id === "mpComissionista"){
     MP.filtroComissionista = e.target.value;
+    // Memoriza escolha pra próxima abertura de "Meus Pedidos"
+    try{
+      if(MP.filtroComissionista) localStorage.setItem("mpLastComissionista", MP.filtroComissionista);
+      else localStorage.removeItem("mpLastComissionista");
+    }catch(_){}
     if(MP.filtroComissionista) _mpLoad();
     else {
       $("mpLista")?.classList.add("hidden");
@@ -11069,7 +11748,7 @@ function togglePref(name){
 // Eventos
 document.addEventListener("click", (e) => {
   if(e.target.closest("#btnTrocarMarca")){
-    window.location.href = "https://marcosrepcms-max.github.io/Catalogo-Olympikus/?abrir=marca";
+    window.location.href = "https://cms-representacoes.github.io/apps-oly/?abrir=marca";
     return;
   }
   if(e.target.closest("#btnPreferences")){ openPrefsModal(); return; }
@@ -11091,19 +11770,16 @@ loadCatalog({ cacheBust:false });
   <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="mpBackdrop"></div>
   <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
     <div class="mp-sheet">
-      <!-- Header -->
-      <div class="mp-sheet-header flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border">
-        <div class="min-w-0">
-          <div class="text-xs font-extrabold uppercase tracking-[0.12em]" style="color:var(--primary)">Histórico</div>
-          <div class="text-lg sm:text-xl font-black text-oly-text">📋 Meus pedidos</div>
-        </div>
-        <button id="btnCloseMeusPedidos" class="focus-ring h-11 w-11 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar histórico">
+      <!-- Header (compacto: uma linha só) -->
+      <div class="mp-sheet-header flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-oly-border">
+        <div class="text-base sm:text-lg font-black text-oly-text">📋 Meus pedidos</div>
+        <button id="btnCloseMeusPedidos" class="focus-ring h-10 w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0" aria-label="Fechar histórico" title="Fechar">
           <i class="fa-solid fa-xmark text-oly-blue"></i>
         </button>
       </div>
 
       <!-- Abas -->
-      <div class="flex gap-1.5 px-5 sm:px-6 pt-3 pb-1" style="background:var(--bg)">
+      <div class="flex gap-1.5 px-5 sm:px-6 pt-2 pb-1" style="background:var(--bg)">
         <button class="mp-aba mp-aba-active" data-aba="rascunhos">
           <i class="fa-solid fa-pen-ruler"></i>
           <span>Rascunhos</span>
@@ -11116,26 +11792,22 @@ loadCatalog({ cacheBust:false });
         </button>
       </div>
 
-      <!-- Filtros -->
-      <div class="mp-sheet-filters px-5 sm:px-6 py-4 border-b border-oly-border" style="background:var(--bg)">
-        <div class="mp-filter-row">
-          <label class="mp-filter-label">Comissionista</label>
-          <select id="mpComissionista" class="mp-filter-select"></select>
-        </div>
-        <div class="mp-filter-row">
-          <label class="mp-filter-label">Buscar</label>
-          <input id="mpBusca" type="search" class="mp-filter-search" placeholder="Cliente, produto, pedido...">
-        </div>
-        <div class="mp-filter-row">
-          <label class="mp-filter-label">Período</label>
-          <div class="mp-periodo-pills">
-            <button class="mp-periodo-pill" data-periodo="7d">7 dias</button>
-            <button class="mp-periodo-pill active" data-periodo="mes">Este mês</button>
-            <button class="mp-periodo-pill" data-periodo="mes-passado">Mês passado</button>
-            <button class="mp-periodo-pill" data-periodo="custom">Personalizado</button>
+      <!-- Filtros (barra única condensada) -->
+      <div class="mp-sheet-filters px-5 sm:px-6 py-3 border-b border-oly-border" style="background:var(--bg)">
+        <div class="mp-filters-inline">
+          <select id="mpComissionista" class="mp-filter-select mp-filter-inline-select" title="Filtrar por comissionista"></select>
+          <div class="mp-filter-search-wrap">
+            <i class="fa-solid fa-magnifying-glass mp-filter-search-icon"></i>
+            <input id="mpBusca" type="search" class="mp-filter-search mp-filter-inline-search" placeholder="Cliente, produto, pedido...">
+          </div>
+          <div class="mp-periodo-pills mp-filter-inline-pills">
+            <button class="mp-periodo-pill" data-periodo="7d" title="Últimos 7 dias">7d</button>
+            <button class="mp-periodo-pill active" data-periodo="mes" title="Este mês">Mês</button>
+            <button class="mp-periodo-pill" data-periodo="mes-passado" title="Mês passado">Anterior</button>
+            <button class="mp-periodo-pill" data-periodo="custom" title="Período personalizado"><i class="fa-solid fa-calendar-days" style="font-size:11px"></i></button>
           </div>
         </div>
-        <div id="mpCustomDates" class="mp-filter-row hidden">
+        <div id="mpCustomDates" class="mp-filter-row hidden" style="margin-top:8px">
           <label class="mp-filter-label">De/Até</label>
           <div style="display:flex;gap:6px;flex:1;">
             <input id="mpDataDe" type="date" class="mp-filter-search" style="flex:1;padding-left:12px;background-image:none;">
@@ -11145,9 +11817,15 @@ loadCatalog({ cacheBust:false });
       </div>
 
       <!-- Stats -->
-      <div class="mp-sheet-stats px-5 sm:px-6 py-2 border-b border-oly-border">
-        <span class="text-xs font-bold" id="mpStatsTxt" style="color:var(--muted)">— pedidos</span>
-        <span class="text-xs font-black" id="mpStatsTotal" style="color:var(--primary)"></span>
+      <div class="mp-sheet-stats px-5 sm:px-6 py-2 border-b border-oly-border flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <span class="text-xs font-bold" id="mpStatsTxt" style="color:var(--muted)">— pedidos</span>
+          <span class="text-xs font-black" id="mpStatsTotal" style="color:var(--primary)"></span>
+        </div>
+        <button id="mpBtnClearHistorico" type="button" class="hidden focus-ring inline-flex items-center gap-1.5 text-xs font-bold rounded-full px-2.5 py-1 hover:bg-oly-bg" style="color:var(--muted);border:1px solid var(--border);" title="Apagar todos os pedidos finalizados">
+          <i class="fa-solid fa-trash-can" style="font-size:10px"></i>
+          <span>Limpar tudo</span>
+        </button>
       </div>
 
       <!-- Lista -->
@@ -11275,6 +11953,84 @@ loadCatalog({ cacheBust:false });
 </div>
 
 <!-- ═══════════ MODAL UPLOAD IMAGENS CATEGORIAS ═══════════ -->
+<!-- ────── Menu de Configurações (depois da senha) ────── -->
+<div id="configMenuModal" class="hidden fixed inset-0 z-[91]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="configMenuBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="ci-sheet" style="max-width:520px;background:var(--card-bg,#fff);border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)">
+      <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border" style="background:var(--card-bg,#fff);color:var(--text,#0F172A)">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-[.18em]" style="color:var(--muted,#6B7280)">Área restrita</div>
+          <div class="text-lg sm:text-xl font-extrabold" style="color:var(--text,#0F172A)">Configurações</div>
+        </div>
+        <button id="configMenuClose" type="button" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="Fechar" aria-label="Fechar">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4" style="background:var(--card-bg,#fff)">
+        <button id="btnCfgImagens" type="button" class="focus-ring text-left rounded-2xl border border-oly-border bg-white hover:bg-oly-bg p-5 transition">
+          <div class="h-12 w-12 rounded-2xl flex items-center justify-center mb-3" style="background:linear-gradient(140deg,#F8FAFC 0%,#EFF6FF 55%,#DBEAFE 100%);box-shadow:0 1px 2px rgba(15,23,42,.05), inset 0 1px 0 rgba(255,255,255,.6);">
+            <i class="fa-solid fa-images" style="color:#1d4ed8;font-size:20px"></i>
+          </div>
+          <div class="font-extrabold text-oly-text text-[15px]">Imagens de Categorias</div>
+          <div class="text-xs text-oly-muted mt-1 leading-relaxed">Trocar as imagens exibidas nos cards de categoria da home.</div>
+        </button>
+        <button id="btnCfgPrepostos" type="button" class="focus-ring text-left rounded-2xl border border-oly-border bg-white hover:bg-oly-bg p-5 transition">
+          <div class="h-12 w-12 rounded-2xl flex items-center justify-center mb-3" style="background:linear-gradient(140deg,#FBF6FE 0%,#FDF4FF 55%,#F0ABFC 100%);box-shadow:0 1px 2px rgba(15,23,42,.05), inset 0 1px 0 rgba(255,255,255,.6);">
+            <i class="fa-solid fa-user-tie" style="color:#9333EA;font-size:20px"></i>
+          </div>
+          <div class="font-extrabold text-oly-text text-[15px]">Prepostos</div>
+          <div class="text-xs text-oly-muted mt-1 leading-relaxed">Cadastrar, editar e excluir comissionistas.</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────── Modal de Prepostos ────── -->
+<div id="prepostosModal" class="hidden fixed inset-0 z-[92]">
+  <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="prepostosBackdrop"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+    <div class="ci-sheet" style="max-width:560px;background:var(--card-bg,#fff);border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)">
+      <div class="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-oly-border" style="background:var(--card-bg,#fff);color:var(--text,#0F172A)">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-[.18em]" style="color:var(--muted,#6B7280)">Cadastro</div>
+          <div class="text-lg sm:text-xl font-extrabold" style="color:var(--text,#0F172A)">Prepostos</div>
+        </div>
+        <button id="prepostosClose" type="button" class="focus-ring h-10 w-10 rounded-full border border-oly-border hover:bg-oly-bg" title="Fechar" aria-label="Fechar">
+          <i class="fa-solid fa-xmark text-oly-blue"></i>
+        </button>
+      </div>
+      <div class="ci-body" style="background:var(--card-bg,#fff)">
+        <!-- Formulário de adicionar/editar -->
+        <div class="rounded-2xl border border-oly-border bg-oly-bg p-4 mb-4">
+          <div class="text-[11px] font-bold uppercase tracking-[.14em] text-oly-muted mb-2" id="prepostoFormLabel">Novo preposto</div>
+          <div class="grid grid-cols-1 sm:grid-cols-[1fr_1.8fr_auto] gap-2">
+            <input id="prepostoCodigo" type="text" inputmode="numeric" placeholder="Código" class="rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2" style="color:var(--text)">
+            <input id="prepostoNome" type="text" placeholder="Nome" class="rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2" style="color:var(--text)">
+            <div class="flex gap-2">
+              <button id="prepostoSaveBtn" type="button" class="focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold text-white flex-1 sm:flex-none" style="background:var(--primary)">
+                <i class="fa-solid fa-check"></i>
+                <span id="prepostoSaveLabel">Adicionar</span>
+              </button>
+              <button id="prepostoCancelEditBtn" type="button" class="focus-ring hidden inline-flex items-center justify-center rounded-xl border border-oly-border bg-white px-3 py-2.5 text-sm font-bold hover:bg-oly-bg" title="Cancelar edição">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <div id="prepostoFormError" class="hidden mt-2 text-xs font-bold" style="color:#B91C1C"></div>
+        </div>
+        <!-- Lista -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-bold uppercase tracking-[.14em] text-oly-muted">Lista atual</div>
+          <div id="prepostosCount" class="text-[11px] font-bold text-oly-muted"></div>
+        </div>
+        <div id="prepostosList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="catImgModal" class="hidden fixed inset-0 z-[91]">
   <div class="absolute inset-0 bg-black/55 backdrop-blur-sm" id="catImgBackdrop"></div>
   <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
