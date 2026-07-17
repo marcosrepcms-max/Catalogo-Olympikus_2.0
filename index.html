@@ -1121,6 +1121,34 @@
       letter-spacing:.005em;
     }
 
+    /* ═══ V1: Grid 2 colunas das categorias ═══ */
+    .home-cat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    /* Card "Ver todos" ocupa linha inteira (mantém proeminência) */
+    .home-cat-grid > .home-cat-all { grid-column: 1 / -1; }
+    /* Em 2 colunas, a miniatura à direita fica apertada — some, ícone à esquerda basta */
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-img-wrap { display: none; }
+    /* Seta chevron também some pra dar respiro ao texto */
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-arrow { display: none; }
+    /* Descrição menor pra caber sem estourar */
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-sub {
+      font-size: 10.5px;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-name { font-size: 14px; }
+    /* Info empacota melhor no card estreito */
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-info { gap: 10px; flex: 1; min-width: 0; }
+    .home-cat-grid > .home-cat-card:not(.home-cat-all) .home-cat-label { min-width: 0; }
+
     .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:12px 14px; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.22s ease,border-color 0.18s ease; text-align:left; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 20px rgba(15,23,42,.06); position:relative; overflow:hidden; }
     .home-cat-card:active { transform:scale(0.98); box-shadow:0 1px 2px rgba(15,23,42,.06); }
     @media (hover: hover){
@@ -1768,7 +1796,7 @@
         <div class="home-hero-sub">Escolha uma categoria para começar</div>
       </div>
     </div>
-    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-3 flex flex-col gap-2">
+    <div class="flex-1 mx-auto w-full max-w-lg sm:max-w-2xl px-4 py-3 flex flex-col gap-2">
       <!-- ═══════════ SELETOR DE COLEÇÃO + CLASSIFICAÇÃO (compacto inline) ═══════════ -->
       <div class="colecao-selector">
         <div class="home-filters-inline">
@@ -1800,6 +1828,8 @@
         </div>
       </div>
 
+      <!-- Grid 2 colunas das categorias (V1) — "Todos" ocupa linha inteira -->
+      <div class="home-cat-grid">
       <button class="home-cat-card focus-ring" data-cat="FTW">
         <div class="home-cat-info">
           <div class="home-cat-icon home-cat-icon-grad" style="background:linear-gradient(140deg,#F8FAFC 0%,#EFF6FF 55%,#DBEAFE 100%);"><svg viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="19"><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" fill="#7c3aed" opacity="0.15"/><path d="M2 22 C2 22 8 10 18 10 C24 10 26 14 32 14 C38 14 44 10 46 10 L46 24 C46 26 44 28 42 28 L6 28 C4 28 2 26 2 24 Z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M18 10 L20 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M24 11 L25 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M30 13 L30 18" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/><path d="M2 24 L46 24" stroke="#7c3aed" stroke-width="1.5"/><ellipse cx="10" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/><ellipse cx="38" cy="28" rx="4" ry="2" fill="#7c3aed" opacity="0.3"/></svg></div>
@@ -1862,6 +1892,7 @@
         </div>
         <i class="fa-solid fa-chevron-right home-cat-arrow" style="color:var(--primary)"></i>
       </button>
+      </div><!-- /home-cat-grid -->
     </div>
   </div>
   <!-- /HOME SCREEN -->
