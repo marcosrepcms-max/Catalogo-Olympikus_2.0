@@ -53,6 +53,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
+    /* ═══ Favoritos ocultos por preferência do usuário (código preservado) ═══ */
+    /* Se um dia quiser reativar, basta remover este bloco. */
+    #btnFavs,
+    #favsActions,
+    #btnFavsSelect,
+    #btnFavsRemoveSelected,
+    #btnFavsClear,
+    #pmFavBtn,
+    #favCountBadge { display: none !important; }
     :root{
       --bg: #F4F6FA;
       --text:#0F172A;
@@ -2046,15 +2055,20 @@
               <span class="action-btn-wrap"><i class="fa-solid fa-clock-rotate-left text-oly-blue"></i><span class="action-btn-mobile-label">Pedidos</span></span>
               <span class="hidden sm:inline">Meus pedidos</span>
             </button>
-            <!-- 3 Layout -->
-            <button id="btnLayout" title="Alternar visualização em lista ou grade" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
-              <span class="action-btn-wrap"><i id="icoLayout" class="fa-solid fa-list text-oly-blue"></i><span class="action-btn-mobile-label">Layout</span></span>
-              <span id="lblLayout" class="hidden sm:inline text-xs font-bold">Lista</span>
-            </button>
-            <!-- 4 Limpar -->
+            <!-- Limpar (agora vem antes de Layout) -->
             <button id="btnClear" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Limpar filtros ativos">
               <span class="action-btn-wrap"><i class="fa-solid fa-broom text-oly-blue"></i><span class="action-btn-mobile-label">Limpar</span></span>
               <span class="hidden sm:inline">Limpar filtros</span>
+            </button>
+            <!-- Atualizar (entre Limpar e Layout, conforme solicitado) -->
+            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
+              <span class="action-btn-wrap"><i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i><span class="action-btn-mobile-label">Atualizar</span></span>
+              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
+            </button>
+            <!-- Layout (agora vem depois de Limpar e Atualizar) -->
+            <button id="btnLayout" title="Alternar visualização em 2 ou 3 colunas" class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-3 text-sm font-semibold hover:bg-oly-bg shrink-0">
+              <span class="action-btn-wrap"><i id="icoLayout" class="fa-solid fa-table-cells-large text-oly-blue"></i><span class="action-btn-mobile-label">Layout</span></span>
+              <span id="lblLayout" class="hidden sm:inline text-xs font-bold">2 Col</span>
             </button>
             <!-- 5 Favoritos -->
             <button id="btnFavs" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Ver produtos favoritos">
@@ -2077,11 +2091,6 @@
             <button id="btnDark" title="Alternar modo claro/escuro" class="focus-ring flex flex-col items-center justify-center gap-0.5 rounded-full border border-oly-border bg-white hover:bg-oly-bg shrink-0 px-2 py-1.5 sm:h-9 sm:w-9 sm:p-0">
               <i id="icoDark" class="fa-solid fa-moon text-oly-blue" style="font-size:13px"></i>
               <span class="action-btn-mobile-label">Tema</span>
-            </button>
-            <!-- 7 Atualizar -->
-            <button id="btnRefresh" class="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-oly-border bg-white px-2.5 py-2 sm:px-4 text-sm font-semibold hover:bg-oly-bg" title="Recarregar catálogo">
-              <span class="action-btn-wrap"><i id="icoRefresh" class="fa-solid fa-arrows-rotate text-oly-blue"></i><span class="action-btn-mobile-label">Atualizar</span></span>
-              <span id="lblRefresh" class="hidden sm:inline">Atualizar</span>
             </button>
           </div><!-- /actionBar -->
           </div><!-- /actionbar-wrap -->
@@ -3237,7 +3246,7 @@ const state = {
   productsView: [],
   groupColors: false,
   viewMode: "all", // all | favs
-  cardLayout: "duo", // duo | list | grid
+  cardLayout: "trio", // duo | trio (list e grid removidos por preferência do usuário)
   filters: { category:"", segment:"", gender:"", q:"", sort:"default", priceMax:Infinity, colecao:"2S26", tier:"" },
   pagination: { pageSize: 24, shown: 0 },
   ui: { lastScrollY: 0, view: 'main' },
@@ -4147,7 +4156,7 @@ function clearAllFilters(){
 }
 $("btnClear").addEventListener("click", ()=>{
   clearAllFilters();
-  state.cardLayout = "duo"; updateLayoutBtn();
+  state.cardLayout = "trio"; updateLayoutBtn();
   if(typeof syncColecaoCards === "function") syncColecaoCards();
   if(typeof syncTierBar === "function") syncTierBar();
   refreshView(true);
@@ -4327,8 +4336,6 @@ function segmentIcon(seg){
 const LAYOUTS = [
   { id:"duo",  icon:"fa-table-cells-large", label:"2 Col" },
   { id:"trio", icon:"fa-table-cells",        label:"3 Col" },
-  { id:"list", icon:"fa-list",               label:"Lista" },
-  { id:"grid", icon:"fa-grip",               label:"Grid"  },
 ];
 function updateLayoutBtn(){
   const cur = LAYOUTS.findIndex(l => l.id === state.cardLayout);
@@ -4343,6 +4350,8 @@ $("btnLayout")?.addEventListener("click", ()=>{
   updateLayoutBtn();
   renderCards();
 });
+// Sincroniza o botão de layout com o padrão inicial (trio)
+updateLayoutBtn();
 $("btnClearFilters").addEventListener("click", ()=>{
   clearAllFilters();
   refreshView(true);
