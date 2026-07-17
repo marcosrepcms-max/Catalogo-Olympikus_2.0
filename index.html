@@ -1089,9 +1089,9 @@
     #homeScreen { background: var(--bg, #F9FAFB); min-height: 100vh; }
     .dark-mode #homeScreen { background: var(--bg, #111827); }
 
-    .home-hero { position:relative; width:100%; height:130px; overflow:hidden; flex-shrink:0; border-radius: 0 0 24px 24px; }
-    @media(min-width:480px){ .home-hero { height:160px; } }
-    @media(min-width:1024px){ .home-hero { height:200px; } }
+    .home-hero { position:relative; width:100%; height:110px; overflow:hidden; flex-shrink:0; border-radius: 0 0 24px 24px; }
+    @media(min-width:480px){ .home-hero { height:130px; } }
+    @media(min-width:1024px){ .home-hero { height:160px; } }
     .home-hero-grid { display:grid; grid-template-columns:1fr 1fr 1fr; height:100%; gap:2px; }
     .home-hero-cell { overflow:hidden; background:#111; position:relative; }
     .home-hero-cell-img { width:100%; height:100%; object-fit:cover; object-position:center 20%; display:block; transition:transform 0.6s cubic-bezier(.2,.7,.2,1); }
@@ -1108,25 +1108,28 @@
       box-shadow: inset 0 0 80px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.04);
       border-radius: inherit;
     }
-    .home-hero-content { position:absolute; bottom:0; left:0; right:0; padding:14px 16px 18px; z-index:1; }
+    .home-hero-content { position:absolute; bottom:0; left:0; right:0; padding:12px 16px 14px; z-index:1; }
     .home-hero-title {
-      font-size:24px; font-weight:900; color:#fff; line-height:1.05;
+      font-size:22px; font-weight:900; color:#fff; line-height:1.05;
       text-shadow:0 2px 12px rgba(0,0,0,.55), 0 0 1px rgba(0,0,0,.5);
       letter-spacing:-0.6px;
     }
-    @media (min-width:768px){ .home-hero-title { font-size: 30px; } }
+    @media (min-width:768px){ .home-hero-title { font-size: 26px; } }
     .home-hero-sub {
-      font-size:12.5px; font-weight:600; color:rgba(255,255,255,0.92); margin-top:4px;
+      font-size:12px; font-weight:600; color:rgba(255,255,255,0.92); margin-top:3px;
       text-shadow:0 1px 6px rgba(0,0,0,.55);
       letter-spacing:.005em;
     }
 
-    .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:14px 16px; cursor:pointer; transition:transform 0.15s ease,box-shadow 0.15s ease,border-color 0.15s ease; text-align:left; box-shadow:0 1px 3px rgba(0,0,0,0.06); position:relative; overflow:hidden; }
-    .home-cat-card:active { transform:scale(0.98); box-shadow:none; }
-    .home-cat-card:hover { border-color:var(--primary,var(--primary)); box-shadow:0 4px 16px rgba(var(--primary-rgb),0.1); }
+    .home-cat-card { width:100%; display:flex; align-items:center; gap:12px; background:var(--card-bg,#fff); border:1px solid var(--border,#E5E7EB); border-radius:20px; padding:12px 14px; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.22s ease,border-color 0.18s ease; text-align:left; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 20px rgba(15,23,42,.06); position:relative; overflow:hidden; }
+    .home-cat-card:active { transform:scale(0.98); box-shadow:0 1px 2px rgba(15,23,42,.06); }
+    @media (hover: hover){
+      .home-cat-card:hover { transform: translateY(-2px); border-color:rgba(124,58,237,.20); box-shadow:0 4px 8px rgba(15,23,42,.06), 0 18px 36px rgba(15,23,42,.12); }
+    }
     .home-cat-all { border-style:dashed; border-color:var(--primary,var(--primary)); background:rgba(var(--primary-rgb),0.03); }
-    .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; }
+    .dark-mode .home-cat-card { background:#1F2937; border-color:#374151; box-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.35); }
     .dark-mode .home-cat-all { background:rgba(var(--primary-rgb),0.08); }
+    .dark-mode .home-cat-card:hover { border-color:rgba(167,139,250,.35); }
     .home-cat-info { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
     .home-cat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     /* ─── Ícones de categoria com brilho radial sutil (premium) ─── */
@@ -1155,46 +1158,71 @@
     .home-cat-arrow { font-size:12px; color:var(--muted,#9CA3AF); margin-left:4px; flex-shrink:0; }
 
     /* ── SELETOR DE COLEÇÃO ── */
-    .colecao-selector { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+    .colecao-selector { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
     .colecao-selector-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       color: var(--muted, #6B7280);
       letter-spacing: 0.6px;
       text-transform: uppercase;
       padding-left: 4px;
     }
-    .colecao-selector-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    /* Barra inline: coleção pílulas + classificação pílulas na mesma linha (desktop/tablet paisagem) */
+    .home-filters-inline {
+      display: flex;
+      align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
+      padding: 4px 0;
     }
-    .colecao-card {
+    .home-filters-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+    .home-filters-group-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted, #6B7280);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding-right: 2px;
+    }
+    /* Pílulas de coleção (novo — compacto, igual tier-pill) */
+    .colecao-pill {
       background: var(--card-bg, #fff);
       border: 1.5px solid var(--border, #E5E7EB);
-      border-radius: 18px;
-      padding: 18px 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: transform .12s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 800;
       color: var(--primary, var(--primary));
+      cursor: pointer;
+      transition: transform .12s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
       user-select: none;
+      letter-spacing: -0.2px;
     }
-    .colecao-card:active { transform: scale(.97); }
-    .colecao-card:hover { border-color: var(--primary, var(--primary)); }
-    .colecao-card-name { font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
-    .colecao-card.active {
+    .colecao-pill:active { transform: scale(.96); }
+    .colecao-pill:hover { border-color: var(--primary); }
+    .colecao-pill.active {
       background: var(--primary, var(--primary));
       border-color: var(--primary, var(--primary));
       color: #fff;
-      box-shadow: 0 6px 14px rgba(var(--primary-rgb),.22);
+      box-shadow: 0 4px 10px rgba(var(--primary-rgb),.22);
     }
-    .dark-mode .colecao-card { background: #1F2937; border-color: #374151; color: #a78bfa; }
-    .dark-mode .colecao-card.active { background: #a78bfa; border-color: #a78bfa; color: #fff; box-shadow: 0 6px 14px rgba(167,139,250,.3); }
+    .dark-mode .colecao-pill { background: #1F2937; border-color: #374151; color: #a78bfa; }
+    .dark-mode .colecao-pill.active { background: #a78bfa; border-color: #a78bfa; color: #fff; }
+    /* Em tablet retrato: quebra em 2 linhas (coleção em cima, classificação embaixo) */
+    @media (max-width: 900px){
+      .home-filters-inline { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .home-filters-group { flex-wrap: wrap; }
+    }
 
     /* ── BAR DE CLASSIFICAÇÃO TIER ── */
-    .tier-bar-wrap { display:none; margin-top:6px; }
-    .tier-bar-wrap.show { display:block; }
+    .tier-bar-wrap { display:none; }
+    /* Quando ativa (2S26 selecionada), aparece como flex inline com a coleção */
+    .tier-bar-wrap.show { display:flex; align-items:center; gap:6px; }
     .tier-bar-label {
       font-size: 11px; font-weight: 800;
       color: var(--muted, #6B7280);
@@ -1740,32 +1768,34 @@
         <div class="home-hero-sub">Escolha uma categoria para começar</div>
       </div>
     </div>
-    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-4 flex flex-col gap-3">
-      <!-- ═══════════ SELETOR DE COLEÇÃO ═══════════ -->
+    <div class="flex-1 mx-auto w-full max-w-lg px-4 py-3 flex flex-col gap-2">
+      <!-- ═══════════ SELETOR DE COLEÇÃO + CLASSIFICAÇÃO (compacto inline) ═══════════ -->
       <div class="colecao-selector">
-        <div class="colecao-selector-label">Coleção</div>
-        <div class="colecao-selector-grid">
-          <button type="button" class="colecao-card focus-ring" data-colecao="1S26">
-            <div class="colecao-card-name">1S26</div>
-          </button>
-          <button type="button" class="colecao-card focus-ring" data-colecao="2S26">
-            <div class="colecao-card-name">2S26</div>
-          </button>
-        </div>
+        <div class="home-filters-inline">
+          <div class="home-filters-group">
+            <span class="home-filters-group-label">Coleção</span>
+            <button type="button" class="colecao-pill colecao-card focus-ring" data-colecao="1S26">
+              <span class="colecao-card-name">1S26</span>
+            </button>
+            <button type="button" class="colecao-pill colecao-card focus-ring" data-colecao="2S26">
+              <span class="colecao-card-name">2S26</span>
+            </button>
+          </div>
 
-        <!-- Bar de classificação por canal/tier (só visível em 2S26) -->
-        <div id="tierBarWrap" class="tier-bar-wrap">
-          <div class="tier-bar-label">Classificação do cliente</div>
-          <div class="tier-bar" id="tierBar">
-            <button type="button" class="tier-pill active" data-tier="">Todos</button>
-            <div class="tier-bar-divider"></div>
-            <button type="button" class="tier-pill" data-tier="sg1" data-tip="Sporting Goods · Tier 1">SG·1</button>
-            <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
-            <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
-            <div class="tier-bar-divider"></div>
-            <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FF·1</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FF·2</button>
-            <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FF·3</button>
+          <!-- Classificação por tier (só visível em 2S26) -->
+          <div id="tierBarWrap" class="tier-bar-wrap home-filters-group">
+            <span class="home-filters-group-label">Classificação</span>
+            <div class="tier-bar" id="tierBar">
+              <button type="button" class="tier-pill active" data-tier="">Todos</button>
+              <div class="tier-bar-divider"></div>
+              <button type="button" class="tier-pill" data-tier="sg1" data-tip="Sporting Goods · Tier 1">SG·1</button>
+              <button type="button" class="tier-pill" data-tier="sg2" data-tip="Sporting Goods · Tier 2">SG·2</button>
+              <button type="button" class="tier-pill" data-tier="sg3" data-tip="Sporting Goods · Tier 3">SG·3</button>
+              <div class="tier-bar-divider"></div>
+              <button type="button" class="tier-pill fam" data-tier="ftw1" data-tip="Family FTW · Tier 1">FF·1</button>
+              <button type="button" class="tier-pill fam" data-tier="ftw2" data-tip="Family FTW · Tier 2">FF·2</button>
+              <button type="button" class="tier-pill fam" data-tier="ftw3" data-tip="Family FTW · Tier 3">FF·3</button>
+            </div>
           </div>
         </div>
       </div>
