@@ -1870,18 +1870,22 @@
           <div class="text-[10px] font-bold text-oly-muted leading-none">Catálogo Digital</div>
           <div id="brandName" class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
         </div>
-        <div class="ml-auto flex items-center gap-2">
-          <a href="https://cms-representacoes.github.io/apps-oly/" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Voltar ao Portal" aria-label="Voltar ao Portal">
+        <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <a href="https://cms-representacoes.github.io/apps-oly/" class="focus-ring flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1.5 rounded-xl border border-oly-border bg-white hover:bg-oly-bg transition" title="Voltar ao Portal" aria-label="Voltar ao Portal">
             <i class="fa-solid fa-arrow-left text-oly-muted text-sm"></i>
+            <span class="text-[9.5px] sm:text-[10px] font-bold text-oly-muted leading-none">Portal</span>
           </a>
-          <button id="btnTrocarMarca" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Trocar de marca" aria-label="Trocar de marca">
-            <i class="fa-solid fa-arrow-right-arrow-left text-oly-muted text-sm"></i>
+          <button id="btnTrocarMarca" class="focus-ring flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1.5 rounded-xl border border-oly-border bg-white hover:bg-oly-bg transition" title="Trocar de marca">
+            <img id="btnTrocarMarcaLogo" src="" alt="" class="h-4 w-auto max-w-[26px] object-contain">
+            <span id="btnTrocarMarcaLabel" class="text-[9.5px] sm:text-[10px] font-bold text-oly-muted leading-none whitespace-nowrap"></span>
           </button>
-          <button id="btnPreferences" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Minhas preferências" aria-label="Preferências do vendedor">
+          <button id="btnPreferences" class="focus-ring flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1.5 rounded-xl border border-oly-border bg-white hover:bg-oly-bg transition" title="Minhas preferências" aria-label="Preferências do vendedor">
             <i class="fa-solid fa-sliders text-oly-muted text-sm"></i>
+            <span class="text-[9.5px] sm:text-[10px] font-bold text-oly-muted leading-none">Preferências</span>
           </button>
-          <button id="btnCatImagesConfig" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Configurar imagens das categorias" aria-label="Configurações de imagens">
+          <button id="btnCatImagesConfig" class="focus-ring flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1.5 rounded-xl border border-oly-border bg-white hover:bg-oly-bg transition" title="Configurar imagens das categorias" aria-label="Configurações de imagens">
             <i class="fa-solid fa-gear text-oly-muted text-sm"></i>
+            <span class="text-[9.5px] sm:text-[10px] font-bold text-oly-muted leading-none">Categorias</span>
           </button>
         </div>
       </div>
@@ -3176,6 +3180,16 @@ const DATA_CONFIG = { xlsxPath: MARCA_ATUAL.xlsx, imagesBasePath: "./imagens_oly
   var bn = document.getElementById("brandName");
   if(bn) bn.textContent = MARCA_ATUAL.nome;
   document.title = "Catálogo " + MARCA_ATUAL.nome;
+
+  // Botão de troca de marca: mostra a logo + nome da OUTRA marca
+  var outraId = MARCA_ATUAL.id === "oly" ? "ua" : "oly";
+  var outra = MARCAS[outraId];
+  var tmLogo = document.getElementById("btnTrocarMarcaLogo");
+  var tmLabel = document.getElementById("btnTrocarMarcaLabel");
+  var tmBtn = document.getElementById("btnTrocarMarca");
+  if(tmLogo){ tmLogo.src = outra.logo; tmLogo.alt = outra.nome; }
+  if(tmLabel) tmLabel.textContent = outra.nome;
+  if(tmBtn) tmBtn.title = "Trocar para " + outra.nome;
   var xlsxNome = MARCA_ATUAL.xlsx.replace(/^\.\//,"");
   var hp = document.getElementById("hintXlsxPath");
   if(hp) hp.textContent = "/" + xlsxNome;
@@ -11808,7 +11822,8 @@ function togglePref(name){
 // Eventos
 document.addEventListener("click", (e) => {
   if(e.target.closest("#btnTrocarMarca")){
-    window.location.href = "https://cms-representacoes.github.io/apps-oly/?abrir=marca";
+    var outraId = MARCA_ATUAL.id === "oly" ? "ua" : "oly";
+    window.location.href = window.location.pathname + "?marca=" + outraId;
     return;
   }
   if(e.target.closest("#btnPreferences")){ openPrefsModal(); return; }
