@@ -1871,6 +1871,9 @@
           <div id="brandName" class="text-base font-extrabold leading-tight text-oly-text">Olympikus</div>
         </div>
         <div class="ml-auto flex items-center gap-2">
+          <a href="https://cms-representacoes.github.io/apps-oly/" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Voltar ao Portal" aria-label="Voltar ao Portal">
+            <i class="fa-solid fa-arrow-left text-oly-muted text-sm"></i>
+          </a>
           <button id="btnTrocarMarca" class="focus-ring h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-oly-border bg-white hover:bg-oly-bg flex items-center justify-center transition" title="Trocar de marca" aria-label="Trocar de marca">
             <i class="fa-solid fa-arrow-right-arrow-left text-oly-muted text-sm"></i>
           </button>
@@ -7345,6 +7348,8 @@ async function openOrderExportModal(opts = {}){
   });
   // Renderiza/inicializa o sub-form de datas individuais
   renderOrderDateOverride();
+  // Reaplica a trava do Portal por último — garante que nada acima (ex: config salva) sobrescreva.
+  _travarComissionistaPortal();
   const modal = $("orderExportModal");
   if(!modal) return;
   modal.classList.remove("hidden");
